@@ -99,7 +99,8 @@ class LevelManager {
         x: 260,
         y: 362,
         name: 'Soldado Guía',
-        dialogueKey: 'prologue'
+        dialogueKey: 'prologue',
+        sprite: 'soldier'
       },
       enemies: [],
       urns: [
@@ -417,13 +418,7 @@ class LevelManager {
       ],
       wind: { force: 0.65, activeMinY: 1500, activeMaxY: 2500 },
       portalTarget: 'boss_minos',
-      portalLabel: 'Sala de Juicio — Rey Minos',
-      npc: {
-        x: 480,
-        y: 2462,
-        name: 'Anciano',
-        dialogueKey: 'anciano'
-      }
+      portalLabel: 'Sala de Juicio — Rey Minos'
     });
   }
 

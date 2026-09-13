@@ -53,49 +53,6 @@ class DialogueManager {
         }
       ],
 
-      anciano: [
-        {
-          speaker: 'Kael',
-          portrait: 'Kael',
-          text: '¿Quién eres?, ¿y en dónde estoy?.'
-        },
-        {
-          speaker: 'Anciano',
-          portrait: 'Anciano',
-          text: 'Ah... al parecer también has sido condenado a este lugar, quién soy no importa, lo que importa es lo que hice y estoy pagando por ello.'
-        },
-        {
-          speaker: 'Kael',
-          portrait: 'Kael',
-          text: '¿Qué has hecho?.'
-        },
-        {
-          speaker: 'Anciano',
-          portrait: 'Anciano',
-          text: 'Asesiné a alguien y luego me ahorqué en mi habitación, ahora estoy aquí.'
-        },
-        {
-          speaker: 'Kael',
-          portrait: 'Kael',
-          text: '¿Hay alguna forma de salir de este sitio?.'
-        },
-        {
-          speaker: 'Anciano',
-          portrait: 'Anciano',
-          text: 'La verdad es que no me interesa salir de aquí, pero ya que lo preguntas, creo que debes subir hasta lo alto de esta torre, pero ten cuidado con los Guardianes, ellos no permitirán que salgas de acá.'
-        },
-        {
-          speaker: 'Kael',
-          portrait: 'Kael',
-          text: 'No entiendo de qué me hablas pero gracias, acabaré con lo que se me interponga y saldré de este lugar.'
-        },
-        {
-          speaker: 'Anciano',
-          portrait: 'Anciano',
-          text: 'Buena suerte... y espero que al salir de acá, seas perdonado por tus crímenes.'
-        }
-      ],
-
       minos_intro: [
         {
           speaker: 'Narrador',

@@ -2369,14 +2369,16 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
   }
 
   drawNpc(npc, camX, camY) {
+    if (!npc) return;
     const rx = Math.round(npc.x - camX);
     const ry = Math.round(npc.y - camY);
 
     const frameIdx = Math.floor(Date.now() / 250) % 4;
-    const ancianoSprites = window.spriteManager.sprites.anciano;
-    if (ancianoSprites && ancianoSprites.idle[frameIdx]) {
+    const spriteKey = npc.sprite || 'soldier';
+    const npcSprites = window.spriteManager && window.spriteManager.sprites ? window.spriteManager.sprites[spriteKey] : null;
+    if (npcSprites && npcSprites.idle && npcSprites.idle[frameIdx]) {
       const breathOffset = Math.sin(Date.now() / 450) * 1.8;
-      const frame = ancianoSprites.idle[frameIdx];
+      const frame = npcSprites.idle[frameIdx];
       const dw = frame.width / 2;
       const dh = frame.height / 2;
       this.ctx.drawImage(frame, rx, ry + breathOffset, dw, dh);

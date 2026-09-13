@@ -1530,91 +1530,88 @@ class SpriteManager {
     }
   }
 
-  // ─── ANCIANO (NPC IN THE TOWER) — HIGH-DENSITY 64x76 CANVAS ───
+  // ─── SOLDIER (NPC IN PROLOGUE / HUB) — HIGH-DENSITY 64x76 CANVAS ───
   generateNpcSprites() {
-    this.sprites.anciano = { idle: [] };
+    this.sprites.soldier = { idle: [] };
     const w = 64, h = 76;
 
     for (let f = 0; f < 8; f++) {
       const { canvas, ctx } = this.createCanvas(w, h);
-      const breath = Math.sin(f * Math.PI / 4) * 2.0;
+      const breath = Math.sin(f * Math.PI / 4) * 1.5;
 
-      // 1. Mystical Robes & Cloak
-      ctx.fillStyle = '#17151d';
-      ctx.fillRect(16, 26 + breath, 32, 44);
-      ctx.fillStyle = '#2a2635';
-      ctx.fillRect(19, 29 + breath, 26, 38);
-      ctx.fillStyle = '#403a50';
-      ctx.fillRect(23, 34 + breath, 18, 30);
-      // Gold Embroidered Hem
-      ctx.fillStyle = '#d4af37';
-      ctx.fillRect(18, 66 + breath, 28, 3);
-      ctx.fillStyle = '#8a6d1c';
-      ctx.fillRect(19, 67 + breath, 26, 1);
+      // 1. Cape / Cloak (Dark Royal Blue back)
+      ctx.fillStyle = '#1e3a8a';
+      ctx.fillRect(18, 28 + breath, 28, 42);
+      ctx.fillStyle = '#172554';
+      ctx.fillRect(20, 32 + breath, 24, 38);
 
-      // 2. Cowl Hood & Head
-      ctx.fillStyle = '#17151d';
-      ctx.fillRect(20, 8 + breath, 24, 22);
-      ctx.fillStyle = '#2f2b3b';
-      ctx.fillRect(23, 11 + breath, 18, 16);
-      // Deep inner hood shadow
-      ctx.fillStyle = '#0e0d12';
-      ctx.fillRect(25, 14 + breath, 14, 14);
+      // 2. Armor Legs & Steel Boots
+      ctx.fillStyle = '#1f2937';
+      ctx.fillRect(24, 56 + breath, 7, 16);
+      ctx.fillRect(33, 56 + breath, 7, 16);
+      ctx.fillStyle = '#4b5563';
+      ctx.fillRect(24, 68 + breath, 7, 4);
+      ctx.fillRect(33, 68 + breath, 7, 4);
 
-      // Weathered Face
-      ctx.fillStyle = '#bfa99b';
-      ctx.fillRect(27, 16 + breath, 11, 10);
-      ctx.fillStyle = '#8c7668'; // Wrinkles
-      ctx.fillRect(28, 17 + breath, 9, 2);
-      // Piercing Wise Eyes
-      ctx.fillStyle = '#111116';
-      ctx.fillRect(29, 20 + breath, 3, 3);
-      ctx.fillRect(34, 20 + breath, 3, 3);
-      ctx.fillStyle = '#90e0ef'; // Starlight pupils
-      ctx.fillRect(30, 21 + breath, 1, 1);
-      ctx.fillRect(35, 21 + breath, 1, 1);
+      // 3. Steel Plate Cuirass & Belt
+      ctx.fillStyle = '#374151';
+      ctx.fillRect(22, 28 + breath, 20, 28);
+      ctx.fillStyle = '#4b5563';
+      ctx.fillRect(24, 30 + breath, 16, 24);
+      ctx.fillStyle = '#6b7280'; // Plate highlight
+      ctx.fillRect(26, 32 + breath, 12, 10);
+      // Gold/Bronze Buckle & Belt
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(22, 48 + breath, 20, 4);
+      ctx.fillStyle = '#d97706';
+      ctx.fillRect(30, 47 + breath, 4, 6);
 
-      // 3. Long Flowing Braided Silver Beard
+      // 4. Shoulder Pauldrons
+      ctx.fillStyle = '#4b5563';
+      ctx.fillRect(18, 26 + breath, 6, 8);
+      ctx.fillRect(40, 26 + breath, 6, 8);
+      ctx.fillStyle = '#9ca3af';
+      ctx.fillRect(19, 27 + breath, 4, 2);
+      ctx.fillRect(41, 27 + breath, 4, 2);
+
+      // 5. Steel Helmet (matches Soldado portrait)
+      ctx.fillStyle = '#374151';
+      ctx.fillRect(24, 10 + breath, 16, 18);
+      ctx.fillStyle = '#4b5563';
+      ctx.fillRect(25, 11 + breath, 14, 16);
+      ctx.fillStyle = '#6b7280';
+      ctx.fillRect(26, 12 + breath, 12, 6);
+      // Helmet plume / crest
+      ctx.fillStyle = '#b91c1c';
+      ctx.fillRect(30, 5 + breath, 4, 7);
+      ctx.fillStyle = '#ef4444';
+      ctx.fillRect(31, 6 + breath, 2, 5);
+      // Visor Eye Slit
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(26, 20 + breath, 12, 4);
+      ctx.fillStyle = '#93c5fd'; // Eye glint
+      ctx.fillRect(28, 21 + breath, 2, 2);
+      ctx.fillRect(34, 21 + breath, 2, 2);
+
+      // 6. Guard Halberd / Spear
+      // Wooden Pole
+      ctx.fillStyle = '#5a3825';
+      ctx.fillRect(48, 6, 4, 64);
+      ctx.fillStyle = '#7c4d32';
+      ctx.fillRect(49, 8, 2, 60);
+      // Steel Spearhead & Blade
       ctx.fillStyle = '#94a3b8';
-      ctx.fillRect(24, 26 + breath, 17, 24);
+      ctx.fillRect(47, 4, 6, 12);
+      ctx.fillStyle = '#e2e8f0';
+      ctx.fillRect(48, 2, 4, 14);
+      ctx.fillRect(49, 0, 2, 6);
+      // Halberd side axe blade
       ctx.fillStyle = '#cbd5e1';
-      ctx.fillRect(26, 27 + breath, 13, 22);
-      ctx.fillStyle = '#f8fafc'; // White highlights
-      ctx.fillRect(28, 28 + breath, 3, 20);
-      ctx.fillRect(34, 28 + breath, 3, 20);
-      // Beard braid bands
-      ctx.fillStyle = '#d4af37';
-      ctx.fillRect(29, 44 + breath, 7, 2);
+      ctx.fillRect(52, 6, 6, 8);
+      ctx.fillStyle = '#64748b';
+      ctx.fillRect(56, 7, 2, 6);
 
-      // 4. Ancient Gnarled Oak Staff with Radiant Sapphire Gem
-      // Gnarled wood pole
-      ctx.fillStyle = '#42281a';
-      ctx.fillRect(12, 10, 5, 60);
-      ctx.fillStyle = '#6b432a';
-      ctx.fillRect(13, 12, 3, 56);
-      ctx.fillStyle = '#8f5c3a';
-      ctx.fillRect(14, 14, 1, 52);
-      // Entwined Root Cradle
-      ctx.fillStyle = '#42281a';
-      ctx.fillRect(10, 6, 9, 6);
-      // Radiant Sapphire Orb
-      ctx.fillStyle = '#03045e';
-      ctx.fillRect(10, 2, 9, 8);
-      ctx.fillStyle = '#0077b6';
-      ctx.fillRect(11, 3, 7, 6);
-      ctx.fillStyle = '#00b4d8';
-      ctx.fillRect(12, 4, 5, 4);
-      ctx.fillStyle = '#ffffff'; // Gleaming crystal shine
-      ctx.fillRect(13, 4, 2, 2);
-
-      // Glowing magical sparkles around staff
-      if (f % 2 === 0) {
-        ctx.fillStyle = '#90e0ef';
-        ctx.fillRect(8, 0, 2, 2);
-        ctx.fillRect(20, 6, 2, 2);
-      }
-
-      this.sprites.anciano.idle.push(canvas);
+      this.sprites.soldier.idle.push(canvas);
     }
   }
 
@@ -2454,30 +2451,7 @@ class SpriteManager {
     kctx.fillRect(44, 76, 8, 14);
     this.portraits.Kael = kc;
 
-    // 2. Anciano Portrait
-    const { canvas: ac, ctx: actx } = this.createCanvas(96, 96);
-    actx.fillStyle = '#0d0912';
-    actx.fillRect(0, 0, 96, 96);
-    // Hood
-    actx.fillStyle = '#2e2b38';
-    actx.fillRect(18, 14, 60, 68);
-    // Face
-    actx.fillStyle = '#b8a694';
-    actx.fillRect(32, 28, 32, 34);
-    // Sad, haunted eyes
-    actx.fillStyle = '#1a1820';
-    actx.fillRect(36, 38, 7, 5);
-    actx.fillRect(53, 38, 7, 5);
-    actx.fillStyle = '#90e0ef'; // Faint ghostly pupil
-    actx.fillRect(38, 40, 3, 3);
-    actx.fillRect(55, 40, 3, 3);
-    // Wrinkles & Long Beard
-    actx.fillStyle = '#cfd8dc';
-    actx.fillRect(28, 54, 40, 34);
-    actx.fillRect(36, 88, 24, 8);
-    this.portraits.Anciano = ac;
-
-    // 3. Soldado Portrait
+    // 2. Soldado Portrait
     const { canvas: sc, ctx: sctx } = this.createCanvas(96, 96);
     sctx.fillStyle = '#0d0912';
     sctx.fillRect(0, 0, 96, 96);
