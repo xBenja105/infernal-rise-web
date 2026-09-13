@@ -9,12 +9,12 @@ class Game {
     this.ctx = this.canvas.getContext('2d');
     this.ctx.imageSmoothingEnabled = false;
 
-    // Fixed virtual resolution
+    // Virtual resolution (dynamically adjusted to screen aspect ratio)
     this.vWidth = 960;
     this.vHeight = 540;
 
     // Game state
-    this.state = 'MENU'; // MENU, INTRO, PLAYING, DIALOGUE, PAUSED, DEAD, VICTORY
+    this._state = 'MENU'; // MENU, INTRO, PLAYING, DIALOGUE, PAUSED, DEAD, VICTORY
     this.gameMode = 'STORY'; // STORY, INFERNAL
 
     // Camera
@@ -128,13 +128,92 @@ class Game {
       slotLeverHitbox: document.getElementById('slot-lever-hitbox'),
       slotStatusBox: document.getElementById('slot-status-box'),
       slotPlayerSouls: document.getElementById('slot-player-souls'),
-      slotCurrentWeapons: document.getElementById('slot-current-weapons')
+      slotCurrentWeapons: document.getElementById('slot-current-weapons'),
+
+      // Mobile Touch Elements
+      btnTouchPause: document.getElementById('btn-touch-pause'),
+      virtualControls: document.getElementById('virtual-controls'),
+      btnTouchInteract: document.getElementById('btn-touch-interact')
     };
 
     this.lastTime = 0;
   }
 
+  get state() {
+    return this._state;
+  }
+
+  set state(val) {
+    this._state = val;
+    this.updateVirtualControlsVisibility();
+  }
+
+  updateVirtualControlsVisibility() {
+    const vc = this.ui && this.ui.virtualControls ? this.ui.virtualControls : (typeof document !== 'undefined' ? document.getElementById('virtual-controls') : null);
+    if (!vc) return;
+    const isPlaying = (this._state === 'PLAYING' || this._state === 'DIALOGUE');
+    if (typeof vc.setAttribute === 'function') {
+      vc.setAttribute('data-visible', isPlaying ? 'true' : 'false');
+    }
+    if (vc.classList) {
+      if (isPlaying) {
+        vc.classList.remove('hidden');
+      } else {
+        vc.classList.add('hidden');
+      }
+    }
+  }
+
+  resizeCanvas() {
+    const displayW = window.innerWidth;
+    const displayH = window.innerHeight;
+    const aspect = displayW / displayH;
+
+    // Strict 1:1 pixel aspect ratio calculation to prevent any distortion or stretching
+    if (aspect >= (16 / 9)) {
+      // Very wide screens or standard widescreen (16:9, 19.5:9, 21:9): base height 540
+      this.vHeight = 540;
+      this.vWidth = Math.round(540 * aspect);
+    } else if (aspect >= 1) {
+      // Squarish landscape or 4:3 tablet: base width 960
+      this.vWidth = 960;
+      this.vHeight = Math.round(960 / aspect);
+    } else {
+      // Portrait (smartphones held vertically)
+      this.vWidth = 540;
+      this.vHeight = Math.round(540 / aspect);
+    }
+
+    this.canvas.width = this.vWidth;
+    this.canvas.height = this.vHeight;
+    this.ctx.imageSmoothingEnabled = false;
+
+    // Reposition ambient particles to fit new canvas bounds
+    if (this.ambientParticles && this.ambientParticles.length > 0) {
+      for (const p of this.ambientParticles) {
+        if (p.x > this.vWidth) p.x = Math.random() * this.vWidth;
+        if (p.y > this.vHeight) p.y = Math.random() * this.vHeight;
+      }
+    }
+
+    if (this._state === 'PLAYING' || this._state === 'SANCTUARY' || this._state === 'SLOT_MACHINE' || this._state === 'PAUSED') {
+      this.render();
+    }
+  }
+
   async init() {
+    this.resizeCanvas();
+    window.addEventListener('resize', () => this.resizeCanvas());
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => this.resizeCanvas(), 100);
+    });
+
+    // Detect touch capability and mark body
+    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+      document.body.classList.add('touch-active');
+    }
+
+    this.updateVirtualControlsVisibility();
     this.bindInputs();
     this.bindUI();
 
@@ -227,35 +306,82 @@ class Game {
       this.input.attack = false;
     });
 
-    // Touch Controls
+    // Touch & Pointer Controls for Mobile & Tablets
     const addTouch = (id, key) => {
       const btn = document.getElementById(id);
       if (!btn) return;
-      btn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
+
+      const handlePress = (e) => {
+        if (e && e.cancelable) e.preventDefault();
+        if (window.soundEngine) window.soundEngine.resume();
         this.input[key] = true;
+        btn.classList.add('pressed');
+
         if (key === 'jump' && this.player) {
           this.player.jumpBufferTimer = this.player.jumpBufferMax;
+          if (this.state === 'DIALOGUE') {
+            window.dialogueManager.advance();
+          }
         }
-        if (key === 'interact' && this.state === 'DIALOGUE') {
-          window.dialogueManager.advance();
-        } else if (key === 'interact' && this.activeChest) {
-          this.openBoonChest(this.activeChest);
-        } else if (key === 'interact') {
-          this.checkNpcInteraction();
+
+        if (key === 'interact') {
+          if (this.state === 'DIALOGUE') {
+            window.dialogueManager.advance();
+          } else if (this.activeChest) {
+            this.openBoonChest(this.activeChest);
+          } else if (this.nearSlotMachine) {
+            this.openSlotMachineModal();
+          } else if (this.nearSanctuary) {
+            this.openSanctuaryModal();
+          } else {
+            this.checkNpcInteraction();
+          }
         }
-      });
-      btn.addEventListener('touchend', (e) => {
-        e.preventDefault();
+      };
+
+      const handleRelease = (e) => {
+        if (e && e.cancelable) e.preventDefault();
         this.input[key] = false;
-      });
+        btn.classList.remove('pressed');
+      };
+
+      btn.addEventListener('touchstart', handlePress, { passive: false });
+      btn.addEventListener('touchend', handleRelease, { passive: false });
+      btn.addEventListener('touchcancel', handleRelease, { passive: false });
+      btn.addEventListener('mousedown', handlePress);
+      btn.addEventListener('mouseup', handleRelease);
+      btn.addEventListener('mouseleave', handleRelease);
     };
 
     addTouch('btn-touch-left', 'left');
     addTouch('btn-touch-right', 'right');
+    addTouch('btn-touch-up', 'up');
+    addTouch('btn-touch-down', 'down');
     addTouch('btn-touch-jump', 'jump');
     addTouch('btn-touch-attack', 'attack');
     addTouch('btn-touch-interact', 'interact');
+
+    // Mobile Pause Button in HUD
+    const pauseBtn = document.getElementById('btn-touch-pause');
+    if (pauseBtn) {
+      const handlePause = (e) => {
+        if (e && e.cancelable) e.preventDefault();
+        if (window.soundEngine) window.soundEngine.playUiClick();
+        if (this.state === 'SANCTUARY') {
+          this.closeSanctuaryModal();
+        } else if (this.state === 'SLOT_MACHINE') {
+          this.closeSlotMachineModal();
+        } else if (this.state === 'SCRATCH_CARD') {
+          this.closeScratchCardModal();
+        } else if (this.state === 'BOON_SELECT' || this.state === 'LEVEL_UP') {
+          // Keep active until choice
+        } else {
+          this.togglePause();
+        }
+      };
+      pauseBtn.addEventListener('touchstart', handlePause, { passive: false });
+      pauseBtn.addEventListener('click', handlePause);
+    }
   }
 
   // ─── UI BUTTONS ───
@@ -511,8 +637,16 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     this.state = 'PLAYING';
     this.level = window.levelManager.loadLevel(levelId);
     this.player = new Player(this.level.spawn.x, this.level.spawn.y);
-    this.camX = this.player.x - this.vWidth / 2;
-    this.camY = this.player.y - this.vHeight / 2;
+    if (this.level.width <= this.vWidth) {
+      this.camX = (this.level.width - this.vWidth) / 2;
+    } else {
+      this.camX = Math.max(0, Math.min(this.level.width - this.vWidth, this.player.x - this.vWidth / 2));
+    }
+    if (this.level.height <= this.vHeight) {
+      this.camY = (this.level.height - this.vHeight) / 2;
+    } else {
+      this.camY = Math.max(0, Math.min(this.level.height - this.vHeight, this.player.y - this.vHeight / 2));
+    }
 
     // Reset projectiles, ladders, moving & crumbling platforms
     this.bossProjectiles = [];
@@ -1276,9 +1410,17 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     this.camX += (targetCamX - this.camX) * 0.1;
     this.camY += (targetCamY - this.camY) * 0.1;
 
-    // Clamp camera within level bounds
-    this.camX = Math.max(0, Math.min(this.level.width - this.vWidth, this.camX));
-    this.camY = Math.max(0, Math.min(this.level.height - this.vHeight, this.camY));
+    // Clamp camera within level bounds (or center if screen is wider/taller than level)
+    if (this.level.width <= this.vWidth) {
+      this.camX = (this.level.width - this.vWidth) / 2;
+    } else {
+      this.camX = Math.max(0, Math.min(this.level.width - this.vWidth, this.camX));
+    }
+    if (this.level.height <= this.vHeight) {
+      this.camY = (this.level.height - this.vHeight) / 2;
+    } else {
+      this.camY = Math.max(0, Math.min(this.level.height - this.vHeight, this.camY));
+    }
 
     // Update UI HUD positioning
     this.updateHudPositions();
@@ -1336,6 +1478,17 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       }
     } else {
       this.ui.interactionBadge.style.display = 'none';
+    }
+
+    // Highlight mobile interaction button when in range of interactable element
+    const canInteract = !this.ui.interactionBadge || this.ui.interactionBadge.style.display !== 'none';
+    const touchInteractBtn = this.ui.btnTouchInteract || document.getElementById('btn-touch-interact');
+    if (touchInteractBtn) {
+      if (canInteract && this.state === 'PLAYING') {
+        touchInteractBtn.classList.add('can-interact');
+      } else {
+        touchInteractBtn.classList.remove('can-interact');
+      }
     }
   }
 

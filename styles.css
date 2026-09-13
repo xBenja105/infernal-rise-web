@@ -28,24 +28,32 @@ html, body {
   font-family: 'MedievalSharp', cursive, serif;
   overflow: hidden;
   width: 100vw;
+  width: 100dvw;
   height: 100vh;
+  height: 100dvh;
   margin: 0;
   padding: 0;
   display: flex;
   justify-content: center;
   align-items: center;
+  touch-action: none;
+  -webkit-touch-callout: none;
 }
 
-/* ─── FULLY RESPONSIVE 16:9 LETTERBOX/PILLARBOX WRAPPER ─── */
+/* ─── FULL EDGE-TO-EDGE NO-MARGIN WRAPPER ─── */
 #game-wrapper {
   position: relative;
   width: 100vw;
+  width: 100dvw;
   height: 100vh;
-  max-width: calc(100vh * (16 / 9));
-  max-height: calc(100vw * (9 / 16));
-  aspect-ratio: 16 / 9;
+  height: 100dvh;
+  max-width: 100%;
+  max-height: 100%;
+  aspect-ratio: auto;
+  margin: 0;
+  padding: 0;
   background: #000;
-  box-shadow: 0 0 60px rgba(184, 13, 34, 0.5);
+  box-shadow: none;
   overflow: hidden;
   display: flex;
   justify-content: center;
@@ -56,7 +64,6 @@ html, body {
   width: 100%;
   height: 100%;
   display: block;
-  object-fit: contain;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
@@ -535,53 +542,311 @@ html, body {
   max-width: 90%;
 }
 
-/* Virtual Controls */
-#virtual-controls {
-  display: none;
-  position: absolute;
-  bottom: 18px;
-  left: 0;
-  width: 100%;
-  padding: 0 20px;
-  justify-content: space-between;
-  align-items: flex-end;
-  pointer-events: none;
-  z-index: 90;
-}
-
-.touch-dpad, .touch-actions {
+/* Pause Button in HUD */
+.hud-pause-btn {
+  background: rgba(25, 10, 18, 0.85);
+  border: 1.5px solid rgba(244, 208, 111, 0.4);
+  color: var(--gold);
+  font-size: 18px;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  cursor: pointer;
   display: flex;
-  gap: 12px;
-  pointer-events: auto;
-}
-
-.touch-btn {
-  width: 58px;
-  height: 58px;
-  border-radius: 50%;
-  background: rgba(25, 12, 18, 0.88);
-  border: 2px solid var(--border);
-  color: var(--text);
-  font-size: 22px;
-  font-weight: 800;
-  display: flex;
-  justify-content: center;
   align-items: center;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+  justify-content: center;
+  pointer-events: auto;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
   user-select: none;
+  -webkit-user-select: none;
   touch-action: manipulation;
 }
 
-.touch-btn:active {
-  background: var(--blood);
-  color: #fff;
-  border-color: #ff3344;
+.hud-pause-btn:hover, .hud-pause-btn:active {
+  background: #5a1820;
+  border-color: var(--gold);
+  box-shadow: 0 0 14px rgba(244, 208, 111, 0.8);
+  transform: scale(0.95);
 }
 
-@media (max-width: 768px) {
-  #virtual-controls { display: flex; }
-  .controls-guide { display: none; }
-  #dialogue-modal { width: 94%; bottom: 12px; }
+/* ─── VIRTUAL CONTROLS (MOBILE & TABLET) ─── */
+#virtual-controls {
+  display: none;
+  position: absolute;
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  left: 0;
+  width: 100%;
+  padding: 0 calc(18px + env(safe-area-inset-right, 0px)) 0 calc(18px + env(safe-area-inset-left, 0px));
+  justify-content: space-between;
+  align-items: flex-end;
+  pointer-events: none;
+  z-index: 95;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* 4-Way D-Pad */
+.touch-dpad-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.touch-dpad-cross {
+  display: grid;
+  grid-template-columns: 52px 52px 52px;
+  grid-template-rows: 52px 52px 52px;
+  grid-template-areas:
+    ". up ."
+    "left center right"
+    ". down .";
+  gap: 4px;
+  background: radial-gradient(circle at center, rgba(35, 12, 22, 0.72) 0%, rgba(10, 4, 10, 0.88) 100%);
+  padding: 6px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 87, 34, 0.35);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(0, 0, 0, 0.9);
+  touch-action: none;
+}
+
+.dpad-center {
+  grid-area: center;
+  background: radial-gradient(circle, rgba(184, 13, 34, 0.4) 0%, rgba(20, 5, 10, 0.8) 80%);
+  border-radius: 50%;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  pointer-events: none;
+}
+
+.dpad-btn {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  background: rgba(28, 14, 22, 0.85);
+  border: 1px solid rgba(244, 208, 111, 0.25);
+  color: #f0e6d6;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.6);
+  transition: background 0.1s, transform 0.05s, border-color 0.1s, box-shadow 0.1s;
+}
+
+.dpad-up { grid-area: up; border-radius: 14px 14px 4px 4px; }
+.dpad-down { grid-area: down; border-radius: 4px 4px 14px 14px; }
+.dpad-left { grid-area: left; border-radius: 14px 4px 4px 14px; }
+.dpad-right { grid-area: right; border-radius: 4px 14px 14px 4px; }
+
+.dpad-btn:active, .dpad-btn.pressed {
+  background: linear-gradient(135deg, #b80d22, #ff5722);
+  color: #ffffff;
+  border-color: #ffd700;
+  box-shadow: 0 0 16px rgba(255, 87, 34, 0.9);
+  transform: scale(0.94);
+}
+
+/* Action Buttons */
+.touch-actions {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.action-btn {
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
+  transition: transform 0.08s, box-shadow 0.1s, filter 0.1s;
+  position: relative;
+}
+
+/* Jump Button - Largest & Main */
+.action-jump {
+  width: 68px;
+  height: 68px;
+  background: radial-gradient(circle at 35% 35%, #ff7733 0%, #d82b10 70%, #6e0d00 100%);
+  border: 2.5px solid var(--gold);
+  color: #fff;
+  box-shadow: 0 0 20px rgba(255, 87, 34, 0.6), 0 4px 15px rgba(0, 0, 0, 0.8);
+}
+
+.action-jump .action-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.action-jump .action-sub {
+  font-size: 12px;
+  line-height: 1;
+  color: var(--gold);
+  font-weight: 900;
+}
+
+.action-jump:active, .action-jump.pressed {
+  transform: scale(0.92);
+  filter: brightness(1.25);
+  box-shadow: 0 0 28px rgba(255, 215, 0, 0.95);
+}
+
+/* Attack Button */
+.action-attack {
+  width: 58px;
+  height: 58px;
+  background: radial-gradient(circle at 35% 35%, #991428 0%, #500a16 80%, #200408 100%);
+  border: 2px solid #ff4d6d;
+  color: #fff;
+  box-shadow: 0 0 15px rgba(184, 13, 34, 0.5), 0 4px 12px rgba(0, 0, 0, 0.8);
+}
+
+.action-attack .action-icon {
+  font-size: 24px;
+}
+
+.action-attack:active, .action-attack.pressed {
+  transform: scale(0.92);
+  background: linear-gradient(135deg, #ff0054, #b80d22);
+  border-color: #ffffff;
+  box-shadow: 0 0 25px rgba(255, 0, 84, 0.9);
+}
+
+/* Contextual Interact Button */
+.action-interact {
+  width: 52px;
+  height: 52px;
+  background: radial-gradient(circle at 35% 35%, #2a1b32 0%, #130a18 100%);
+  border: 2px solid rgba(244, 208, 111, 0.4);
+  color: var(--gold);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
+}
+
+.action-interact .action-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.action-interact .action-label {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 900;
+  color: #f4d06f;
+}
+
+.action-interact:active, .action-interact.pressed {
+  transform: scale(0.92);
+  background: #5a1820;
+  border-color: #ffd700;
+}
+
+/* Pulsing effect when interactable target is in range */
+.action-interact.can-interact {
+  border-color: var(--gold);
+  background: radial-gradient(circle at 35% 35%, #5c2f00 0%, #201000 100%);
+  box-shadow: 0 0 18px rgba(244, 208, 111, 0.9);
+  animation: pulseInteract 0.9s infinite alternate;
+}
+
+@keyframes pulseInteract {
+  0% { transform: scale(1); box-shadow: 0 0 8px rgba(244, 208, 111, 0.5); }
+  100% { transform: scale(1.08); box-shadow: 0 0 22px rgba(255, 215, 0, 0.95); }
+}
+
+/* Media Queries for touch devices and responsive screen sizes */
+@media (hover: none) and (pointer: coarse), (max-width: 1024px) {
+  #virtual-controls {
+    display: flex;
+  }
+  .controls-guide {
+    display: none;
+  }
+}
+
+body.touch-active #virtual-controls {
+  display: flex;
+}
+
+/* Hide virtual controls on menus and overlays */
+#virtual-controls.hidden,
+#virtual-controls[data-visible="false"],
+body.in-menu #virtual-controls {
+  display: none !important;
+}
+
+@media (max-width: 768px), (max-height: 500px) {
+  #hud {
+    padding: 8px 12px;
+  }
+  .currency-pill {
+    padding: 3px 7px;
+    font-size: 17px;
+  }
+  .hud-level-badge {
+    font-size: 13px;
+    padding: 2px 6px;
+  }
+  .hud-xp-track {
+    width: 85px;
+    height: 7px;
+  }
+  .touch-dpad-cross {
+    grid-template-columns: 44px 44px 44px;
+    grid-template-rows: 44px 44px 44px;
+  }
+  .dpad-btn {
+    font-size: 18px;
+  }
+  .action-jump {
+    width: 58px;
+    height: 58px;
+  }
+  .action-attack {
+    width: 50px;
+    height: 50px;
+  }
+  .action-interact {
+    width: 44px;
+    height: 44px;
+  }
+  #dialogue-modal {
+    width: 94%;
+    bottom: 12px;
+  }
+  .sanctuary-container {
+    padding: 10px 14px;
+    max-height: 94dvh;
+  }
+  .slot-machine-container {
+    padding: 12px 14px;
+    max-height: 94dvh;
+    overflow-y: auto;
+  }
+  .slot-reel-window {
+    width: 72px;
+    height: 82px;
+  }
+  .slot-symbol {
+    font-size: 34px;
+  }
 }
 
 /* ─── SANCTUARY & ROGUE-LITE MODALS ─── */

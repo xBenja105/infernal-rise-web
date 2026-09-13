@@ -2,7 +2,11 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#030105">
   <title>Infernal Rise 2.0</title>
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -52,6 +56,7 @@
         </div>
 
         <div class="hud-top-right">
+          <button id="btn-touch-pause" class="hud-pause-btn" title="Pausar juego" aria-label="Pausa">⏸</button>
           <!-- Sanctuary shop is now located physically in the Lobby world as an interactive altar -->
           <button id="btn-open-sanctuary" class="hud-sanctuary-btn" style="display: none !important;"></button>
           <div id="player-health-wrap" style="display: none !important;"><div id="player-health-fill"></div></div>
@@ -340,14 +345,30 @@
 
     <!-- Virtual Controls for Mobile / Tablets -->
     <div id="virtual-controls">
-      <div class="touch-dpad">
-        <button id="btn-touch-left" class="touch-btn">◀</button>
-        <button id="btn-touch-right" class="touch-btn">▶</button>
+      <!-- 4-Way D-Pad for running and climbing ladders -->
+      <div class="touch-dpad-container">
+        <div class="touch-dpad-cross">
+          <button id="btn-touch-up" class="touch-btn dpad-btn dpad-up" aria-label="Subir / Trepar">▲</button>
+          <button id="btn-touch-left" class="touch-btn dpad-btn dpad-left" aria-label="Izquierda">◀</button>
+          <div class="dpad-center"></div>
+          <button id="btn-touch-right" class="touch-btn dpad-btn dpad-right" aria-label="Derecha">▶</button>
+          <button id="btn-touch-down" class="touch-btn dpad-btn dpad-down" aria-label="Bajar / Descender">▼</button>
+        </div>
       </div>
+
+      <!-- Action Buttons Cluster -->
       <div class="touch-actions">
-        <button id="btn-touch-interact" class="touch-btn" style="font-size: 18px;">E</button>
-        <button id="btn-touch-attack" class="touch-btn" style="font-size: 18px;">⚔</button>
-        <button id="btn-touch-jump" class="touch-btn" style="background: var(--flame); border-color: var(--gold);">▲</button>
+        <button id="btn-touch-interact" class="touch-btn action-btn action-interact" aria-label="Interactuar / Abrir">
+          <span class="action-icon">✋</span>
+          <span class="action-label">E</span>
+        </button>
+        <button id="btn-touch-attack" class="touch-btn action-btn action-attack" aria-label="Atacar">
+          <span class="action-icon">⚔</span>
+        </button>
+        <button id="btn-touch-jump" class="touch-btn action-btn action-jump" aria-label="Saltar">
+          <span class="action-icon">🦘</span>
+          <span class="action-sub">▲</span>
+        </button>
       </div>
     </div>
   </div>
