@@ -62,20 +62,15 @@ class LevelManager {
         { x: 0, y: 0, w: 960, h: 22, type: 'stone' },
 
         // 1. Ruleta de las Armas — Left Dais
-        { x: 170, y: 460, w: 120, h: 20, type: 'stone' },
+        { x: 160, y: 460, w: 140, h: 20, type: 'stone' },
 
         // 2. Santuario de Almas — Grand Center 3-Tier Sacred Dais
-        { x: 340, y: 460, w: 280, h: 20, type: 'stone' },
-        { x: 375, y: 440, w: 210, h: 20, type: 'runic' },
-        { x: 410, y: 420, w: 140, h: 20, type: 'runic' },
+        { x: 330, y: 460, w: 300, h: 20, type: 'stone' },
+        { x: 370, y: 440, w: 220, h: 20, type: 'stone' },
+        { x: 410, y: 420, w: 140, h: 20, type: 'stone' },
 
         // 3. Portal a la Torre — Right Dais
-        { x: 745, y: 460, w: 120, h: 20, type: 'stone' },
-
-        // 4. Upper Gothic Mezzanines & High Catwalk Gallery
-        { x: 50, y: 320, w: 130, h: 18, type: 'stone' },
-        { x: 780, y: 320, w: 130, h: 18, type: 'stone' },
-        { x: 360, y: 220, w: 240, h: 18, type: 'runic' }
+        { x: 730, y: 460, w: 150, h: 20, type: 'stone' }
       ],
       // In-World Sanctuary Altar (Upgrade Shop) — Center Stage
       sanctuary: {
@@ -94,35 +89,26 @@ class LevelManager {
         cost: 80,
         label: 'Ruleta de las Armas'
       },
-      ladders: [
-        { x: 50, y: 320, h: 160 },
-        { x: 880, y: 320, h: 160 }
-      ],
+      ladders: [],
       movingPlatforms: [],
       crumblingPlatforms: [],
       spikes: [],
       torches: [
         // Ground & Dais Torches
-        { x: 40, y: 420, blue: false },
-        { x: 155, y: 425, blue: false },
-        { x: 305, y: 425, blue: false },
-        { x: 355, y: 420, blue: true },
-        { x: 590, y: 420, blue: true },
-        { x: 730, y: 420, blue: true },
-        { x: 880, y: 420, blue: true },
-        // Upper Balconies & Catwalk Torches
-        { x: 160, y: 280, blue: false },
-        { x: 795, y: 280, blue: false },
-        { x: 380, y: 180, blue: true },
-        { x: 565, y: 180, blue: true }
+        { x: 45, y: 420, blue: false },
+        { x: 150, y: 425, blue: false },
+        { x: 310, y: 425, blue: false },
+        { x: 355, y: 405, blue: true },
+        { x: 590, y: 405, blue: true },
+        { x: 720, y: 425, blue: true },
+        { x: 890, y: 425, blue: true }
       ],
       enemies: [],
       urns: [
-        { x: 100, y: 288, value: 25 },
-        { x: 350, y: 428, value: 20 },
-        { x: 585, y: 428, value: 20 },
-        { x: 830, y: 288, value: 25 },
-        { x: 480, y: 188, value: 40 }
+        { x: 110, y: 448, value: 25 },
+        { x: 340, y: 428, value: 20 },
+        { x: 595, y: 428, value: 20 },
+        { x: 890, y: 448, value: 25 }
       ],
       chests: [],
       portal: {

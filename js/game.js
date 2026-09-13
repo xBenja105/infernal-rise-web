@@ -1794,6 +1794,15 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     if (!bg && window.spriteManager) bg = window.spriteManager.sprites.infernalBg;
     if (!bg) return;
 
+    // Special handling for Prologue (Sanctuary Cathedral Chamber):
+    // The sanctuary is a fixed indoor room; it must lock 1:1 with world space
+    // to prevent parallax desynchronization, vibration, top gaps, and repeating tile clashing.
+    if (biomeKey === 'prologue' || (this.level && this.level.id === 'prologue')) {
+      this.drawPrologueSanctuary(bg, camX, camY);
+      this.drawAtmosphericParticles();
+      return;
+    }
+
     // Layer 1: Celestial Spires & Sky (Parallax speed: 0.06)
     if (bg.skySpires) {
       const layerW = 960;
@@ -1853,82 +1862,107 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     }
 
     // 6. Atmospheric Biome Particles (Embers, Spores, Snowflakes, Dawn Leaves, Rain)
+    this.drawAtmosphericParticles();
+  }
+
+  drawPrologueSanctuary(bg, camX, camY) {
+    const rx = Math.round(-camX);
+    const ry = Math.round(-camY);
+
+    // 1. Fill entire canvas to prevent any black margins
+    this.ctx.fillStyle = '#0a0912';
+    this.ctx.fillRect(0, 0, this.vWidth, this.vHeight);
+
+    // 2. If screen is wider than 960 (e.g. mobile landscape or ultrawide):
+    // Fill horizontal margins with matching cathedral stone wall
+    if (rx > 0 || rx + 960 < this.vWidth) {
+      this.ctx.fillStyle = '#11101d';
+      this.ctx.fillRect(0, 0, this.vWidth, this.vHeight);
+    }
+
+    // 3. Draw the master Cathedral Hall locked 1:1 to world coordinates
+    const hallImg = bg ? (bg.cathedralHall || bg.skySpires) : null;
+    if (hallImg) {
+      this.ctx.drawImage(hallImg, rx, ry, 960, 540);
+    }
+  }
+
+  drawAtmosphericParticles() {
     const particles = this.ambientParticles || this.ambientEmbers;
-    if (particles) {
-      const dt = 0.016;
-      for (const p of particles) {
-        if (p.type === 'snow') {
-          p.y += p.speed * dt;
-          p.x += (p.speed * 0.4) * dt;
-          p.phase += dt * 2.0;
-          if (p.y > this.vHeight + 10 || p.x > this.vWidth + 10) {
-            p.y = -10;
-            p.x = Math.random() * this.vWidth;
-          }
-          const swayX = p.x + Math.sin(p.phase) * 6;
-          this.ctx.fillStyle = p.color;
-          this.ctx.fillRect(swayX, p.y, p.size, p.size);
-        } else if (p.type === 'leaf') {
-          p.y += p.speed * dt;
-          p.x += Math.sin(p.phase * 2.5) * 18 * dt + (p.speed * 0.3) * dt;
-          p.phase += dt * 2.2;
-          if (p.y > this.vHeight + 10) {
-            p.y = -10;
-            p.x = Math.random() * this.vWidth;
-          }
-          this.ctx.fillStyle = p.color;
-          this.ctx.fillRect(p.x, p.y, p.size, p.size * 0.7);
-        } else if (p.type === 'sanctuary') {
-          p.y -= (p.speed * 0.45) * dt;
-          p.phase += dt * 1.6;
-          if (p.y < -10) {
-            p.y = this.vHeight + 10;
-            p.x = Math.random() * this.vWidth;
-          }
-          const swayX = p.x + Math.sin(p.phase) * 10;
-          const pulse = 0.4 + Math.sin(p.phase * 2) * 0.4;
-          this.ctx.save();
-          this.ctx.globalAlpha = Math.max(0.15, Math.min(1, pulse));
-          this.ctx.fillStyle = p.color;
-          this.ctx.beginPath();
-          this.ctx.arc(swayX, p.y, p.size, 0, Math.PI * 2);
-          this.ctx.fill();
-          this.ctx.restore();
-        } else if (p.type === 'rain') {
-          p.y += p.speed * dt;
-          p.x -= (p.speed * 0.25) * dt;
-          if (p.y > this.vHeight + 10) {
-            p.y = -10;
-            p.x = Math.random() * (this.vWidth + 100);
-          }
-          this.ctx.strokeStyle = p.color;
-          this.ctx.lineWidth = 1.2;
-          this.ctx.beginPath();
-          this.ctx.moveTo(p.x, p.y);
-          this.ctx.lineTo(p.x - 4, p.y + 10);
-          this.ctx.stroke();
-        } else if (p.type === 'spore') {
-          p.y -= (p.speed * 0.4) * dt;
-          p.phase += dt * 1.8;
-          if (p.y < -10) {
-            p.y = this.vHeight + 10;
-            p.x = Math.random() * this.vWidth;
-          }
-          const swayX = p.x + Math.sin(p.phase) * 16;
-          this.ctx.fillStyle = p.color;
-          this.ctx.fillRect(swayX, p.y, p.size, p.size);
-        } else {
-          // Ember (default)
-          p.y -= p.speed * dt;
-          p.phase += dt * 2.5;
-          if (p.y < -10) {
-            p.y = this.vHeight + 10;
-            p.x = Math.random() * this.vWidth;
-          }
-          const swayX = p.x + Math.sin(p.phase) * 12;
-          this.ctx.fillStyle = p.color;
-          this.ctx.fillRect(swayX, p.y, p.size, p.size);
+    if (!particles) return;
+    const dt = 0.016;
+    for (const p of particles) {
+      if (p.type === 'snow') {
+        p.y += p.speed * dt;
+        p.x += (p.speed * 0.4) * dt;
+        p.phase += dt * 2.0;
+        if (p.y > this.vHeight + 10 || p.x > this.vWidth + 10) {
+          p.y = -10;
+          p.x = Math.random() * this.vWidth;
         }
+        const swayX = p.x + Math.sin(p.phase) * 6;
+        this.ctx.fillStyle = p.color;
+        this.ctx.fillRect(swayX, p.y, p.size, p.size);
+      } else if (p.type === 'leaf') {
+        p.y += p.speed * dt;
+        p.x += Math.sin(p.phase * 2.5) * 18 * dt + (p.speed * 0.3) * dt;
+        p.phase += dt * 2.2;
+        if (p.y > this.vHeight + 10) {
+          p.y = -10;
+          p.x = Math.random() * this.vWidth;
+        }
+        this.ctx.fillStyle = p.color;
+        this.ctx.fillRect(p.x, p.y, p.size, p.size * 0.7);
+      } else if (p.type === 'sanctuary') {
+        p.y -= (p.speed * 0.45) * dt;
+        p.phase += dt * 1.6;
+        if (p.y < -10) {
+          p.y = this.vHeight + 10;
+          p.x = Math.random() * this.vWidth;
+        }
+        const swayX = p.x + Math.sin(p.phase) * 10;
+        const pulse = 0.4 + Math.sin(p.phase * 2) * 0.4;
+        this.ctx.save();
+        this.ctx.globalAlpha = Math.max(0.15, Math.min(1, pulse));
+        this.ctx.fillStyle = p.color;
+        this.ctx.beginPath();
+        this.ctx.arc(swayX, p.y, p.size, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.restore();
+      } else if (p.type === 'rain') {
+        p.y += p.speed * dt;
+        p.x -= (p.speed * 0.25) * dt;
+        if (p.y > this.vHeight + 10) {
+          p.y = -10;
+          p.x = Math.random() * (this.vWidth + 100);
+        }
+        this.ctx.strokeStyle = p.color;
+        this.ctx.lineWidth = 1.2;
+        this.ctx.beginPath();
+        this.ctx.moveTo(p.x, p.y);
+        this.ctx.lineTo(p.x - 4, p.y + 10);
+        this.ctx.stroke();
+      } else if (p.type === 'spore') {
+        p.y -= (p.speed * 0.4) * dt;
+        p.phase += dt * 1.8;
+        if (p.y < -10) {
+          p.y = this.vHeight + 10;
+          p.x = Math.random() * this.vWidth;
+        }
+        const swayX = p.x + Math.sin(p.phase) * 16;
+        this.ctx.fillStyle = p.color;
+        this.ctx.fillRect(swayX, p.y, p.size, p.size);
+      } else {
+        // Ember (default)
+        p.y -= p.speed * dt;
+        p.phase += dt * 2.5;
+        if (p.y < -10) {
+          p.y = this.vHeight + 10;
+          p.x = Math.random() * this.vWidth;
+        }
+        const swayX = p.x + Math.sin(p.phase) * 12;
+        this.ctx.fillStyle = p.color;
+        this.ctx.fillRect(swayX, p.y, p.size, p.size);
       }
     }
   }
@@ -1971,8 +2005,20 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       const tile = tileMap[pType] || props.stoneTile;
       const style = styleMap[pType] || styleMap.stone;
 
-      // 1. Architectural Corbels (Stepped stone bracket supports underneath)
-      if (p.w >= 60) {
+      // Check if this platform has solid ground or another platform directly underneath it
+      const hasSupportBelow = (p.y + p.h >= (this.level.height || 540) - 20) ||
+        this.level.platforms.some(other =>
+          other !== p &&
+          !other.isMovingPlatform &&
+          !other.isCrumbling &&
+          other.x < p.x + p.w &&
+          other.x + other.w > p.x &&
+          other.y >= p.y + p.h - 4 &&
+          other.y <= p.y + p.h + 20
+        );
+
+      // 1. Architectural Corbels (Stepped stone bracket supports underneath floating platforms)
+      if (!hasSupportBelow && p.w >= 60) {
         this.drawCorbelBracket(rx + 6, ry + p.h, style.corbel, style.dark, false);
         this.drawCorbelBracket(rx + p.w - 18, ry + p.h, style.corbel, style.dark, true);
         if (p.w >= 280) {
@@ -1981,7 +2027,9 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       }
 
       // 2. Thematic Underside Details (Magma drips, icicles, bone fangs, rusted chains)
-      this.drawPlatformUndersideDecorations(rx, ry + p.h, p.w, pType);
+      if (!hasSupportBelow) {
+        this.drawPlatformUndersideDecorations(rx, ry + p.h, p.w, pType);
+      }
 
       // 3. Platform Outer Drop Shadow
       this.ctx.fillStyle = '#060207';

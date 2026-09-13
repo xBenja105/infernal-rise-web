@@ -2378,92 +2378,96 @@ class SpriteManager {
 
   // 5. BIOME: PROLOGUE (Santuario de los Caídos — Catedral Gótica y Forja de Almas)
   generatePrologueBg() {
-    // ─── LAYER 1: CELESTIAL TWILIGHT, ROSE WINDOW & CASTLE SPIRES (960x540) ───
-    const { canvas: sc, ctx: sctx } = this.createCanvas(960, 540);
+    // Single unified 960x540 master canvas for zero layer drift, perfect alignment, and crisp aesthetics
+    const { canvas: ch, ctx: cctx } = this.createCanvas(960, 540);
 
-    // 1. Midnight Gothic Sky Gradient
-    const skyGrad = sctx.createLinearGradient(0, 0, 0, 540);
+    // 1. Midnight Gothic Sky Gradient (Upper cathedral clerestory)
+    const skyGrad = cctx.createLinearGradient(0, 0, 0, 320);
     skyGrad.addColorStop(0, '#030712');
     skyGrad.addColorStop(0.35, '#0b1022');
-    skyGrad.addColorStop(0.7, '#1e1438');
-    skyGrad.addColorStop(1, '#2c123d');
-    sctx.fillStyle = skyGrad;
-    sctx.fillRect(0, 0, 960, 540);
+    skyGrad.addColorStop(0.7, '#19122c');
+    skyGrad.addColorStop(1, '#11101d');
+    cctx.fillStyle = skyGrad;
+    cctx.fillRect(0, 0, 960, 320);
 
-    // 2. Distant Celestial Stars
-    const starCoords = [
-      [45, 40], [110, 80], [195, 35], [280, 65], [370, 45],
-      [590, 50], [675, 75], [760, 30], [840, 60], [915, 45],
-      [80, 140], [240, 120], [710, 110], [880, 130]
-    ];
-    for (const [sx, sy] of starCoords) {
-      sctx.fillStyle = '#bae6fd';
-      sctx.fillRect(sx, sy, 2, 2);
-      sctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-      sctx.fillRect(sx - 1, sy, 4, 2);
-      sctx.fillRect(sx, sy - 1, 2, 4);
+    // 2. Cathedral Lower Ashlar Wall Masonry
+    cctx.fillStyle = '#11101d';
+    cctx.fillRect(0, 200, 960, 340);
+
+    // Subtle stone brick masonry lines
+    cctx.strokeStyle = 'rgba(45, 40, 68, 0.4)';
+    cctx.lineWidth = 1;
+    for (let y = 80; y < 480; y += 24) {
+      cctx.beginPath();
+      cctx.moveTo(0, y);
+      cctx.lineTo(960, y);
+      cctx.stroke();
+      const offset = (y % 48 === 0) ? 0 : 30;
+      for (let x = offset; x < 960; x += 60) {
+        cctx.beginPath();
+        cctx.moveTo(x, y);
+        cctx.lineTo(x, y + 24);
+        cctx.stroke();
+      }
     }
 
-    // 3. Giant Luminous Cathedral Moon behind Rose Window
-    const moonX = 480, moonY = 125, moonR = 58;
-    const mHalo = sctx.createRadialGradient(moonX, moonY, moonR - 10, moonX, moonY, moonR + 90);
-    mHalo.addColorStop(0, 'rgba(254, 240, 138, 0.85)');
-    mHalo.addColorStop(0.25, 'rgba(216, 180, 254, 0.45)');
-    mHalo.addColorStop(0.6, 'rgba(147, 197, 253, 0.18)');
-    mHalo.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    sctx.fillStyle = mHalo;
-    sctx.beginPath();
-    sctx.arc(moonX, moonY, moonR + 90, 0, Math.PI * 2);
-    sctx.fill();
+    // 3. Celestial Twinkling Stars in Clerestory
+    const starCoords = [
+      [50, 35], [110, 60], [175, 28], [270, 55], [370, 35],
+      [590, 40], [680, 65], [775, 25], [845, 50], [910, 38],
+      [75, 110], [240, 95], [720, 90], [885, 105]
+    ];
+    for (const [sx, sy] of starCoords) {
+      cctx.fillStyle = '#bae6fd';
+      cctx.fillRect(sx, sy, 2, 2);
+      cctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+      cctx.fillRect(sx - 1, sy, 4, 2);
+      cctx.fillRect(sx, sy - 1, 2, 4);
+    }
 
-    sctx.fillStyle = '#f8fafc';
-    sctx.beginPath();
-    sctx.arc(moonX, moonY, moonR, 0, Math.PI * 2);
-    sctx.fill();
+    // 4. Luminous Cathedral Moon behind the Rose Window
+    const moonX = 480, moonY = 125, moonR = 58;
+    const mHalo = cctx.createRadialGradient(moonX, moonY, moonR - 10, moonX, moonY, moonR + 90);
+    mHalo.addColorStop(0, 'rgba(254, 240, 138, 0.75)');
+    mHalo.addColorStop(0.3, 'rgba(216, 180, 254, 0.4)');
+    mHalo.addColorStop(0.7, 'rgba(147, 197, 253, 0.15)');
+    mHalo.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    cctx.fillStyle = mHalo;
+    cctx.beginPath();
+    cctx.arc(moonX, moonY, moonR + 90, 0, Math.PI * 2);
+    cctx.fill();
+
+    // Moon disc
+    cctx.fillStyle = '#f8fafc';
+    cctx.beginPath();
+    cctx.arc(moonX, moonY, moonR, 0, Math.PI * 2);
+    cctx.fill();
 
     // Subtle craters
-    sctx.fillStyle = '#e2e8f0';
-    sctx.beginPath();
-    sctx.arc(moonX - 18, moonY - 14, 14, 0, Math.PI * 2);
-    sctx.arc(moonX + 16, moonY + 12, 18, 0, Math.PI * 2);
-    sctx.arc(moonX + 6, moonY - 24, 10, 0, Math.PI * 2);
-    sctx.fill();
+    cctx.fillStyle = '#e2e8f0';
+    cctx.beginPath();
+    cctx.arc(moonX - 18, moonY - 14, 14, 0, Math.PI * 2);
+    cctx.arc(moonX + 16, moonY + 12, 18, 0, Math.PI * 2);
+    cctx.arc(moonX + 6, moonY - 24, 10, 0, Math.PI * 2);
+    cctx.fill();
 
-    // 4. Distant Gothic Castle Spire Silhouettes & Flying Buttresses
-    sctx.fillStyle = '#090a14';
-    sctx.beginPath();
-    sctx.moveTo(0, 540);
-    const spires = [
-      [0, 360], [40, 260], [55, 230], [70, 260], [110, 350],
-      [150, 290], [170, 210], [190, 290], [240, 370],
-      [310, 330], [335, 250], [360, 330], [420, 380],
-      [540, 380], [600, 330], [625, 250], [650, 330],
-      [720, 370], [770, 290], [790, 210], [810, 290],
-      [850, 350], [890, 260], [905, 230], [920, 260], [960, 360]
-    ];
-    sctx.lineTo(spires[0][0], spires[0][1]);
-    for (let p = 1; p < spires.length; p++) sctx.lineTo(spires[p][0], spires[p][1]);
-    sctx.lineTo(960, 540);
-    sctx.closePath();
-    sctx.fill();
-
-    // 5. Grand Gothic Rose Window (Vitral Gótico Central)
-    const winX = 480, winY = 125, winR = 54;
-    // Outer stone frame
-    sctx.fillStyle = '#1e1a2e';
-    sctx.beginPath();
-    sctx.arc(winX, winY, winR + 8, 0, Math.PI * 2);
-    sctx.fill();
-    sctx.strokeStyle = '#d4af37';
-    sctx.lineWidth = 3;
-    sctx.stroke();
+    // 5. Grand Gothic Rose Window (Vitral Gótico Central — directly above Sanctuary Altar)
+    const winX = 480, winY = 125, winR = 56;
+    // Outer stone frame moulding
+    cctx.fillStyle = '#1e1a2e';
+    cctx.beginPath();
+    cctx.arc(winX, winY, winR + 8, 0, Math.PI * 2);
+    cctx.fill();
+    cctx.strokeStyle = '#d4af37';
+    cctx.lineWidth = 3.5;
+    cctx.stroke();
 
     // Inner gold leaded rim
-    sctx.strokeStyle = '#b48c28';
-    sctx.lineWidth = 2;
-    sctx.beginPath();
-    sctx.arc(winX, winY, winR, 0, Math.PI * 2);
-    sctx.stroke();
+    cctx.strokeStyle = '#b48c28';
+    cctx.lineWidth = 2;
+    cctx.beginPath();
+    cctx.arc(winX, winY, winR, 0, Math.PI * 2);
+    cctx.stroke();
 
     // 12 Stained Glass Segments
     const glassColors = [
@@ -2473,146 +2477,122 @@ class SpriteManager {
     for (let i = 0; i < 12; i++) {
       const a1 = (i * Math.PI * 2) / 12;
       const a2 = ((i + 1) * Math.PI * 2) / 12;
-      sctx.fillStyle = glassColors[i];
-      sctx.beginPath();
-      sctx.moveTo(winX, winY);
-      sctx.arc(winX, winY, winR - 2, a1, a2);
-      sctx.closePath();
-      sctx.fill();
+      cctx.fillStyle = glassColors[i];
+      cctx.beginPath();
+      cctx.moveTo(winX, winY);
+      cctx.arc(winX, winY, winR - 2, a1, a2);
+      cctx.closePath();
+      cctx.fill();
       // Stone tracery spoke
-      sctx.strokeStyle = '#1e1a2e';
-      sctx.lineWidth = 2;
-      sctx.stroke();
+      cctx.strokeStyle = '#1e1a2e';
+      cctx.lineWidth = 2;
+      cctx.stroke();
     }
 
     // Inner rosette ring & core
-    sctx.fillStyle = '#ffd166';
-    sctx.beginPath();
-    sctx.arc(winX, winY, 18, 0, Math.PI * 2);
-    sctx.fill();
-    sctx.fillStyle = '#7b2cbf';
-    sctx.beginPath();
-    sctx.arc(winX, winY, 12, 0, Math.PI * 2);
-    sctx.fill();
-    sctx.fillStyle = '#ffffff';
-    sctx.beginPath();
-    sctx.arc(winX, winY, 5, 0, Math.PI * 2);
-    sctx.fill();
+    cctx.fillStyle = '#ffd166';
+    cctx.beginPath();
+    cctx.arc(winX, winY, 18, 0, Math.PI * 2);
+    cctx.fill();
+    cctx.fillStyle = '#7b2cbf';
+    cctx.beginPath();
+    cctx.arc(winX, winY, 12, 0, Math.PI * 2);
+    cctx.fill();
+    cctx.fillStyle = '#ffffff';
+    cctx.beginPath();
+    cctx.arc(winX, winY, 5, 0, Math.PI * 2);
+    cctx.fill();
 
-    // Divine Volumetric Light Rays radiating down from the Rose Window
-    const lightGrad = sctx.createLinearGradient(winX, winY, winX, 480);
-    lightGrad.addColorStop(0, 'rgba(233, 213, 255, 0.28)');
-    lightGrad.addColorStop(0.3, 'rgba(253, 224, 71, 0.16)');
-    lightGrad.addColorStop(0.7, 'rgba(167, 139, 250, 0.08)');
+    // Divine Volumetric Light Rays radiating down from the Rose Window onto the Altar
+    const lightGrad = cctx.createLinearGradient(winX, winY, winX, 480);
+    lightGrad.addColorStop(0, 'rgba(233, 213, 255, 0.32)');
+    lightGrad.addColorStop(0.3, 'rgba(253, 224, 71, 0.18)');
+    lightGrad.addColorStop(0.7, 'rgba(167, 139, 250, 0.10)');
     lightGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    sctx.fillStyle = lightGrad;
-    sctx.beginPath();
-    sctx.moveTo(winX - 35, winY + 20);
-    sctx.lineTo(winX + 35, winY + 20);
-    sctx.lineTo(winX + 160, 480);
-    sctx.lineTo(winX - 160, 480);
-    sctx.closePath();
-    sctx.fill();
+    cctx.fillStyle = lightGrad;
+    cctx.beginPath();
+    cctx.moveTo(winX - 32, winY + 20);
+    cctx.lineTo(winX + 32, winY + 20);
+    cctx.lineTo(winX + 160, 480);
+    cctx.lineTo(winX - 160, 480);
+    cctx.closePath();
+    cctx.fill();
 
-    // 6. Flanking Pointed Gothic Lancet Windows
+    // 6. Flanking Pointed Gothic Lancet Windows (above Ruleta & Portal)
     const drawLancet = (lx, ly, col1, col2) => {
-      sctx.fillStyle = '#171424';
-      sctx.fillRect(lx - 20, ly, 40, 110);
-      sctx.beginPath();
-      sctx.arc(lx, ly, 20, Math.PI, 0);
-      sctx.fill();
+      cctx.fillStyle = '#171424';
+      cctx.fillRect(lx - 20, ly, 40, 110);
+      cctx.beginPath();
+      cctx.arc(lx, ly, 20, Math.PI, 0);
+      cctx.fill();
 
       // Glass inside
-      const lGrad = sctx.createLinearGradient(lx, ly - 20, lx, ly + 110);
+      const lGrad = cctx.createLinearGradient(lx, ly - 20, lx, ly + 110);
       lGrad.addColorStop(0, col1);
       lGrad.addColorStop(1, col2);
-      sctx.fillStyle = lGrad;
-      sctx.fillRect(lx - 16, ly + 4, 32, 102);
-      sctx.beginPath();
-      sctx.arc(lx, ly + 4, 16, Math.PI, 0);
-      sctx.fill();
+      cctx.fillStyle = lGrad;
+      cctx.fillRect(lx - 16, ly + 4, 32, 102);
+      cctx.beginPath();
+      cctx.arc(lx, ly + 4, 16, Math.PI, 0);
+      cctx.fill();
 
       // Stone Mullions & Tracery
-      sctx.fillStyle = '#171424';
-      sctx.fillRect(lx - 1, ly - 16, 2, 126);
-      sctx.fillRect(lx - 16, ly + 35, 32, 2);
-      sctx.fillRect(lx - 16, ly + 70, 32, 2);
-      sctx.strokeStyle = '#d4af37';
-      sctx.lineWidth = 1.5;
-      sctx.strokeRect(lx - 16, ly + 4, 32, 102);
+      cctx.fillStyle = '#171424';
+      cctx.fillRect(lx - 1, ly - 16, 2, 126);
+      cctx.fillRect(lx - 16, ly + 35, 32, 2);
+      cctx.fillRect(lx - 16, ly + 70, 32, 2);
+      cctx.strokeStyle = '#d4af37';
+      cctx.lineWidth = 1.5;
+      cctx.strokeRect(lx - 16, ly + 4, 32, 102);
     };
 
-    drawLancet(200, 140, '#f59e0b', '#78350f'); // Warm amber gold above slot machine
-    drawLancet(760, 140, '#38bdf8', '#0369a1'); // Mystic sapphire cyan above portal
+    drawLancet(200, 140, '#f59e0b', '#78350f'); // Warm amber gold above Ruleta
+    drawLancet(770, 140, '#38bdf8', '#0369a1'); // Mystic sapphire cyan above Portal
 
-    // ─── LAYER 2: CATHEDRAL HALL ARCHITECTURE & COLONNADE (960x540) ───
-    const { canvas: mc, ctx: mctx } = this.createCanvas(960, 540);
-
-    // 1. Ashlar Stone Wall Relief
-    mctx.fillStyle = '#100f1c';
-    mctx.fillRect(0, 0, 960, 540);
-
-    // Stone brick lines
-    mctx.strokeStyle = 'rgba(40, 35, 60, 0.45)';
-    mctx.lineWidth = 1;
-    for (let y = 40; y < 480; y += 24) {
-      mctx.beginPath();
-      mctx.moveTo(0, y);
-      mctx.lineTo(960, y);
-      mctx.stroke();
-      const offset = (y % 48 === 0) ? 0 : 30;
-      for (let x = offset; x < 960; x += 60) {
-        mctx.beginPath();
-        mctx.moveTo(x, y);
-        mctx.lineTo(x, y + 24);
-        mctx.stroke();
-      }
-    }
-
-    // 2. High Ribbed Vault Arches (Bóvedas de Crucería)
-    mctx.strokeStyle = '#2b2542';
-    mctx.lineWidth = 6;
-    mctx.beginPath();
+    // 7. High Ribbed Vault Arches (Bóvedas de Crucería)
+    cctx.strokeStyle = '#2b2542';
+    cctx.lineWidth = 6;
+    cctx.beginPath();
     // Arch 1 (Left to center-left)
-    mctx.moveTo(90, 200);
-    mctx.quadraticCurveTo(210, 60, 330, 200);
-    // Arch 2 (Center-left to center-right)
-    mctx.moveTo(330, 200);
-    mctx.quadraticCurveTo(480, 50, 630, 200);
+    cctx.moveTo(90, 200);
+    cctx.quadraticCurveTo(210, 60, 330, 200);
+    // Arch 2 (Center-left to center-right, framing Rose Window & Altar)
+    cctx.moveTo(330, 200);
+    cctx.quadraticCurveTo(480, 48, 630, 200);
     // Arch 3 (Center-right to right)
-    mctx.moveTo(630, 200);
-    mctx.quadraticCurveTo(750, 60, 870, 200);
-    mctx.stroke();
+    cctx.moveTo(630, 200);
+    cctx.quadraticCurveTo(750, 60, 870, 200);
+    cctx.stroke();
 
     // Arch gold keystones
     for (const kx of [210, 480, 750]) {
-      mctx.fillStyle = '#d4af37';
-      mctx.fillRect(kx - 6, 60, 12, 10);
+      cctx.fillStyle = '#d4af37';
+      cctx.fillRect(kx - 6, 56, 12, 10);
     }
 
-    // 3. Four Monumental Carved Stone Pillars
+    // 8. Four Monumental Carved Stone Pillars
     const drawPillar = (px) => {
       // Capital top
-      mctx.fillStyle = '#3f375c';
-      mctx.fillRect(px - 22, 180, 44, 12);
-      mctx.fillStyle = '#524874';
-      mctx.fillRect(px - 18, 192, 36, 10);
-      mctx.fillStyle = '#d4af37'; // Gold capital ring
-      mctx.fillRect(px - 16, 202, 32, 4);
+      cctx.fillStyle = '#3f375c';
+      cctx.fillRect(px - 22, 180, 44, 12);
+      cctx.fillStyle = '#524874';
+      cctx.fillRect(px - 18, 192, 36, 10);
+      cctx.fillStyle = '#d4af37'; // Gold capital ring
+      cctx.fillRect(px - 16, 202, 32, 4);
 
       // Fluted Column Shaft
-      mctx.fillStyle = '#1c182b';
-      mctx.fillRect(px - 14, 206, 28, 254);
-      mctx.fillStyle = '#2b2542';
-      mctx.fillRect(px - 10, 206, 20, 254);
-      mctx.fillStyle = '#3f375c';
-      mctx.fillRect(px - 4, 206, 8, 254); // Center highlight
+      cctx.fillStyle = '#1c182b';
+      cctx.fillRect(px - 14, 206, 28, 254);
+      cctx.fillStyle = '#2b2542';
+      cctx.fillRect(px - 10, 206, 20, 254);
+      cctx.fillStyle = '#3f375c';
+      cctx.fillRect(px - 4, 206, 8, 254); // Center highlight
 
       // Column Base
-      mctx.fillStyle = '#3f375c';
-      mctx.fillRect(px - 18, 460, 36, 10);
-      mctx.fillStyle = '#231d36';
-      mctx.fillRect(px - 22, 470, 44, 10);
+      cctx.fillStyle = '#3f375c';
+      cctx.fillRect(px - 18, 460, 36, 10);
+      cctx.fillStyle = '#231d36';
+      cctx.fillRect(px - 22, 470, 44, 10);
     };
 
     drawPillar(90);
@@ -2620,96 +2600,93 @@ class SpriteManager {
     drawPillar(630);
     drawPillar(870);
 
-    // 4. Hanging Royal Velvet Banners with Gold Fringe
+    // 9. Hanging Royal Velvet Banners with Gold Fringe
     const drawBanner = (bx, by, bw, bh, color, crest) => {
-      mctx.save();
+      cctx.save();
       // Wall brass rod
-      mctx.fillStyle = '#d4af37';
-      mctx.fillRect(bx - 4, by, bw + 8, 5);
+      cctx.fillStyle = '#d4af37';
+      cctx.fillRect(bx - 4, by, bw + 8, 5);
 
       // Velvet body
-      mctx.fillStyle = color;
-      mctx.beginPath();
-      mctx.moveTo(bx, by + 5);
-      mctx.lineTo(bx + bw, by + 5);
-      mctx.lineTo(bx + bw, by + bh);
-      mctx.lineTo(bx + bw / 2, by + bh + 14);
-      mctx.lineTo(bx, by + bh);
-      mctx.closePath();
-      mctx.fill();
+      cctx.fillStyle = color;
+      cctx.beginPath();
+      cctx.moveTo(bx, by + 5);
+      cctx.lineTo(bx + bw, by + 5);
+      cctx.lineTo(bx + bw, by + bh);
+      cctx.lineTo(bx + bw / 2, by + bh + 14);
+      cctx.lineTo(bx, by + bh);
+      cctx.closePath();
+      cctx.fill();
 
       // Gold embroidery trim
-      mctx.strokeStyle = '#ffd700';
-      mctx.lineWidth = 1.8;
-      mctx.stroke();
+      cctx.strokeStyle = '#ffd700';
+      cctx.lineWidth = 1.8;
+      cctx.stroke();
 
       // Emblem
-      mctx.fillStyle = '#ffd700';
-      mctx.font = 'bold 12px serif';
-      mctx.textAlign = 'center';
-      mctx.fillText(crest, bx + bw / 2, by + bh / 2 + 4);
-      mctx.restore();
+      cctx.fillStyle = '#ffd700';
+      cctx.font = 'bold 12px serif';
+      cctx.textAlign = 'center';
+      cctx.fillText(crest, bx + bw / 2, by + bh / 2 + 4);
+      cctx.restore();
     };
 
     drawBanner(130, 210, 28, 70, '#1e3a8a', '⚔'); // Left entrance heraldry
-    drawBanner(275, 210, 28, 70, '#831843', '🎰'); // Ruleta heraldry
-    drawBanner(655, 210, 28, 70, '#581c87', '🔮'); // Altar heraldry
-    drawBanner(800, 210, 28, 70, '#7f1d1d', '🔥'); // Portal heraldry
+    drawBanner(270, 210, 28, 70, '#831843', '🎰'); // Ruleta heraldry
+    drawBanner(650, 210, 28, 70, '#581c87', '🔮'); // Altar heraldry
+    drawBanner(810, 210, 28, 70, '#7f1d1d', '🔥'); // Portal heraldry
 
-    // 5. Ornate Gothic Chandeliers with Candles
+    // 10. Ornate Gothic Chandeliers with Candles
     const drawChandelier = (cx, cy) => {
       // Iron chain
-      mctx.strokeStyle = '#27272a';
-      mctx.lineWidth = 1.5;
-      mctx.beginPath();
-      mctx.moveTo(cx, 0);
-      mctx.lineTo(cx, cy);
-      mctx.stroke();
+      cctx.strokeStyle = '#27272a';
+      cctx.lineWidth = 1.5;
+      cctx.beginPath();
+      cctx.moveTo(cx, 0);
+      cctx.lineTo(cx, cy);
+      cctx.stroke();
 
       // Iron hoop & scrolls
-      mctx.strokeStyle = '#3f3f46';
-      mctx.lineWidth = 3;
-      mctx.beginPath();
-      mctx.ellipse(cx, cy, 32, 10, 0, 0, Math.PI * 2);
-      mctx.stroke();
+      cctx.strokeStyle = '#3f3f46';
+      cctx.lineWidth = 3;
+      cctx.beginPath();
+      cctx.ellipse(cx, cy, 32, 10, 0, 0, Math.PI * 2);
+      cctx.stroke();
 
       // Candles with glowing flames
       const candleOffsets = [-24, -12, 0, 12, 24];
       for (const off of candleOffsets) {
-        mctx.fillStyle = '#fef08a';
-        mctx.fillRect(cx + off - 1.5, cy - 8, 3, 8);
+        cctx.fillStyle = '#fef08a';
+        cctx.fillRect(cx + off - 1.5, cy - 8, 3, 8);
         // Flame
-        mctx.fillStyle = '#f59e0b';
-        mctx.beginPath();
-        mctx.arc(cx + off, cy - 10, 3, 0, Math.PI * 2);
-        mctx.fill();
-        mctx.fillStyle = '#fef08a';
-        mctx.fillRect(cx + off - 1, cy - 11, 2, 2);
+        cctx.fillStyle = '#f59e0b';
+        cctx.beginPath();
+        cctx.arc(cx + off, cy - 10, 3, 0, Math.PI * 2);
+        cctx.fill();
+        cctx.fillStyle = '#fef08a';
+        cctx.fillRect(cx + off - 1, cy - 11, 2, 2);
       }
     };
 
-    drawChandelier(210, 140);
-    drawChandelier(480, 120);
-    drawChandelier(750, 140);
+    drawChandelier(200, 140);
+    drawChandelier(480, 115);
+    drawChandelier(770, 140);
 
-    // ─── LAYER 3: FOREGROUND GOTHIC ARCHES & PILASTERS (480x540) ───
-    const { canvas: tc, ctx: tctx } = this.createCanvas(480, 540);
-    // Left & Right Framing Pilasters
-    tctx.fillStyle = '#08070e';
-    tctx.fillRect(0, 0, 32, 540);
-    tctx.fillRect(448, 0, 32, 540);
+    // 11. Side Framing Pilasters & Gold Crown Valance
+    cctx.fillStyle = '#08070e';
+    cctx.fillRect(0, 0, 24, 540);
+    cctx.fillRect(936, 0, 24, 540);
 
-    tctx.fillStyle = '#161324';
-    tctx.fillRect(8, 0, 16, 540);
-    tctx.fillRect(456, 0, 16, 540);
+    cctx.fillStyle = '#161324';
+    cctx.fillRect(6, 0, 12, 540);
+    cctx.fillRect(942, 0, 12, 540);
 
-    // Top Gothic Arch Valance
-    tctx.fillStyle = '#08070e';
-    tctx.fillRect(0, 0, 480, 24);
-    tctx.fillStyle = '#d4af37'; // Gold crown trim
-    tctx.fillRect(0, 22, 480, 2);
+    cctx.fillStyle = '#08070e';
+    cctx.fillRect(0, 0, 960, 22);
+    cctx.fillStyle = '#d4af37'; // Gold crown trim
+    cctx.fillRect(0, 20, 960, 2);
 
-    return { skySpires: sc, magmaPeaks: mc, towerArch: tc };
+    return { cathedralHall: ch, skySpires: ch, magmaPeaks: ch, towerArch: null };
   }
 
   // ─── DIALOGUE PORTRAITS (96x96) ───
