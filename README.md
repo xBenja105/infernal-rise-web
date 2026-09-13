@@ -1,5 +1,10 @@
 # Infernal Rise — Edición Web (Plataformer 2D Incremental Rogue-lite)
 
+[![Jugar en Vercel](https://img.shields.io/badge/Jugar%20Online-Vercel-black?style=for-the-badge&logo=vercel)](https://infernal-rise-web.vercel.app)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-xBenja105%2Finfernal--rise--web-181717?style=for-the-badge&logo=github)](https://github.com/xBenja105/infernal-rise-web)
+
+🎮 **Jugar Online en Vivo**: **[https://infernal-rise-web.vercel.app](https://infernal-rise-web.vercel.app)**
+
 **Autores Originales**: Benjamín Arriagada & Jorge Castro  
 **Asignatura**: Desarrollo de Videojuegos — 3er Semestre (INACAP)  
 **Docente**: Sebastián Pizarro  
