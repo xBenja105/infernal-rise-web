@@ -524,7 +524,7 @@ class Player {
       amount = Math.round(amount * 0.65);
     }
     this.hp -= amount;
-    this.invulnerableTimer = 0.8;
+    this.invulnerableTimer = 1.1; // 1.1s of i-frame grace period to prevent unfair consecutive stuns
     this.vy = -5.0;
     this.vx = -this.facing * 3.4;
     if (soundEng) soundEng.playHit();
@@ -610,6 +610,88 @@ class Player {
 
     const pwm = window.game ? window.game.passiveWeaponsManager : null;
     const visuals = pwm ? pwm.getActiveVisuals() : null;
+
+    // ── ASCENDED ARCHON SKIN: SERAPH WINGS & CELESTIAL BACK GLOW ──
+    if (visuals && visuals.hasAllWeapons) {
+      ctx.save();
+      const wingTime = Date.now() * 0.005;
+      const flapAngle = Math.sin(wingTime) * 0.18 + (this.animState === 'jump' || this.animState === 'fall' ? 0.35 : 0);
+
+      // Back Holy Halo
+      ctx.fillStyle = 'rgba(255, 215, 0, 0.16)';
+      ctx.beginPath();
+      ctx.arc(8, 12, 28, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Wing drawing helper
+      const drawWing = (dir) => {
+        ctx.save();
+        ctx.translate(8, 14);
+        ctx.scale(dir, 1);
+        ctx.rotate(flapAngle);
+
+        // Golden Outer Feathers
+        ctx.fillStyle = '#ffd700';
+        ctx.shadowColor = '#ffb703';
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(-14, -22, -32, -18);
+        ctx.quadraticCurveTo(-38, -4, -24, 8);
+        ctx.quadraticCurveTo(-12, 6, 0, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        // Inner Crimson Flame Feather Layer
+        ctx.fillStyle = '#ff3b30';
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(-10, -16, -24, -12);
+        ctx.quadraticCurveTo(-28, -2, -18, 5);
+        ctx.quadraticCurveTo(-8, 4, 0, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        // Starlight Diamond Shaft
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(-28, -14);
+        ctx.stroke();
+
+        ctx.restore();
+      };
+
+      drawWing(-1); // Left Seraph Wing
+      drawWing(1);  // Right Seraph Wing
+      ctx.restore();
+    }
+
+    // ── DYNAMIC PASSIVE EQUIPMENT: BACK LAYER (Spectral Javelin) ──
+    if (visuals && visuals.hasJavelin) {
+      ctx.save();
+      // Spectral cyan javelin diagonally across back (opposite angle)
+      ctx.strokeStyle = '#00f5d4';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = '#00f5d4';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.moveTo(18, 28);
+      ctx.lineTo(2, -4);
+      ctx.stroke();
+
+      // Trident / Javelin Head
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(2, -4);
+      ctx.lineTo(-2, -10);
+      ctx.lineTo(2, -8);
+      ctx.lineTo(6, -10);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
 
     // ── DYNAMIC PASSIVE EQUIPMENT: BACK LAYER (Death Scythe) ──
     if (visuals && visuals.hasScythe) {
@@ -748,6 +830,84 @@ class Player {
         }
         ctx.restore();
       }
+
+      // 5. Infernal Chakram (Orbiting razor disc near hip)
+      if (visuals.hasChakram) {
+        ctx.save();
+        const spinAng = Date.now() * 0.012;
+        const cx = 16 + Math.cos(spinAng * 0.5) * 4;
+        const cy = 18 + Math.sin(spinAng * 0.5) * 3;
+        ctx.translate(cx, cy);
+        ctx.rotate(spinAng);
+        ctx.shadowColor = '#ff0055';
+        ctx.shadowBlur = 8;
+        ctx.strokeStyle = '#ffd700';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, 5, 0, Math.PI * 2);
+        ctx.stroke();
+        // Cross blades
+        ctx.fillStyle = '#ff0055';
+        ctx.fillRect(-7, -1.5, 14, 3);
+        ctx.fillRect(-1.5, -7, 3, 14);
+        ctx.restore();
+      }
+
+      // 6. ASCENDED ARCHON CROWN & PAULDRONS (Skin Definitiva al tener todas las armas)
+      if (visuals.hasAllWeapons) {
+        ctx.save();
+        // A. Golden Crown of Radiant Flame
+        const crownBob = Math.sin(Date.now() * 0.006) * 1.5;
+        const headX = 6, headY = -9 + crownBob;
+
+        ctx.shadowColor = '#ffd700';
+        ctx.shadowBlur = 14;
+        ctx.fillStyle = '#ffd700';
+        ctx.beginPath();
+        // 5-Point Golden Crown
+        ctx.moveTo(headX - 8, headY);
+        ctx.lineTo(headX - 9, headY - 8);
+        ctx.lineTo(headX - 4, headY - 4);
+        ctx.lineTo(headX, headY - 11);
+        ctx.lineTo(headX + 4, headY - 4);
+        ctx.lineTo(headX + 9, headY - 8);
+        ctx.lineTo(headX + 8, headY);
+        ctx.closePath();
+        ctx.fill();
+
+        // Crown Crown Jewels (Ruby center & emerald sides)
+        ctx.fillStyle = '#ff2a2a';
+        ctx.fillRect(headX - 1.5, headY - 5, 3, 3);
+        ctx.fillStyle = '#00f5d4';
+        ctx.fillRect(headX - 6, headY - 4, 2, 2);
+        ctx.fillRect(headX + 4, headY - 4, 2, 2);
+
+        // B. Radiant Pauldrons (Golden armored shoulders)
+        ctx.fillStyle = '#d4af37';
+        ctx.strokeStyle = '#fff275';
+        ctx.lineWidth = 1;
+        // Left pauldron
+        ctx.beginPath();
+        ctx.arc(0, 8, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        // Right pauldron
+        ctx.beginPath();
+        ctx.arc(14, 8, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // C. Orbiting Seraphic Embers
+        const emberT = Date.now() * 0.007;
+        for (let e = 0; e < 3; e++) {
+          const eAng = emberT + (e * Math.PI * 2) / 3;
+          const ex = 7 + Math.cos(eAng) * 18;
+          const ey = 14 + Math.sin(eAng) * 12;
+          ctx.fillStyle = e % 2 === 0 ? '#ffd700' : '#00f5d4';
+          ctx.fillRect(ex, ey, 2, 2);
+        }
+        ctx.restore();
+      }
     }
 
     ctx.restore();
@@ -758,6 +918,18 @@ class Player {
       const barH = 5;
       const barX = Math.round(rx + (this.w - barW) / 2);
       const barY = Math.round(ry - 13);
+
+      // Overhead Ascended Avatar Distinction
+      if (visuals && visuals.hasAllWeapons) {
+        ctx.save();
+        ctx.font = 'bold 8px Cinzel, serif';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = '#ffd700';
+        ctx.shadowBlur = 8;
+        ctx.fillStyle = '#ffd700';
+        ctx.fillText('✦ AVATAR ASCENDIDO ✦', rx + this.w / 2, barY - 4);
+        ctx.restore();
+      }
 
       ctx.save();
       // Drop shadow for crisp readability against any background
@@ -822,7 +994,7 @@ class SkeletonEnemy {
     this.maxX = data.maxX;
     this.hp = data.hp || (this.isElite ? 85 : 30);
     this.maxHp = this.hp;
-    this.touchDamage = this.isElite ? 44 : 30;
+    this.touchDamage = this.isElite ? 26 : 18; // Rebalanced from 44/30 to prevent early-run instant death
     this.isMage = data.isMage || data.type === 'skeleton_mage';
 
     // Platform & Gravity Physics (Strict ground anchoring, zero floating)
@@ -1123,7 +1295,7 @@ class SkeletonEnemy {
       if (this.animFrame >= 7 && this.animFrame <= 9 && !this.attackHasHit) {
         this.attackHasHit = true;
         if (Math.abs(player.x - this.x) < 38 && Math.abs(player.y - this.y) < 28) {
-          player.takeDamage(this.isElite ? 50 : 36, soundEng, particleSys);
+          player.takeDamage(this.isElite ? 30 : 22, soundEng, particleSys);
         }
       }
       if (this.attackTimer <= 0) {
@@ -1341,7 +1513,7 @@ class SkeletonEnemy {
 
     // Touch damage
     if (Math.abs(player.x - this.x) < Math.max(22, this.w * 0.8) && Math.abs(player.y - this.y) < Math.max(28, this.h * 0.8)) {
-      player.takeDamage(this.touchDamage || 30, soundEng, particleSys);
+      player.takeDamage(this.touchDamage || 18, soundEng, particleSys);
     }
   }
 
@@ -1565,8 +1737,8 @@ class SkeletonEnemy {
             window.game.openScratchCardModal(window.progression.generateScratchCard());
           }
         }
-        // BoonChest drop from Giant / Elite enemies (10% rare drop)
-        if (this.isElite && window.game.spawnBoonChest && Math.random() < 0.10) {
+        // BoonChest drop from Giant / Elite enemies (35% drop chance to reward player for defeating health-bar elites)
+        if (this.isElite && window.game.spawnBoonChest && Math.random() < 0.35) {
           window.game.spawnBoonChest(this.x + this.w / 2 - 17, this.y + this.h - 26);
         }
       }
@@ -3307,7 +3479,7 @@ class AbyssalBat {
     this.h = 20;
     this.hp = data.hp || 18;
     this.maxHp = this.hp;
-    this.damage = data.damage || 28;
+    this.damage = data.damage || 16; // Rebalanced from 28 to 16
 
     this.vx = 0;
     this.vy = 0;
@@ -3496,7 +3668,7 @@ class EnemyProjectile {
     this.vy = data.vy || 0;
     this.w = 20;
     this.h = 20;
-    this.damage = data.damage || 35;
+    this.damage = data.damage || 20; // Rebalanced from 35 to 20
     this.type = data.type || 'skull';
     this.life = 0;
     this.maxLife = data.maxLife || 4.2;

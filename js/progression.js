@@ -155,6 +155,24 @@ class ProgressionManager {
         desc: 'Arma Pasiva: Un halo carmesí continuo rodea a Kael, dañando y repeliendo a cualquier criatura.',
         icon: '📿'
       },
+      {
+        id: 'weapon_spectral_javelin',
+        isWeapon: true,
+        weaponType: 'spectral_javelin',
+        name: 'Lanza Espectral',
+        rarity: 'Épica',
+        desc: 'Arma Pasiva: Dispara jabalinas de luz etérea que perforan a todos los enemigos en fila a gran velocidad.',
+        icon: '🔱'
+      },
+      {
+        id: 'weapon_infernal_chakram',
+        isWeapon: true,
+        weaponType: 'infernal_chakram',
+        name: 'Chakram del Averno',
+        rarity: 'Épica',
+        desc: 'Arma Pasiva: Lanza discos cortantes ardientes en arco que regresan a Kael como bumerán, rebanando a su paso.',
+        icon: '🌀'
+      },
       // ─── TOMOS PASIVOS (VAMPIRE SURVIVORS SYNERGY TOMES) ───
       {
         id: 'tome_candelabro',
@@ -732,7 +750,7 @@ class ProgressionManager {
         if (!pwm) return true;
         const lvl = pwm.getLevel(b.weaponType);
         if (lvl >= 5) return false;
-        if (lvl === 0 && pwm.weapons.size >= 4) return false;
+        if (lvl === 0 && pwm.weapons.size >= 7) return false;
         return true;
       }
       if (b.isTome) {

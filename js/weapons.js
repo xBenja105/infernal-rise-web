@@ -33,22 +33,37 @@ class PassiveWeaponsManager {
   }
 
   getActiveVisuals() {
+    const hasHolyCross = this.hasWeapon('holy_cross');
+    const hasHellfireOrb = this.hasWeapon('hellfire_orb');
+    const hasLightning = this.hasWeapon('celestial_lightning');
+    const hasScythe = this.hasWeapon('death_scythe');
+    const hasGarlic = this.hasWeapon('blood_garlic');
+    const hasJavelin = this.hasWeapon('spectral_javelin');
+    const hasChakram = this.hasWeapon('infernal_chakram');
+    const totalEquipped = (hasHolyCross ? 1 : 0) +
+                          (hasHellfireOrb ? 1 : 0) +
+                          (hasLightning ? 1 : 0) +
+                          (hasScythe ? 1 : 0) +
+                          (hasGarlic ? 1 : 0) +
+                          (hasJavelin ? 1 : 0) +
+                          (hasChakram ? 1 : 0);
     return {
-      hasHolyCross: this.hasWeapon('holy_cross'),
+      hasHolyCross,
       holyCrossLevel: this.getLevel('holy_cross'),
-      hasHellfireOrb: this.hasWeapon('hellfire_orb'),
+      hasHellfireOrb,
       hellfireOrbLevel: this.getLevel('hellfire_orb'),
-      hasLightning: this.hasWeapon('celestial_lightning'),
+      hasLightning,
       lightningLevel: this.getLevel('celestial_lightning'),
-      hasScythe: this.hasWeapon('death_scythe'),
+      hasScythe,
       scytheLevel: this.getLevel('death_scythe'),
-      hasGarlic: this.hasWeapon('blood_garlic'),
+      hasGarlic,
       garlicLevel: this.getLevel('blood_garlic'),
-      totalEquipped: (this.hasWeapon('holy_cross') ? 1 : 0) +
-                     (this.hasWeapon('hellfire_orb') ? 1 : 0) +
-                     (this.hasWeapon('celestial_lightning') ? 1 : 0) +
-                     (this.hasWeapon('death_scythe') ? 1 : 0) +
-                     (this.hasWeapon('blood_garlic') ? 1 : 0)
+      hasJavelin,
+      javelinLevel: this.getLevel('spectral_javelin'),
+      hasChakram,
+      chakramLevel: this.getLevel('infernal_chakram'),
+      totalEquipped,
+      hasAllWeapons: totalEquipped >= 7 || (hasHolyCross && hasHellfireOrb && hasLightning && hasScythe && hasGarlic && hasJavelin && hasChakram)
     };
   }
 
@@ -173,6 +188,28 @@ class PassiveWeaponsManager {
               icon: '📿'
             });
             break;
+          case 'spectral_javelin':
+            evolutions.push({
+              id: 'evo_spectral_javelin',
+              isEvolution: true,
+              baseWeaponType: 'spectral_javelin',
+              name: 'Tridente del Leviatán',
+              rarity: 'Legendaria',
+              desc: 'SUPER EVOLUCIÓN: 5 tridentes titánicos luminosos que atraviesan la pantalla entera provocando explosiones de choque espectral (120 de daño).',
+              icon: '🔱'
+            });
+            break;
+          case 'infernal_chakram':
+            evolutions.push({
+              id: 'evo_infernal_chakram',
+              isEvolution: true,
+              baseWeaponType: 'infernal_chakram',
+              name: 'Círculo del Infierno Eterno',
+              rarity: 'Legendaria',
+              desc: 'SUPER EVOLUCIÓN: 4 discos solares ardientes bumerán que rebanan dos veces a todos los enemigos dejando estelas de fuego eterno (90 de daño).',
+              icon: '🌀'
+            });
+            break;
         }
       }
     }
@@ -225,6 +262,24 @@ class PassiveWeaponsManager {
         w.maxCooldown = 0.35;
         w.damage = 38;
         w.radius = 115;
+        break;
+      case 'spectral_javelin':
+        w.name = 'Tridente del Leviatán';
+        w.icon = '🔱';
+        w.count = 5;
+        w.maxCooldown = 0.7;
+        w.damage = 120;
+        w.speed = 12.0;
+        w.pierceAll = true;
+        break;
+      case 'infernal_chakram':
+        w.name = 'Círculo del Infierno Eterno';
+        w.icon = '🌀';
+        w.count = 4;
+        w.maxCooldown = 0.8;
+        w.damage = 90;
+        w.speed = 9.0;
+        w.maxDist = 360;
         break;
     }
     if (window.particleSystem) {
@@ -287,6 +342,26 @@ class PassiveWeaponsManager {
         w.maxCooldown = 0.55;
         w.damage = 14 + (w.level - 1) * 6;
         w.radius = 58 + (w.level - 1) * 12;
+        break;
+
+      case 'spectral_javelin':
+        w.name = 'Lanza Espectral';
+        w.icon = '🔱';
+        w.maxCooldown = Math.max(0.85, 1.5 - (w.level - 1) * 0.15);
+        w.damage = 32 + (w.level - 1) * 14;
+        w.count = w.level >= 5 ? 3 : (w.level >= 3 ? 2 : 1);
+        w.speed = 9.5;
+        w.pierceCount = 3 + w.level * 2;
+        break;
+
+      case 'infernal_chakram':
+        w.name = 'Chakram del Averno';
+        w.icon = '🌀';
+        w.maxCooldown = Math.max(0.9, 1.6 - (w.level - 1) * 0.15);
+        w.damage = 22 + (w.level - 1) * 10;
+        w.count = w.level >= 5 ? 3 : (w.level >= 3 ? 2 : 1);
+        w.speed = 7.5;
+        w.maxDist = 240 + (w.level - 1) * 20;
         break;
     }
   }
@@ -581,6 +656,102 @@ class PassiveWeaponsManager {
       }
     }
 
+    // ─── 5B. UPDATE SPECTRAL JAVELIN ───
+    const javelinWeapon = this.weapons.get('spectral_javelin');
+    if (javelinWeapon) {
+      javelinWeapon.timer -= dt / cdMult;
+      if (javelinWeapon.timer <= 0) {
+        javelinWeapon.timer = javelinWeapon.maxCooldown;
+        const facing = player.facing || 1;
+        const count = javelinWeapon.count;
+        const effectiveDmg = Math.round(javelinWeapon.damage * dmgMult);
+        const speed = javelinWeapon.speed;
+
+        // Auto-orient towards nearest enemy if one exists in front / nearby
+        let targetAngle = facing > 0 ? 0 : Math.PI;
+        let nearest = null;
+        let nearestDist = 480;
+        for (const t of targets) {
+          const tx = t.x + (t.w ? t.w / 2 : 12);
+          const ty = t.y + (t.h ? t.h / 2 : 16);
+          const d = Math.hypot(tx - px, ty - py);
+          if (d < nearestDist) {
+            nearestDist = d;
+            nearest = t;
+          }
+        }
+        if (nearest) {
+          const ntx = nearest.x + (nearest.w ? nearest.w / 2 : 12);
+          const nty = nearest.y + (nearest.h ? nearest.h / 2 : 16);
+          targetAngle = Math.atan2(nty - py, ntx - px);
+        }
+
+        for (let i = 0; i < count; i++) {
+          const spread = count > 1 ? (i - (count - 1) / 2) * 0.18 : 0;
+          const ang = targetAngle + spread;
+          this.projectiles.push({
+            type: 'javelin',
+            x: px,
+            y: py - 2,
+            vx: Math.cos(ang) * speed,
+            vy: Math.sin(ang) * speed,
+            angle: ang,
+            damage: effectiveDmg,
+            pierced: new Set(),
+            maxPierce: javelinWeapon.pierceAll ? 999 : (javelinWeapon.pierceCount || 5),
+            isEvolved: !!javelinWeapon.isEvolved,
+            life: 2.5,
+            scale: areaMult,
+            trailTimer: 0
+          });
+        }
+        if (soundEng && soundEng.playSwordSlash) {
+          soundEng.playSwordSlash();
+        }
+      }
+    }
+
+    // ─── 5C. UPDATE INFERNAL CHAKRAM (BOOMERANG) ───
+    const chakramWeapon = this.weapons.get('infernal_chakram');
+    if (chakramWeapon) {
+      chakramWeapon.timer -= dt / cdMult;
+      if (chakramWeapon.timer <= 0) {
+        chakramWeapon.timer = chakramWeapon.maxCooldown;
+        const facing = player.facing || 1;
+        const count = chakramWeapon.count;
+        const effectiveDmg = Math.round(chakramWeapon.damage * dmgMult);
+        const maxDist = (chakramWeapon.maxDist || 260) * areaMult;
+        const speed = chakramWeapon.speed;
+
+        for (let i = 0; i < count; i++) {
+          const angleOffset = count > 1 ? (i - (count - 1) / 2) * 0.32 : 0;
+          const baseAng = (facing > 0 ? 0 : Math.PI) + angleOffset;
+          this.projectiles.push({
+            type: 'chakram',
+            startX: px,
+            startY: py,
+            x: px,
+            y: py - 4,
+            vx: Math.cos(baseAng) * speed,
+            vy: Math.sin(baseAng) * speed,
+            angle: 0,
+            damage: effectiveDmg,
+            isReturning: false,
+            distTraveled: 0,
+            maxDist: maxDist,
+            speed: speed,
+            hitCooldowns: new Map(),
+            isEvolved: !!chakramWeapon.isEvolved,
+            life: 3.5,
+            scale: areaMult
+          });
+        }
+        if (soundEng && soundEng.playScytheThrow) {
+          soundEng.playScytheThrow();
+        }
+      }
+    }
+
     // ─── 6. UPDATE FLYING PROJECTILES ───
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
       const p = this.projectiles[i];
@@ -650,6 +821,86 @@ class PassiveWeaponsManager {
               p.pierced.add(t);
               if (t.takeDamage) t.takeDamage(p.damage, p.x, soundEng, particleSys);
               if (particleSys) particleSys.spawnSlashSparks(tx, ty, Math.sign(p.vx));
+            }
+          }
+        }
+      } else if (p.type === 'javelin') {
+        p.x += p.vx;
+        p.y += p.vy;
+
+        p.trailTimer = (p.trailTimer || 0) + dt;
+        if (p.trailTimer > 0.05 && particleSys) {
+          p.trailTimer = 0;
+          particleSys.spawnDust(p.x, p.y, 1);
+        }
+
+        // Piercing line collision
+        for (const t of targets) {
+          if (!p.pierced.has(t)) {
+            const tx = t.x + (t.w ? t.w / 2 : 12);
+            const ty = t.y + (t.h ? t.h / 2 : 16);
+            if (Math.hypot(tx - p.x, ty - p.y) < 28 * p.scale) {
+              p.pierced.add(t);
+              if (t.takeDamage) t.takeDamage(p.damage, p.x, soundEng, particleSys);
+              if (particleSys) {
+                particleSys.spawnSlashSparks(tx, ty, Math.sign(p.vx || 1));
+                if (p.isEvolved) {
+                  particleSys.spawnBloodExplosion(tx, ty, 8);
+                  particleSys.triggerScreenShake(0.08, 3);
+                }
+              }
+              if (p.pierced.size >= p.maxPierce) {
+                p.life = 0;
+                break;
+              }
+            }
+          }
+        }
+      } else if (p.type === 'chakram') {
+        p.angle += dt * 18.0; // Fast spin
+
+        // Tick hit cooldowns
+        for (const [t, cd] of p.hitCooldowns.entries()) {
+          if (cd > 0) p.hitCooldowns.set(t, cd - dt);
+        }
+
+        if (!p.isReturning) {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.distTraveled += Math.hypot(p.vx, p.vy);
+          if (p.distTraveled >= p.maxDist) {
+            p.isReturning = true;
+          }
+        } else {
+          // Returning homing trajectory towards player
+          const dx = px - p.x;
+          const dy = py - p.y;
+          const distToPlayer = Math.hypot(dx, dy);
+          if (distToPlayer < 24) {
+            p.life = 0; // Caught by Kael!
+          } else {
+            p.vx = (dx / distToPlayer) * (p.speed * 1.2);
+            p.vy = (dy / distToPlayer) * (p.speed * 1.2);
+            p.x += p.vx;
+            p.y += p.vy;
+          }
+        }
+
+        // Damage slice (both outgoing and returning)
+        for (const t of targets) {
+          const cd = p.hitCooldowns.get(t) || 0;
+          if (cd <= 0) {
+            const tx = t.x + (t.w ? t.w / 2 : 12);
+            const ty = t.y + (t.h ? t.h / 2 : 16);
+            if (Math.hypot(tx - p.x, ty - p.y) < 28 * p.scale) {
+              p.hitCooldowns.set(t, 0.28);
+              if (t.takeDamage) t.takeDamage(p.damage, p.x, soundEng, particleSys);
+              if (particleSys) {
+                particleSys.spawnSlashSparks(tx, ty, Math.sign(p.vx || 1));
+                if (p.isEvolved) {
+                  particleSys.spawnLavaBubble(tx, ty);
+                }
+              }
             }
           }
         }
@@ -799,6 +1050,76 @@ class PassiveWeaponsManager {
         ctx.moveTo(0, 0);
         ctx.lineTo(8, 14);
         ctx.stroke();
+
+        ctx.restore();
+      } else if (p.type === 'javelin') {
+        ctx.save();
+        ctx.translate(rx, ry);
+        ctx.rotate(p.angle);
+        ctx.scale(p.scale, p.scale);
+
+        ctx.shadowColor = p.isEvolved ? '#ffd700' : '#00f5d4';
+        ctx.shadowBlur = p.isEvolved ? 18 : 12;
+
+        // Spear shaft
+        ctx.strokeStyle = p.isEvolved ? '#ffd700' : '#00f5d4';
+        ctx.lineWidth = p.isEvolved ? 3.5 : 2.5;
+        ctx.beginPath();
+        ctx.moveTo(-18, 0);
+        ctx.lineTo(16, 0);
+        ctx.stroke();
+
+        // Spearhead / Trident
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.moveTo(22, 0);
+        ctx.lineTo(12, -5);
+        ctx.lineTo(14, 0);
+        ctx.lineTo(12, 5);
+        ctx.closePath();
+        ctx.fill();
+
+        if (p.isEvolved) {
+          // Extra trident prongs
+          ctx.strokeStyle = '#ffd700';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(10, -6); ctx.lineTo(18, -9);
+          ctx.moveTo(10, 6); ctx.lineTo(18, 9);
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      } else if (p.type === 'chakram') {
+        ctx.save();
+        ctx.translate(rx, ry);
+        ctx.rotate(p.angle);
+        ctx.scale(p.scale, p.scale);
+
+        ctx.shadowColor = p.isEvolved ? '#ff4500' : '#ff0055';
+        ctx.shadowBlur = 14;
+
+        // Outer solar razor ring
+        ctx.strokeStyle = p.isEvolved ? '#ffd700' : '#ff0055';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, 11, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Inner core
+        ctx.fillStyle = p.isEvolved ? '#ff4500' : '#ffd700';
+        ctx.beginPath();
+        ctx.arc(0, 0, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 4 razor curved teeth
+        ctx.fillStyle = p.isEvolved ? '#fff275' : '#ff3366';
+        for (let b = 0; b < 4; b++) {
+          ctx.save();
+          ctx.rotate((b * Math.PI) / 2);
+          ctx.fillRect(8, -2, 7, 4);
+          ctx.restore();
+        }
 
         ctx.restore();
       }

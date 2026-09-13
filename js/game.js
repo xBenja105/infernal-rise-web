@@ -3176,13 +3176,15 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       this.ui.slotStatusBox.innerHTML = '⚡ <i>Girando los rodillos del Averno... ¿Qué bendición te aguarda?</i>';
     }
 
-    // Available starting weapons
+    // Available starting weapons (7 autonomous relics)
     const weaponSymbols = [
       { id: 'holy_cross', name: 'Cruces de Luz', icon: '✝️', isWeapon: true },
       { id: 'hellfire_orb', name: 'Orbe del Averno', icon: '☄️', isWeapon: true },
       { id: 'celestial_lightning', name: 'Ira del Cielo', icon: '⚡', isWeapon: true },
       { id: 'death_scythe', name: 'Guadaña Espectral', icon: '🪓', isWeapon: true },
-      { id: 'blood_garlic', name: 'Aura de Penitencia', icon: '📿', isWeapon: true }
+      { id: 'blood_garlic', name: 'Aura de Penitencia', icon: '📿', isWeapon: true },
+      { id: 'spectral_javelin', name: 'Lanza Espectral', icon: '🔱', isWeapon: true },
+      { id: 'infernal_chakram', name: 'Chakram del Averno', icon: '🌀', isWeapon: true }
     ];
 
     // Non-weapon / special symbols
