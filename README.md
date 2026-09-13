@@ -1,19 +1,16 @@
-# Infernal Rise — Edición Web (Plataformer 2D Incremental Rogue-lite)
+# Infernal Rise 2.0 (Plataformer 2D Incremental Rogue-lite)
 
 [![Jugar en Vercel](https://img.shields.io/badge/Jugar%20Online-Vercel-black?style=for-the-badge&logo=vercel)](https://infernal-rise-web.vercel.app)
 [![GitHub Repo](https://img.shields.io/badge/GitHub-xBenja105%2Finfernal--rise--web-181717?style=for-the-badge&logo=github)](https://github.com/xBenja105/infernal-rise-web)
 
 🎮 **Jugar Online en Vivo**: **[https://infernal-rise-web.vercel.app](https://infernal-rise-web.vercel.app)**
 
-**Autores Originales**: Benjamín Arriagada & Jorge Castro  
-**Asignatura**: Desarrollo de Videojuegos — 3er Semestre (INACAP)  
-**Docente**: Sebastián Pizarro  
-**Expansión**: Incremental Rogue-lite Engine con física suave, saltos progresivos, economía de almas y prestigios.
+**Autor**: Benjamín Arriagada ([@xBenja105](https://github.com/xBenja105))
 
 ---
 
 ## ⚔️ Acerca del Juego
-*Infernal Rise* es un videojuego de plataformas vertical y acción en 2D con ambientación de fantasía oscura y dificultad desafiante. En esta versión web, el juego original se ha transformado en un **Plataformer Hardcore Incremental Rogue-lite** estructurado canónicamente según la **Divina Comedia de Dante Alighieri** (los 9 Círculos del Infierno).
+*Infernal Rise 2.0* es un videojuego de plataformas vertical y acción en 2D con ambientación de fantasía oscura y dificultad desafiante. En esta versión web, el juego se ha transformado en un **Plataformer Hardcore Incremental Rogue-lite** estructurado canónicamente según la **Divina Comedia de Dante Alighieri** (los 9 Círculos del Infierno).
 
 Encarnas a **Kael**, un soldado condenado a ascender desde las profundidades del Purgatorio a través de los 9 Círculos del Inframundo, enfrentando a los 5 Guardianes Legendarios:
 1. **Rey Minos** (Juez de los Condenados — Círculo II)
