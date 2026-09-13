@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Infernal Rise — Edición Web</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="game-wrapper">
+    <canvas id="game-canvas" width="960" height="540"></canvas>
+
+    <!-- In-Game HUD -->
+    <div id="hud">
+      <div class="hud-top">
+        <div class="hud-top-left">
+          <div class="death-counter">
+            <span class="skull-icon"></span>
+            <span id="death-count">0</span>
+          </div>
+
+          <div class="economy-counters">
+            <div class="currency-pill souls-pill" title="Almas recolectadas">
+              <span class="currency-icon">🔮</span>
+              <span id="hud-souls-count">0</span>
+            </div>
+            <div class="currency-pill shards-pill" title="Fragmentos de Humanidad (obtenidos al vencer jefes)">
+              <span class="currency-icon">💠</span>
+              <span id="hud-shards-count">0</span>
+            </div>
+            <div class="currency-pill ashes-pill" title="Cenizas de Penitencia (+15% multi permanente)">
+              <span class="currency-icon">🔥</span>
+              <span id="hud-ashes-count">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hud-top-right">
+          <!-- Sanctuary shop is now located physically in the Lobby world as an interactive altar -->
+          <button id="btn-open-sanctuary" class="hud-sanctuary-btn" style="display: none !important;"></button>
+          <div id="player-health-wrap" style="display: none !important;"><div id="player-health-fill"></div></div>
+        </div>
+      </div>
+
+      <!-- Active Rogue-lite Boons & Passive Weapons (Vampire Survivors style) -->
+      <div id="hud-active-boons" class="hud-boons-bar"></div>
+      <div id="hud-passive-weapons" class="hud-weapons-bar"></div>
+
+      <!-- Boss HUD (Top Center) -->
+      <div id="boss-hud">
+        <div id="boss-name" class="boss-name">AZGALOR, EL ABRASADOR</div>
+        <div class="boss-bar-outer">
+          <div id="boss-health-fill" class="boss-bar-inner"></div>
+        </div>
+      </div>
+
+      <!-- Boss Defeat Banner -->
+      <div id="boss-defeat-banner" class="boss-defeat-banner hidden" style="display: none;">
+        <div class="defeat-crown">👑</div>
+        <div id="defeat-banner-title" class="defeat-title">¡JEFE DERROTADO!</div>
+        <div class="defeat-subtitle">Despoja el Cofre de Reliquia y cruza el Portal para ascender</div>
+      </div>
+
+      <!-- Interaction Badge -->
+      <div id="interaction-badge">[E] Hablar</div>
+    </div>
+
+    <!-- Dialogue Modal -->
+    <div id="dialogue-modal">
+      <div class="dialogue-content">
+        <div class="dialogue-portrait">
+          <canvas id="dialogue-portrait-canvas" width="96" height="96"></canvas>
+        </div>
+        <div class="dialogue-text-wrap">
+          <div id="dialogue-speaker" class="dialogue-speaker">Kael</div>
+          <div id="dialogue-text" class="dialogue-text">...</div>
+          <div class="dialogue-prompt">Pulsa [Espacio] o [E] para continuar ▶</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Menu Screen -->
+    <div id="main-menu" class="screen-overlay">
+      <h1 class="game-title">Infernal Rise</h1>
+      <div class="game-subtitle">El Ascenso hacia la Redención</div>
+      <div class="menu-buttons">
+        <button id="btn-start" class="btn-infernal">Comenzar</button>
+        <button id="btn-menu-sanctuary" class="btn-infernal">⛩️ Santuario de Mejoras</button>
+        <button id="btn-infernal-mode" class="btn-infernal">Modo Infernal</button>
+        <button id="btn-sound-toggle" class="btn-infernal" style="font-size: 16px;">Sonido: ON</button>
+        <button id="btn-reset-save" class="btn-infernal btn-danger" style="font-size: 14px;">⚠️ Reiniciar Progreso</button>
+      </div>
+      <div class="controls-guide">
+        <span><b>[A] / [D]</b> Moverse</span>
+        <span><b>[W] / [S]</b> Trepar Escaleras</span>
+        <span><b>[Espacio]</b> Saltar / Doble Salto</span>
+        <span><b>[Z] / [Click]</b> Atacar</span>
+        <span><b>[E]</b> Interactuar / Abrir Cofres</span>
+        <span><b>[P]</b> Santuario</span>
+        <span><b>[ESC]</b> Pausa</span>
+      </div>
+    </div>
+
+    <!-- Intro Lore Screen -->
+    <div id="intro-screen" class="screen-overlay hidden">
+      <div class="intro-text-box">
+        <p id="intro-typewriter"></p>
+      </div>
+      <div class="continue-prompt">Pulsa espacio para continuar</div>
+    </div>
+
+    <!-- Pause Screen -->
+    <div id="pause-screen" class="screen-overlay hidden">
+      <h2 class="game-title" style="font-size: 48px;">Pausa</h2>
+      <div class="menu-buttons">
+        <button id="btn-resume" class="btn-infernal">Reanudar</button>
+        <button id="btn-restart" class="btn-infernal">Reiniciar Nivel</button>
+        <button id="btn-pause-reset-save" class="btn-infernal btn-danger" style="font-size: 14px;">⚠️ Borrar Progreso</button>
+        <button id="btn-quit" class="btn-infernal btn-danger">Menú Principal</button>
+      </div>
+    </div>
+
+    <!-- Death / Game Over Screen -->
+    <div id="death-screen" class="screen-overlay hidden">
+      <h2>Has Perecido</h2>
+      <p id="death-message">¡El jugador ha muerto!</p>
+      <div class="menu-buttons">
+        <button id="btn-respawn" class="btn-infernal">Reintentar</button>
+        <button id="btn-death-menu" class="btn-infernal btn-danger">Menú Principal</button>
+      </div>
+    </div>
+
+    <!-- Victory Screen -->
+    <div id="victory-screen" class="screen-overlay hidden">
+      <h2 class="game-title" style="font-size: 48px; color: var(--gold); text-shadow: 0 0 30px rgba(244, 208, 111, 0.9);">¡Guardián Derrotado!</h2>
+      <p id="victory-message" style="font-size: 20px; margin-bottom: 30px; text-align: center; max-width: 600px;"></p>
+      <div class="menu-buttons">
+        <button id="btn-victory-next" class="btn-infernal">Continuar Ascenso</button>
+      </div>
+    </div>
+
+    <!-- Sanctuary Modal (Permanent Upgrades & Prestige) -->
+    <div id="sanctuary-modal" class="screen-overlay hidden">
+      <div class="sanctuary-container">
+        <div class="sanctuary-header">
+          <div class="sanctuary-title-wrap">
+            <h2 class="game-title" style="font-size: 30px; margin: 0;">Santuario de las Almas</h2>
+            <div class="sanctuary-subtitle">Altar ancestral donde Kael forja su redención eterna</div>
+          </div>
+          <button id="btn-close-sanctuary" class="btn-modal-close" title="Cerrar">✕</button>
+        </div>
+
+        <div class="sanctuary-wallet-bar">
+          <div class="wallet-stat"><span>🔮 Almas:</span> <b id="sanctuary-souls">0</b></div>
+          <div class="wallet-stat"><span>💠 Humanidad:</span> <b id="sanctuary-shards">0</b></div>
+          <div class="wallet-stat"><span>🔥 Cenizas:</span> <b id="sanctuary-ashes">0</b></div>
+          <div class="wallet-stat"><span>⚡ Multiplicador:</span> <b id="sanctuary-mult">+0%</b></div>
+        </div>
+
+        <div class="sanctuary-tabs">
+          <button id="tab-btn-upgrades" class="sanctuary-tab-btn active">Mejoras del Alma</button>
+          <button id="tab-btn-prestige" class="sanctuary-tab-btn">Penitencia y Prestigio</button>
+        </div>
+
+        <!-- Upgrades Tab -->
+        <div id="sanctuary-tab-upgrades" class="sanctuary-tab-panel">
+          <div id="upgrades-grid" class="upgrades-grid"></div>
+        </div>
+
+        <!-- Prestige Tab -->
+        <div id="sanctuary-tab-prestige" class="sanctuary-tab-panel hidden">
+          <div class="prestige-card">
+            <h3 style="font-family:'Cinzel',serif; color:var(--flame); font-size:22px; margin-bottom:8px;">El Fuego Purificador</h3>
+            <p style="font-size:15px; line-height:1.5; color:var(--text); margin-bottom:14px;">Al realizar la <b>Penitencia</b>, consumes tus almas y restableces tus mejoras básicas a cambio de <b>Cenizas de Penitencia</b> permanentes.</p>
+            <div class="prestige-perks-box">
+              <div class="perk-line">🔥 Cada Ceniza otorga un <b>+15% permanente</b> a todas las estadísticas y almas ganadas.</div>
+              <div class="perk-line">💠 Los <b>Fragmentos de Humanidad</b> y el Doble Salto se conservan siempre.</div>
+            </div>
+            <div class="prestige-calc-box">
+              <div>Cenizas actuales: <span id="prestige-current-ashes" style="color:var(--flame);font-weight:bold;">0</span></div>
+              <div>Cenizas al renacer: <span id="prestige-pending-ashes" style="color:var(--gold);font-weight:bold;font-size:20px;">0</span></div>
+            </div>
+            <button id="btn-perform-prestige" class="btn-infernal" style="margin-top:14px; width:100%;">Realizar Penitencia</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Boon Selection Modal (In-Run Roguelite Blessings) -->
+    <div id="boon-modal" class="screen-overlay hidden">
+      <div class="boon-modal-container">
+        <h2 class="game-title" style="font-size: 32px; margin-bottom: 6px; color: var(--gold); text-shadow: 0 0 25px rgba(244, 208, 111, 0.8);">Gracia del Purgatorio</h2>
+        <div class="boon-modal-subtitle">Has abierto un Cofre Sagrado. Selecciona una bendición para este ascenso:</div>
+        <div id="boon-cards-container" class="boon-cards-container"></div>
+      </div>
+    </div>
+
+    <!-- Reset Progress Confirmation Modal -->
+    <div id="reset-confirm-modal" class="screen-overlay hidden" style="z-index: 10000;">
+      <div class="sanctuary-container" style="max-width: 480px; text-align: center; padding: 28px; border-color: #ff3333; box-shadow: 0 0 35px rgba(255, 51, 51, 0.4);">
+        <h2 class="game-title" style="font-size: 26px; color: #ff4d4d; margin-bottom: 12px;">⚠️ Reiniciar Todo el Progreso</h2>
+        <p style="font-size: 15px; line-height: 1.6; color: #e0e0e0; margin-bottom: 24px;">
+          ¿Estás seguro de que deseas restablecer <b>todas</b> tus estadísticas, almas, cenizas, mejoras permanentes del santuario y contador de muertes a cero?<br><br>
+          <span style="color: #ff8888; font-weight: bold;">Esta acción es permanente e irreversible.</span>
+        </p>
+        <div style="display: flex; gap: 14px; justify-content: center;">
+          <button id="btn-confirm-reset" class="btn-infernal btn-danger" style="border-color: #ff4d4d; background: rgba(180, 20, 30, 0.8); color: #fff;">Sí, Borrar Todo</button>
+          <button id="btn-cancel-reset" class="btn-infernal">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reset Success Feedback Toast -->
+    <div id="reset-toast" class="hidden" style="position: absolute; top: 24px; left: 50%; transform: translateX(-50%); background: rgba(30, 10, 15, 0.95); border: 2px solid #ff4d4d; color: #ffdddd; padding: 12px 26px; border-radius: 8px; font-family: 'Cinzel', serif; font-size: 15px; font-weight: bold; z-index: 10001; pointer-events: none; box-shadow: 0 0 25px rgba(255, 77, 77, 0.6); text-align: center;">
+      ✓ Progreso y estadísticas reiniciados por completo
+    </div>
+
+    <!-- Virtual Controls for Mobile / Tablets -->
+    <div id="virtual-controls">
+      <div class="touch-dpad">
+        <button id="btn-touch-left" class="touch-btn">◀</button>
+        <button id="btn-touch-right" class="touch-btn">▶</button>
+      </div>
+      <div class="touch-actions">
+        <button id="btn-touch-interact" class="touch-btn" style="font-size: 18px;">E</button>
+        <button id="btn-touch-attack" class="touch-btn" style="font-size: 18px;">⚔</button>
+        <button id="btn-touch-jump" class="touch-btn" style="background: var(--flame); border-color: var(--gold);">▲</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Scripts -->
+  <script src="js/audio.js"></script>
+  <script src="js/sprites.js"></script>
+  <script src="js/particles.js"></script>
+  <script src="js/dialogues.js"></script>
+  <script src="js/progression.js"></script>
+  <script src="js/levels.js"></script>
+  <script src="js/entities.js"></script>
+  <script src="js/weapons.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>

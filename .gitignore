@@ -1,0 +1,16 @@
+﻿# Dependencies
+node_modules/
+
+# SonarQube analysis workdir
+.scannerwork/
+
+# Vercel deployment cache
+.vercel/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+*.log
+
+# Temp scratch scripts
+scratch/
