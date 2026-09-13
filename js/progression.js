@@ -303,7 +303,7 @@ class ProgressionManager {
       },
       soulGreed: {
         name: 'Codicia del Condenado',
-        desc: '+12% de almas obtenidas por altura y por cada enemigo derrotado.',
+        desc: '+10% de almas obtenidas por altura y por cada enemigo derrotado.',
         currency: 'souls',
         baseCost: 75,
         costMult: 1.5,
@@ -312,7 +312,7 @@ class ProgressionManager {
       },
       altarOfTorment: {
         name: 'Altar del Tormento',
-        desc: 'Genera almas pasivas continuamente (+0.4 almas/segundo por nivel base).',
+        desc: 'Genera almas pasivas continuamente (+0.08 almas/segundo por nivel base).',
         currency: 'souls',
         baseCost: 90,
         costMult: 1.55,
@@ -333,24 +333,59 @@ class ProgressionManager {
     this.loadSave();
   }
 
+  getStorage() {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) return window.localStorage;
+      if (typeof localStorage !== 'undefined') return localStorage;
+    } catch (e) {}
+    return null;
+  }
+
   loadSave() {
     try {
-      const data = JSON.parse(localStorage.getItem(this.SAVE_KEY));
+      const storage = this.getStorage();
+      const raw = storage ? (storage.getItem('infernal_rise_save_v2') || storage.getItem('infernal_rise_save_v1') || storage.getItem(this.SAVE_KEY)) : null;
+      const data = raw ? JSON.parse(raw) : null;
       if (data) {
         this.souls = data.souls || 0;
         this.humanityShards = data.humanityShards || 0;
         this.penitenceAshes = data.penitenceAshes || 0;
         this.totalSoulsEver = data.totalSoulsEver || 0;
         this.maxHeightClimbed = data.maxHeightClimbed || 0;
+
+        // Auto-sanitize broken or overflowed save data from previous exponential bug
+        let neededSanitizing = false;
+        if (this.souls > 10000) {
+          this.souls = 350;
+          neededSanitizing = true;
+        }
+        if (this.penitenceAshes > 25) {
+          this.penitenceAshes = 4;
+          neededSanitizing = true;
+        }
+        if (this.totalSoulsEver > 25000) {
+          this.totalSoulsEver = 1500;
+          neededSanitizing = true;
+        }
+        if (this.humanityShards > 40) {
+          this.humanityShards = 10;
+          neededSanitizing = true;
+        }
+
         if (data.upgrades) {
           if (data.upgrades.chargeSpeed !== undefined && data.upgrades.agility === undefined) {
             data.upgrades.agility = data.upgrades.chargeSpeed;
           }
           for (const k in this.upgrades) {
             if (data.upgrades[k] !== undefined) {
-              this.upgrades[k] = data.upgrades[k];
+              const maxAllowed = this.upgradeDefinitions[k] ? this.upgradeDefinitions[k].maxLvl : 10;
+              this.upgrades[k] = Math.min(maxAllowed, Math.max(0, data.upgrades[k]));
             }
           }
+        }
+
+        if (neededSanitizing) {
+          this.save();
         }
       }
     } catch (e) {
@@ -360,6 +395,8 @@ class ProgressionManager {
 
   save() {
     try {
+      const storage = this.getStorage();
+      if (!storage) return;
       const data = {
         souls: Math.floor(this.souls),
         humanityShards: this.humanityShards,
@@ -368,7 +405,7 @@ class ProgressionManager {
         maxHeightClimbed: Math.floor(this.maxHeightClimbed),
         upgrades: this.upgrades
       };
-      localStorage.setItem(this.SAVE_KEY, JSON.stringify(data));
+      storage.setItem(this.SAVE_KEY, JSON.stringify(data));
     } catch (e) {
       console.warn('Could not save data', e);
     }
@@ -376,24 +413,24 @@ class ProgressionManager {
 
   // ─── ECONOMY & GAINS ───
   getPrestigeMultiplier() {
-    // Each ash of penitence gives +5% permanent multiplier to all souls and combat stats
-    return 1.0 + (this.penitenceAshes * 0.05);
+    // Each ash gives +2% bonus souls, up to a maximum multiplier of 2.5x (+150%)
+    return Math.min(2.5, 1.0 + (this.penitenceAshes * 0.02));
   }
 
   getPassiveAPS() {
     const lvl = this.upgrades.altarOfTorment;
     if (lvl <= 0) return 0;
-    const baseAPS = lvl * 0.4;
-    const greedMult = 1.0 + (this.upgrades.soulGreed * 0.12);
+    const baseAPS = lvl * 0.08;
+    const greedMult = 1.0 + (this.upgrades.soulGreed * 0.10);
     const prestigeMult = this.getPrestigeMultiplier();
     return baseAPS * greedMult * prestigeMult;
   }
 
   addSouls(amount) {
-    const greedMult = 1.0 + (this.upgrades.soulGreed * 0.12);
-    const boonMult = this.hasBoon('goldenTouch') ? 2.0 : 1.0;
+    const greedMult = 1.0 + (this.upgrades.soulGreed * 0.10);
+    const boonMult = this.hasBoon('goldenTouch') ? 1.5 : 1.0;
     const prestigeMult = this.getPrestigeMultiplier();
-    const finalAmount = amount * greedMult * boonMult * prestigeMult;
+    const finalAmount = Math.max(1, Math.round(amount * greedMult * boonMult * prestigeMult));
 
     this.souls += finalAmount;
     this.totalSoulsEver += finalAmount;
@@ -459,10 +496,8 @@ class ProgressionManager {
 
   // ─── CALCULATE COMBAT & MOVEMENT STATS ───
   getPlayerStats() {
-    const prestige = this.getPrestigeMultiplier();
-
     return {
-      maxHp: Math.round((100 + (this.upgrades.vitality * 10)) * prestige),
+      maxHp: 100 + (this.upgrades.vitality * 10),
       hpRegen: this.upgrades.vitality * 0.08,
       hasSpikeResist: this.upgrades.spikeResist > 0,
       spikeDamageRatio: Math.max(0.35, 0.70 - (this.upgrades.spikeResist * 0.07)),
@@ -470,8 +505,8 @@ class ProgressionManager {
       jumpForceMult: 1.0 + (this.upgrades.jumpPower * 0.02),
       weaponName: 'Daga Básica',
       weaponType: 'dagger',
-      daggerDamage: Math.round((16 + (this.upgrades.bladeMastery * 2.5)) * prestige),
-      swordDamage: Math.round((16 + (this.upgrades.bladeMastery * 2.5)) * prestige),
+      daggerDamage: 16 + (this.upgrades.bladeMastery * 2.5),
+      swordDamage: 16 + (this.upgrades.bladeMastery * 2.5),
       hasDoubleJump: this.upgrades.doubleJump > 0,
       magnetRadius: this.hasBoon('soulMagnet') ? 260 : 70
     };
@@ -528,40 +563,40 @@ class ProgressionManager {
   }
 
   // ─── BALATRO CHIPS × MULT SCORING ENGINE ───
-  calculateBalatroScore(baseChips, context = {}) {
+  calculateBalatroScore(baseChips = 2, context = {}) {
     let bonusChips = 0;
-    let addMult = Math.min(12, Math.floor(this.bonkCombo * 0.5));
-    let xMult = context.isMegabonk ? 2.5 : 1.0;
+    let addMult = Math.min(4, Math.floor(this.bonkCombo * 0.2));
+    let xMult = context.isMegabonk ? 1.5 : 1.0;
 
     // Apply Jokers
     for (const joker of this.activeJokers) {
-      if (joker.edition === 'foil') bonusChips += 50;
-      else if (joker.edition === 'holo') addMult += 10;
-      else if (joker.edition === 'polychrome') xMult *= 1.5;
+      if (joker.edition === 'foil') bonusChips += 2;
+      else if (joker.edition === 'holo') addMult += 2;
+      else if (joker.edition === 'polychrome') xMult *= 1.25;
 
       switch (joker.id) {
         case 'joker_fool':
-          if (context.inAir) addMult += 4;
+          if (context.inAir) addMult += 2;
           break;
         case 'joker_greedy':
-          if (this.souls >= 150) xMult *= 1.5;
+          if (this.souls >= 150) xMult *= 1.2;
           break;
         case 'joker_wheel':
-          if (Math.random() < 0.25) xMult *= 3.0;
+          if (Math.random() < 0.20) xMult *= 1.5;
           break;
         case 'joker_bonk':
-          if (context.isMegabonk) addMult += 10;
+          if (context.isMegabonk) addMult += 2;
           break;
         case 'joker_golden':
-          bonusChips += 35;
+          bonusChips += 4;
           break;
       }
     }
 
-    const prestige = this.getPrestigeMultiplier();
-    const finalChips = Math.round((baseChips + bonusChips) * prestige);
+    const finalChips = baseChips + bonusChips;
     const finalMult = Math.max(1, 1 + addMult);
-    const totalSouls = Math.max(1, Math.round(finalChips * finalMult * xMult));
+    const rawSouls = Math.round(finalChips * finalMult * xMult);
+    const totalSouls = Math.min(20, Math.max(1, rawSouls));
 
     this.addSouls(totalSouls);
     this.lastBalatroScore = { chips: finalChips, mult: finalMult, xMult: xMult, totalSouls: totalSouls };
@@ -594,11 +629,11 @@ class ProgressionManager {
   // ─── SCRITCHY SCRATCHY (RASCADOR DEL INFRAMUNDO) ───
   generateScratchCard() {
     const symbols = [
-      { id: 'souls_50', icon: '🔮', name: '50 Almas', type: 'souls', value: 50 },
-      { id: 'souls_100', icon: '🔮', name: '100 Almas', type: 'souls', value: 100 },
-      { id: 'souls_200', icon: '✨', name: '200 Almas', type: 'souls', value: 200 },
+      { id: 'souls_8', icon: '🔮', name: '8 Almas', type: 'souls', value: 8 },
+      { id: 'souls_15', icon: '🔮', name: '15 Almas', type: 'souls', value: 15 },
+      { id: 'souls_25', icon: '✨', name: '25 Almas', type: 'souls', value: 25 },
       { id: 'shard', icon: '💠', name: '1 Fragmento', type: 'shard', value: 1 },
-      { id: 'megabonk', icon: '💥', name: 'Impacto Titánico', type: 'megabonk', value: 3 },
+      { id: 'megabonk', icon: '💥', name: 'Impacto Titánico', type: 'megabonk', value: 2 },
       { id: 'joker', icon: '🃏', name: 'Arcano', type: 'joker', value: 1 }
     ];
 
@@ -637,15 +672,15 @@ class ProgressionManager {
     if (card.isJackpot) {
       const sym = card.cells[0];
       if (sym.type === 'souls') {
-        totalSoulsAwarded = sym.value * 4;
+        totalSoulsAwarded = sym.value * 3;
         this.addSouls(totalSoulsAwarded);
       } else if (sym.type === 'shard') {
-        this.addHumanityShards(3);
+        this.addHumanityShards(2);
       } else if (sym.type === 'joker') {
-        this.acquireJoker({ id: 'joker_wheel', name: 'Arcano: La Rueda del Destino', rarity: 'Épica', desc: 'Arcano: 25% prob triplicar almas', icon: '🎡', edition: 'polychrome' });
+        this.acquireJoker({ id: 'joker_wheel', name: 'Arcano: La Rueda del Destino', rarity: 'Épica', desc: 'Arcano: 20% prob potenciar almas', icon: '🎡', edition: 'polychrome' });
       } else {
-        totalSoulsAwarded = 350;
-        this.addSouls(350);
+        totalSoulsAwarded = 45;
+        this.addSouls(45);
       }
     } else {
       for (const c of card.cells) {
@@ -655,8 +690,8 @@ class ProgressionManager {
         } else if (c.type === 'shard') {
           this.addHumanityShards(c.value);
         } else {
-          totalSoulsAwarded += 40;
-          this.addSouls(40);
+          totalSoulsAwarded += 10;
+          this.addSouls(10);
         }
       }
     }
@@ -753,8 +788,8 @@ class ProgressionManager {
 
   // ─── PRESTIGE (PENITENCIA / PURGATORIO) ───
   calculatePendingAshes() {
-    // 1 ash per 300 total souls ever earned
-    const potentialTotalAshes = Math.floor(Math.sqrt(this.totalSoulsEver / 40));
+    // 1 ash per 500 total souls ever earned (capped at 30 max)
+    const potentialTotalAshes = Math.min(30, Math.floor(Math.sqrt(this.totalSoulsEver / 500)));
     return Math.max(0, potentialTotalAshes - this.penitenceAshes);
   }
 
@@ -797,8 +832,11 @@ class ProgressionManager {
     }
     this.activeBoons = [];
     try {
-      localStorage.removeItem(this.SAVE_KEY);
-      localStorage.removeItem('infernal_rise_deaths');
+      const storage = this.getStorage();
+      if (storage) {
+        storage.removeItem(this.SAVE_KEY);
+        storage.removeItem('infernal_rise_deaths');
+      }
     } catch (e) {
       console.warn('Could not clear localStorage save data', e);
     }

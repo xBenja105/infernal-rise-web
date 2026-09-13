@@ -889,8 +889,8 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
     if (!this.boss.hasDropped) {
       this.boss.hasDropped = true;
-      this.spawnSoulOrbs(this.boss.x + this.boss.w / 2, this.boss.y + this.boss.h / 2, 10, 350, true);
-      this.spawnXpGems(this.boss.x + this.boss.w / 2, this.boss.y + this.boss.h / 2, 8, 120);
+      this.spawnSoulOrbs(this.boss.x + this.boss.w / 2, this.boss.y + this.boss.h / 2, 6, 120, true);
+      this.spawnXpGems(this.boss.x + this.boss.w / 2, this.boss.y + this.boss.h / 2, 5, 50);
       if (window.progression) window.progression.addHumanityShards(2);
     }
 
@@ -2485,15 +2485,15 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
   }
 
   // ─── INCREMENTAL & ROGUELITE METHODS ───
-  spawnSoulOrbs(x, y, count = 3, value = 20, isGolden = false) {
+  spawnSoulOrbs(x, y, count = 2, value = 4, isGolden = false) {
     for (let i = 0; i < count; i++) {
-      this.soulOrbs.push(new SoulOrb(x, y, Math.round(value / count), isGolden));
+      this.soulOrbs.push(new SoulOrb(x, y, Math.max(1, Math.round(value / count)), isGolden));
     }
   }
 
-  spawnXpGems(x, y, count = 1, value = 15) {
+  spawnXpGems(x, y, count = 1, value = 12) {
     for (let i = 0; i < count; i++) {
-      this.xpGems.push(new XpGem(x, y, Math.round(value / count)));
+      this.xpGems.push(new XpGem(x, y, Math.max(1, Math.round(value / count))));
     }
   }
 
@@ -2520,7 +2520,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
             en.isDead = true;
             en.state = 'dead';
             if (window.particleSystem) window.particleSystem.spawnBloodExplosion(en.x + en.w / 2, en.y + en.h / 2, 25);
-            this.spawnSoulOrbs(en.x + en.w / 2, en.y + en.h / 2, 3, 20);
+            this.spawnSoulOrbs(en.x + en.w / 2, en.y + en.h / 2, 2, en.isElite ? 14 : 4);
           }
         }
       }

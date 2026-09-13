@@ -983,20 +983,30 @@ class SkeletonEnemy {
             if (this.x + this.w > sp.x && this.x < sp.x + sp.w &&
                 this.y + this.h >= sp.y && this.y < sp.y + sp.h) {
               if (particleSys && particleSys.spawnFloatingText) {
-                particleSys.spawnFloatingText('🔥 ¡ANIQUILACIÓN!', this.x + this.w / 2, this.y - 15, { isMegabonk: true });
+                particleSys.spawnFloatingText('🔥 ¡ANIQUILACIÓN! +4 🔮', this.x + this.w / 2, this.y - 15, { isMegabonk: true });
                 particleSys.spawnBloodExplosion(this.x + this.w / 2, this.y + this.h / 2, 40);
               }
-              this.takeDamage(999, this.x, soundEng, particleSys);
+              if (window.progression) window.progression.addSouls(4);
+              this.hp = 0;
+              this.hasDropped = true;
+              this.state = 'dead';
+              this.deathTimer = 0.8;
+              if (soundEng && soundEng.playHit) soundEng.playHit();
               return;
             }
           }
         }
         if (level.lavaY !== undefined && (this.y + this.h >= level.lavaY)) {
           if (particleSys && particleSys.spawnFloatingText) {
-            particleSys.spawnFloatingText('🔥 ¡ANIQUILACIÓN!', this.x + this.w / 2, this.y - 15, { isMegabonk: true });
+            particleSys.spawnFloatingText('🔥 ¡ANIQUILACIÓN! +4 🔮', this.x + this.w / 2, this.y - 15, { isMegabonk: true });
             particleSys.spawnBloodExplosion(this.x + this.w / 2, this.y + this.h / 2, 40);
           }
-          this.takeDamage(999, this.x, soundEng, particleSys);
+          if (window.progression) window.progression.addSouls(4);
+          this.hp = 0;
+          this.hasDropped = true;
+          this.state = 'dead';
+          this.deathTimer = 0.8;
+          if (soundEng && soundEng.playHit) soundEng.playHit();
           return;
         }
       }
@@ -1496,11 +1506,9 @@ class SkeletonEnemy {
     this.isGrounded = false;
     this.x += hitDir * 4;
 
-    // Megabonk Combo & Balatro Scoring Engine
+    // Megabonk Combo & Comic-book Floating Text
     if (window.progression) {
       window.progression.addBonkHit(isMegabonk);
-      const isPlayerInAir = (window.game && window.game.player) ? !window.game.player.isGrounded : false;
-      const score = window.progression.calculateBalatroScore(amount, { isMegabonk, inAir: isPlayerInAir });
 
       // Comic-book Floating Text
       if (particleSys && particleSys.spawnFloatingText) {
@@ -1528,22 +1536,30 @@ class SkeletonEnemy {
       this.animFrame = 0;
       if (particleSys) particleSys.spawnBloodExplosion(this.x + this.w / 2, this.y + this.h / 2, this.isElite ? 45 : 25);
       if (window.game) {
-        const souls = this.isElite ? 4 : 2;
+        // Balanced Soul Orbs: 4 souls for normal, 14 souls for elite
+        const orbCount = 2;
+        const totalSouls = this.isElite ? 14 : 4;
         if (window.game.spawnSoulOrbs) {
-          window.game.spawnSoulOrbs(this.x + this.w / 2, this.y + this.h / 2, souls, this.isElite ? 60 : 20);
+          window.game.spawnSoulOrbs(this.x + this.w / 2, this.y + this.h / 2, orbCount, totalSouls);
+        }
+
+        // Balatro Scoring Engine triggered ONLY on enemy death (capped bonus tribute)
+        if (window.progression) {
+          const isPlayerInAir = (window.game && window.game.player) ? !window.game.player.isGrounded : false;
+          window.progression.calculateBalatroScore(this.isElite ? 6 : 2, { isMegabonk, inAir: isPlayerInAir });
         }
 
         // Vampire Survivors In-Run XP Gems
         if (window.game.spawnXpGems) {
-          const xpVal = this.isElite ? 45 : 18;
+          const xpVal = this.isElite ? 25 : 12;
           window.game.spawnXpGems(this.x + this.w / 2, this.y + this.h / 2, this.isElite ? 2 : 1, xpVal);
         }
 
-        if (window.game.spawnHealthOrb && Math.random() < (this.isElite ? 0.65 : 0.28)) {
+        if (window.game.spawnHealthOrb && Math.random() < (this.isElite ? 0.40 : 0.15)) {
           window.game.spawnHealthOrb(this.x + this.w / 2, this.y + this.h / 2, this.isElite ? 25 : 15);
         }
-        // Scritchy Scratchy Ticket Drop (12% from elites, 4% from normal)
-        if (window.progression && Math.random() < (this.isElite ? 0.12 : 0.04)) {
+        // Scritchy Scratchy Ticket Drop (10% exclusively from elite enemies to avoid spam)
+        if (window.progression && this.isElite && Math.random() < 0.10) {
           if (window.game.openScratchCardModal) {
             window.game.openScratchCardModal(window.progression.generateScratchCard());
           }
@@ -2703,7 +2719,7 @@ class FlameWave {
           en.isDead = true;
           en.state = 'dead';
           if (particleSys) particleSys.spawnBloodExplosion(en.x + en.w / 2, en.y + en.h / 2, 25);
-          if (window.game) window.game.spawnSoulOrbs(en.x + en.w / 2, en.y + en.h / 2, 3, 20);
+          if (window.game) window.game.spawnSoulOrbs(en.x + en.w / 2, en.y + en.h / 2, 2, en.isElite ? 14 : 4);
         }
         this.isDead = true;
         return;
@@ -2724,7 +2740,7 @@ class FlameWave {
           particleSys.spawnBloodExplosion(boss.x + boss.w / 2, boss.y + boss.h / 2, 80);
         }
         if (soundEng) soundEng.playDeath();
-        if (window.game) window.game.spawnSoulOrbs(boss.x + boss.w / 2, boss.y + boss.h / 2, 10, 350, true);
+        if (window.game) window.game.spawnSoulOrbs(boss.x + boss.w / 2, boss.y + boss.h / 2, 6, 120, true);
         if (window.progression) window.progression.addHumanityShards(1);
       }
       this.isDead = true;
@@ -3461,7 +3477,7 @@ class AbyssalBat {
       this.isDead = true;
       if (particleSys) particleSys.spawnBloodExplosion(this.x + this.w / 2, this.y + this.h / 2, 20);
       if (window.game) {
-        window.game.spawnSoulOrbs(this.x + this.w / 2, this.y + this.h / 2, 2, 16);
+        window.game.spawnSoulOrbs(this.x + this.w / 2, this.y + this.h / 2, 1, 2);
         if (Math.random() < 0.25) {
           window.game.spawnHealthOrb(this.x + this.w / 2, this.y + this.h / 2, 15);
         }
