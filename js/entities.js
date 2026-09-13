@@ -2016,12 +2016,6 @@ class SkeletonEnemy {
         if (window.game.spawnHealthOrb && Math.random() < (this.isElite ? 0.40 : 0.15)) {
           window.game.spawnHealthOrb(this.x + this.w / 2, this.y + this.h / 2, this.isElite ? 25 : 15);
         }
-        // Scritchy Scratchy Ticket Drop (10% exclusively from elite enemies to avoid spam)
-        if (window.progression && this.isElite && Math.random() < 0.10) {
-          if (window.game.openScratchCardModal) {
-            window.game.openScratchCardModal(window.progression.generateScratchCard());
-          }
-        }
         // BoonChest drop from Giant / Elite enemies (35% drop chance to reward player for defeating health-bar elites)
         if (this.isElite && window.game.spawnBoonChest && Math.random() < 0.35) {
           window.game.spawnBoonChest(this.x + this.w / 2 - 17, this.y + this.h - 26);

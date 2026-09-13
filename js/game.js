@@ -56,7 +56,6 @@ class Game {
     this.urns = [];
     this.flameWaves = [];
     this.activeChest = null;
-    this.activeScratchCard = null;
     this.pendingLevelUps = 0;
     this.lastReportedAltitude = 0;
 
@@ -212,14 +211,6 @@ class Game {
       modalRunLevel: document.getElementById('modal-run-level'),
       levelupCardsContainer: document.getElementById('levelup-cards-container'),
       btnLevelupReroll: document.getElementById('btn-levelup-reroll'),
-
-      // Scritchy Scratchy Modal
-      scratchCardModal: document.getElementById('scratch-card-modal'),
-      scratchGrid: document.getElementById('scratch-grid'),
-      scratchResultMsg: document.getElementById('scratch-result-msg'),
-      btnClaimScratch: document.getElementById('btn-claim-scratch'),
-      btnScratchAll: document.getElementById('btn-scratch-all'),
-      btnCloseScratch: document.getElementById('btn-close-scratch'),
 
       // Ruleta de Armas (Slot Machine) Modal
       slotMachineModal: document.getElementById('slot-machine-modal'),
@@ -420,8 +411,6 @@ class Game {
           this.closeSanctuaryModal();
         } else if (this.state === 'SLOT_MACHINE') {
           this.closeSlotMachineModal();
-        } else if (this.state === 'SCRATCH_CARD') {
-          this.closeScratchCardModal();
         } else if (this.state === 'BOON_SELECT' || this.state === 'LEVEL_UP') {
           // Keep modal active until choice is selected
         } else {
@@ -513,8 +502,6 @@ class Game {
           this.closeSanctuaryModal();
         } else if (this.state === 'SLOT_MACHINE') {
           this.closeSlotMachineModal();
-        } else if (this.state === 'SCRATCH_CARD') {
-          this.closeScratchCardModal();
         } else if (this.state === 'BOON_SELECT' || this.state === 'LEVEL_UP') {
           // Keep active until choice
         } else {
@@ -847,11 +834,6 @@ class Game {
           this.ui.btnBoonReroll.disabled = !window.progression.canReroll();
         }
       });
-    }
-
-    // Scritchy Scratchy Modal Actions
-    if (this.ui.btnCloseScratch) {
-      this.ui.btnCloseScratch.addEventListener('click', () => this.closeScratchCardModal());
     }
 
     // Ruleta de Armas (Slot Machine) Modal Actions
@@ -1625,6 +1607,9 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
         const soulsReward = Math.max(1, Math.floor(diff / 22));
         if (soulsReward > 0 && window.progression) {
           window.progression.addSouls(soulsReward);
+        }
+        if (altitude >= 200 && window.progression && window.progression.unlockAchievement) {
+          window.progression.unlockAchievement('speed_demon');
         }
       }
     }
@@ -3143,9 +3128,6 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       } else if (b.isTome) {
         badgeHtml = `<span class="boon-rarity" style="background:rgba(0,180,216,0.25);border:1.5px solid #00b4d8;color:#90e0ef;">📖 TOMO PASIVO</span>`;
         btnText = 'Aprender Tomo';
-      } else if (b.isScratchCard) {
-        badgeHtml = `<span class="boon-rarity" style="background:rgba(255,209,102,0.25);border:1.5px solid #ffd166;color:#ffd166;">🎟️ TABLILLA DEL DESTINO</span>`;
-        btnText = '¡Raspar Tablilla!';
       } else {
         const rarityClass = b.rarity.toLowerCase() === 'épica' ? 'rarity-epica' : (b.rarity.toLowerCase() === 'rara' ? 'rarity-rara' : 'rarity-comun');
         badgeHtml = `<span class="boon-rarity ${rarityClass}">${b.rarity}</span>`;
@@ -3259,9 +3241,6 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       } else if (b.isTome) {
         badgeHtml = `<span class="boon-rarity" style="background:rgba(0,180,216,0.25);border:1.5px solid #00b4d8;color:#90e0ef;">📖 TOMO PASIVO</span>`;
         btnText = 'Aprender Tomo';
-      } else if (b.isScratchCard) {
-        badgeHtml = `<span class="boon-rarity" style="background:rgba(255,209,102,0.25);border:1.5px solid #ffd166;color:#ffd166;">🎟️ TABLILLA DEL DESTINO</span>`;
-        btnText = '¡Raspar Tablilla!';
       } else {
         const rarityClass = b.rarity.toLowerCase() === 'épica' ? 'rarity-epica' : (b.rarity.toLowerCase() === 'rara' ? 'rarity-rara' : 'rarity-comun');
         badgeHtml = `<span class="boon-rarity ${rarityClass}">${b.rarity}</span>`;
@@ -3298,103 +3277,6 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     if (this.ui && this.ui.levelUpModal) {
       this.ui.levelUpModal.classList.add('hidden');
     }
-    this.state = this.prevStateBeforeModal || 'PLAYING';
-  }
-
-  // ─── SCRITCHY SCRATCHY (RASCADOR DEL INFRAMUNDO) ───
-  openScratchCardModal(card) {
-    if (!card) return;
-    this.activeScratchCard = card;
-    this.prevStateBeforeModal = this.state;
-    this.state = 'SCRATCH_CARD';
-    this.ui.interactionBadge.style.display = 'none';
-
-    this.ui.scratchGrid.innerHTML = '';
-    this.ui.scratchResultMsg.textContent = '¡Rasca o haz clic en las 3 casillas doradas!';
-    this.ui.btnClaimScratch.disabled = true;
-
-    for (let i = 0; i < 3; i++) {
-      const cellData = card.cells[i];
-      const cell = document.createElement('div');
-      cell.className = 'scratch-cell' + (card.scratched[i] ? ' scratched' : '');
-      cell.innerHTML = `
-        <div class="scratch-foil">
-          <span>✨</span>
-          <span>RASPAR</span>
-        </div>
-        <div class="scratch-cell-inner">
-          <span class="scratch-cell-icon">${cellData.icon}</span>
-          <span class="scratch-cell-label">${cellData.name}</span>
-        </div>
-      `;
-
-      const scratchOne = () => {
-        if (card.scratched[i]) return;
-        card.scratched[i] = true;
-        cell.classList.add('scratched');
-        if (window.soundEngine && window.soundEngine.playSwordSlash) {
-          window.soundEngine.playSwordSlash();
-        }
-        if (window.particleSystem) {
-          window.particleSystem.spawnDust(this.vWidth / 2 + (i - 1) * 80, this.vHeight / 2, 8);
-        }
-
-        const scratchedCount = card.scratched.filter(s => s).length;
-        if (scratchedCount === 3) {
-          this.ui.btnClaimScratch.disabled = false;
-          if (card.isJackpot) {
-            this.ui.scratchResultMsg.innerHTML = '🎉 ¡¡JACKPOT TRIPLE!! ¡Premio multiplicado ×4!';
-            if (window.particleSystem) {
-              window.particleSystem.triggerScreenShake(0.35, 7);
-              window.particleSystem.spawnTeleportSparks(this.vWidth / 2, this.vHeight / 2);
-            }
-            if (window.soundEngine && window.soundEngine.playPrestige) {
-              window.soundEngine.playPrestige();
-            }
-          } else {
-            this.ui.scratchResultMsg.innerHTML = '✨ ¡Casillas reveladas! Reclama tu botín.';
-          }
-        }
-      };
-
-      cell.addEventListener('click', scratchOne);
-      this.ui.scratchGrid.appendChild(cell);
-    }
-
-    this.ui.btnScratchAll.onclick = () => {
-      const cells = this.ui.scratchGrid.querySelectorAll('.scratch-cell');
-      cells.forEach((c, idx) => {
-        card.scratched[idx] = true;
-        c.classList.add('scratched');
-      });
-      this.ui.btnClaimScratch.disabled = false;
-      if (card.isJackpot) {
-        this.ui.scratchResultMsg.innerHTML = '🎉 ¡¡JACKPOT TRIPLE!! ¡Premio multiplicado ×4!';
-        if (window.particleSystem) {
-          window.particleSystem.triggerScreenShake(0.35, 7);
-        }
-        if (window.soundEngine && window.soundEngine.playPrestige) window.soundEngine.playPrestige();
-      } else {
-        this.ui.scratchResultMsg.innerHTML = '✨ ¡Casillas reveladas! Reclama tu botín.';
-      }
-    };
-
-    this.ui.btnClaimScratch.onclick = () => {
-      const reward = window.progression.claimScratchReward(card);
-      if (reward && reward.souls > 0 && window.progression && window.progression.unlockAchievement) {
-        window.progression.unlockAchievement('scratch_winner');
-      }
-      if (window.soundEngine && window.soundEngine.playSoulPickup) {
-        window.soundEngine.playSoulPickup();
-      }
-      this.closeScratchCardModal();
-    };
-
-    this.ui.scratchCardModal.classList.remove('hidden');
-  }
-
-  closeScratchCardModal() {
-    if (this.ui.scratchCardModal) this.ui.scratchCardModal.classList.add('hidden');
     this.state = this.prevStateBeforeModal || 'PLAYING';
   }
 
@@ -3992,8 +3874,6 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
         this.closeSanctuaryModal();
       } else if (this.state === 'SLOT_MACHINE') {
         this.closeSlotMachineModal();
-      } else if (this.state === 'SCRATCH_CARD') {
-        this.closeScratchCardModal();
       } else if (this.state === 'BOON_SELECT' || this.state === 'LEVEL_UP') {
         // Selection is required
       } else {

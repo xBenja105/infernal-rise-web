@@ -518,8 +518,15 @@ html, body {
 .menu-buttons-organized {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 12px;
-  width: min(390px, 88vw);
+  width: min(440px, 92vw);
+  margin: 0 auto;
+}
+
+.menu-buttons-organized > .btn-infernal {
+  width: 100%;
 }
 
 .btn-infernal {
@@ -581,18 +588,56 @@ html, body {
   box-shadow: 0 0 25px rgba(239, 68, 68, 0.75) !important;
 }
 
-/* Secondary Row (Codex & Settings) */
+/* Secondary Row (Codex, Wardrobe, Achievements, Settings: 2x2 Clean Grid) */
 .menu-secondary-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
   width: 100%;
 }
 
 .btn-subnav {
-  flex: 1;
-  font-size: 14px;
-  padding: 10px 12px;
-  letter-spacing: 1px;
+  width: 100%;
+  font-size: 13.5px;
+  padding: 11px 10px;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Standard Menu Buttons & Dialog Centering (Pause, Death, Victory) */
+.menu-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 650px;
+  margin: 16px auto 0 auto;
+}
+
+.menu-buttons .btn-infernal {
+  min-width: 180px;
+  text-align: center;
+  justify-content: center;
+}
+
+/* Pause screen vertical button stack */
+#pause-screen .menu-buttons {
+  flex-direction: column;
+  max-width: 360px;
+  width: min(360px, 90vw);
+  gap: 12px;
+}
+
+#pause-screen .menu-buttons .btn-infernal {
+  width: 100%;
+  padding: 12px 20px;
+  font-size: 17px;
 }
 
 /* Hover yellow for general buttons */
@@ -670,20 +715,26 @@ html, body {
 }
 
 .subview-footer {
-  margin-top: 14px;
+  margin-top: 18px;
   display: flex;
   justify-content: center;
+  align-items: center;
+  width: 100%;
 }
 
 .btn-back {
   font-size: 15px;
-  padding: 10px 26px;
+  padding: 11px 32px;
   border-color: #832035;
+  min-width: 220px;
+  text-align: center;
+  justify-content: center;
 }
 
 /* ─── CODEX SUBVIEW ─── */
 .codex-content-scroll {
   width: min(740px, 92vw);
+  margin: 0 auto;
   max-height: 56vh;
   overflow-y: auto;
   display: flex;
@@ -792,11 +843,12 @@ html, body {
 
 /* ─── SETTINGS SUBVIEW ─── */
 .settings-content-card {
-  width: min(580px, 92vw);
+  width: min(650px, 92vw);
+  margin: 0 auto;
   background: rgba(18, 9, 15, 0.94);
   border: 1.5px solid #4a1520;
   border-radius: 8px;
-  padding: 16px 22px;
+  padding: 18px 24px;
   box-shadow: 0 4px 22px rgba(0,0,0,0.85);
   display: flex;
   flex-direction: column;
@@ -2100,129 +2152,6 @@ body.in-menu #virtual-controls {
   cursor: not-allowed;
 }
 
-/* ─── TABLILLA RASCABLE DEL DESTINO ─── */
-.scratch-modal-container {
-  background: rgba(15, 8, 20, 0.97);
-  border: 2px solid #ffd166;
-  border-radius: 10px;
-  width: min(540px, 92%);
-  padding: 24px 20px;
-  text-align: center;
-  box-shadow: 0 0 50px rgba(255, 209, 102, 0.45);
-  position: relative;
-}
-
-.scratch-header {
-  margin-bottom: 18px;
-}
-
-.scratch-icon {
-  font-size: 38px;
-  display: inline-block;
-  margin-bottom: 4px;
-}
-
-.scratch-subtitle {
-  font-size: 14px;
-  color: #d8c8b8;
-  margin-top: 4px;
-}
-
-.scratch-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-  margin: 20px auto;
-  max-width: 420px;
-}
-
-.scratch-cell {
-  aspect-ratio: 1;
-  background: #1a0f24;
-  border: 2px solid #4a286d;
-  border-radius: 8px;
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.7);
-  transition: transform 0.2s ease, border-color 0.2s;
-}
-
-.scratch-cell:hover {
-  transform: scale(1.05);
-  border-color: #ffd166;
-}
-
-.scratch-cell-inner {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 4px;
-  padding: 8px;
-}
-
-.scratch-cell-icon {
-  font-size: 34px;
-  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
-}
-
-.scratch-cell-label {
-  font-family: 'Cinzel', serif;
-  font-size: 13px;
-  font-weight: 800;
-  color: #fff;
-}
-
-.scratch-foil {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, #d4af37 0%, #ffd700 35%, #aa771c 70%, #d4af37 100%);
-  border: 1px solid #ffe600;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  color: #4a3000;
-  font-family: 'Cinzel', serif;
-  font-size: 14px;
-  font-weight: 900;
-  letter-spacing: 1px;
-  box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
-  transition: opacity 0.35s ease, transform 0.35s ease;
-  z-index: 2;
-}
-
-.scratch-cell.scratched .scratch-foil {
-  opacity: 0;
-  transform: scale(1.2);
-  pointer-events: none;
-}
-
-.scratch-result-msg {
-  font-family: 'VT323', monospace;
-  font-size: 24px;
-  color: #ffd166;
-  min-height: 32px;
-  margin: 12px 0;
-  text-shadow: 0 0 10px rgba(255, 209, 102, 0.7);
-}
-
-.scratch-actions {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
 /* ─── SLOT MACHINE (RULETA DE ARMAS) ─── */
 .slot-machine-container {
   background: radial-gradient(circle at center, #231024 0%, #0c050e 100%);
@@ -2677,7 +2606,8 @@ body.in-menu #virtual-controls {
 
 /* ─── ACHIEVEMENTS GRID & CARDS ─── */
 .achievements-summary-header {
-  margin-bottom: 16px;
+  width: min(720px, 92vw);
+  margin: 0 auto 16px auto;
 }
 
 .achievements-progress-bar-wrap {
@@ -2710,6 +2640,8 @@ body.in-menu #virtual-controls {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 12px;
+  width: min(720px, 92vw);
+  margin: 0 auto;
   max-height: 52vh;
   overflow-y: auto;
   padding-right: 6px;
@@ -3069,10 +3001,11 @@ body.in-menu #virtual-controls {
 
 /* 4. WARDROBE / SKINS VIEW */
 .wardrobe-scroll-container {
-  max-height: 420px;
+  width: min(780px, 92vw);
+  margin: 0 auto 12px auto;
+  max-height: 440px;
   overflow-y: auto;
   padding: 10px;
-  margin-bottom: 12px;
 }
 
 .wardrobe-grid {
@@ -3225,6 +3158,23 @@ body.in-menu #virtual-controls {
 @keyframes pulseRebind {
   from { opacity: 0.6; transform: scale(0.95); }
   to { opacity: 1.0; transform: scale(1.05); }
+}
+
+/* Clean Modal Centering & Actions */
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-top: 18px;
+}
+
+#btn-reset-keybindings {
+  margin: 14px auto 0 auto !important;
+  display: flex !important;
+  justify-content: center;
+  text-align: center;
 }
 
 

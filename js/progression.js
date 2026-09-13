@@ -45,9 +45,6 @@ class ProgressionManager {
     this.lastBalatroScore = { chips: 0, mult: 1, xMult: 1, totalSouls: 0 };
     this.rerollCost = 15;
 
-    // ─── SCRITCHY SCRATCHY ───
-    this.activeScratchCard = null;
-
     // ─── IN-GAME ACHIEVEMENTS (LOGROS DEL AVERNO) ───
     this.achievements = {};
     this.achievementDefinitions = [
@@ -60,7 +57,7 @@ class ProgressionManager {
       { id: 'arsenal_complete', name: 'Ascensión Celestial', icon: '🌟', desc: 'Desbloquea las 7 armas y despierta la Skin Ascendida.', reward: 150, shards: 1 },
       { id: 'boss_slayer', name: 'Verdugo de la Cripta', icon: '👹', desc: 'Derrota al Gran Guardián de la Cripta.', reward: 100, shards: 1 },
       { id: 'lucky_spin', name: 'Suerte del Averno', icon: '🎲', desc: 'Gana un premio en la Ruleta / Tragaperras.', reward: 40 },
-      { id: 'scratch_winner', name: 'Raspe de la Fortuna', icon: '🎟️', desc: 'Reclama una tarjeta Scritchy Scratchy ganadora.', reward: 50 },
+      { id: 'speed_demon', name: 'Velocista del Abismo', icon: '⚡', desc: 'Alcanza los 200m de altura en la torre.', reward: 50 },
       { id: 'penitence', name: 'Fénix del Averno', icon: '🔥', desc: 'Realiza tu primer Sacrificio de Cenizas (Prestigio).', reward: 120 },
       { id: 'immortal_run', name: 'Inmortal del Abismo', icon: '🩸', desc: 'Alcanza el nivel 5 de personaje en una sola partida.', reward: 80 }
     ];
@@ -293,15 +290,6 @@ class ProgressionManager {
         rarity: 'Rara',
         desc: 'Arcano: Cada Impacto Demoledor añade +10 Fervor 🔴 temporal a la racha de almas.',
         icon: '🔨'
-      },
-      // ─── TABLILLA RASCABLE DEL DESTINO ───
-      {
-        id: 'scratch_card_ticket',
-        isScratchCard: true,
-        name: 'Tablilla Rascable del Destino',
-        rarity: 'Épica',
-        desc: '¡Tablilla Arcana! Rasca las 3 runas malditas para ganar almas instantáneas, arcanos o el Gran Tributo.',
-        icon: '🎟️'
       }
     ];
 
@@ -1069,80 +1057,6 @@ class ProgressionManager {
     return joker;
   }
 
-  // ─── SCRITCHY SCRATCHY (RASCADOR DEL INFRAMUNDO) ───
-  generateScratchCard() {
-    const symbols = [
-      { id: 'souls_8', icon: '🔮', name: '8 Almas', type: 'souls', value: 8 },
-      { id: 'souls_15', icon: '🔮', name: '15 Almas', type: 'souls', value: 15 },
-      { id: 'souls_25', icon: '✨', name: '25 Almas', type: 'souls', value: 25 },
-      { id: 'shard', icon: '💠', name: '1 Fragmento', type: 'shard', value: 1 },
-      { id: 'megabonk', icon: '💥', name: 'Impacto Titánico', type: 'megabonk', value: 2 },
-      { id: 'joker', icon: '🃏', name: 'Arcano', type: 'joker', value: 1 }
-    ];
-
-    const isJackpot = Math.random() < 0.28;
-    let cells;
-    if (isJackpot) {
-      const pick = symbols[Math.floor(Math.random() * symbols.length)];
-      cells = [{ ...pick }, { ...pick }, { ...pick }];
-    } else {
-      cells = [
-        { ...symbols[Math.floor(Math.random() * symbols.length)] },
-        { ...symbols[Math.floor(Math.random() * symbols.length)] },
-        { ...symbols[Math.floor(Math.random() * symbols.length)] }
-      ];
-      if (cells[0].id === cells[1].id && cells[1].id === cells[2].id) {
-        cells[2] = { ...symbols[(symbols.indexOf(cells[0]) + 1) % symbols.length] };
-      }
-    }
-
-    this.activeScratchCard = {
-      id: 'scritch_' + Date.now(),
-      cells: cells,
-      scratched: [false, false, false],
-      isClaimed: false,
-      isJackpot: cells[0].id === cells[1].id && cells[1].id === cells[2].id
-    };
-
-    return this.activeScratchCard;
-  }
-
-  claimScratchReward(card) {
-    if (!card || card.isClaimed) return 0;
-    card.isClaimed = true;
-    let totalSoulsAwarded = 0;
-
-    if (card.isJackpot) {
-      const sym = card.cells[0];
-      if (sym.type === 'souls') {
-        totalSoulsAwarded = sym.value * 3;
-        this.addSouls(totalSoulsAwarded);
-      } else if (sym.type === 'shard') {
-        this.addHumanityShards(2);
-      } else if (sym.type === 'joker') {
-        this.acquireJoker({ id: 'joker_wheel', name: 'Arcano: La Rueda del Destino', rarity: 'Épica', desc: 'Arcano: 20% prob potenciar almas', icon: '🎡', edition: 'polychrome' });
-      } else {
-        totalSoulsAwarded = 45;
-        this.addSouls(45);
-      }
-    } else {
-      for (const c of card.cells) {
-        if (c.type === 'souls') {
-          totalSoulsAwarded += c.value;
-          this.addSouls(c.value);
-        } else if (c.type === 'shard') {
-          this.addHumanityShards(c.value);
-        } else {
-          totalSoulsAwarded += 10;
-          this.addSouls(10);
-        }
-      }
-    }
-
-    this.updateHUD();
-    return totalSoulsAwarded;
-  }
-
   // ─── REROLL SYSTEM (BALATRO / VAMPIRE SURVIVORS) ───
   canReroll() {
     return this.souls >= this.rerollCost;
@@ -1187,7 +1101,7 @@ class ProgressionManager {
     }
 
     if (isRelic) {
-      const highTier = available.filter(b => b.isEvolution || b.isWeapon || b.isJoker || b.isScratchCard || b.rarity === 'Épica' || b.rarity === 'Rara');
+      const highTier = available.filter(b => b.isEvolution || b.isWeapon || b.isJoker || b.rarity === 'Épica' || b.rarity === 'Rara');
       if (highTier.length >= count) {
         available = highTier;
       }
@@ -1214,10 +1128,6 @@ class ProgressionManager {
       }
     } else if (boon.isJoker) {
       this.acquireJoker(boon);
-    } else if (boon.isScratchCard) {
-      if (window.game && window.game.openScratchCardModal) {
-        window.game.openScratchCardModal(this.generateScratchCard());
-      }
     } else {
       this.activeBoons.push(boon);
     }
