@@ -57,6 +57,7 @@ class Game {
     this.flameWaves = [];
     this.activeChest = null;
     this.activeScratchCard = null;
+    this.pendingLevelUps = 0;
     this.lastReportedAltitude = 0;
 
     // Vampire Survivors style Passive Auto-Attacking Weapons
@@ -623,6 +624,7 @@ class Game {
     if (this.ui.playerHealthWrap) this.ui.playerHealthWrap.style.display = 'none';
     this.ui.interactionBadge.style.display = 'none';
     this.xpGems = [];
+    this.pendingLevelUps = 0;
     if (this.passiveWeaponsManager) {
       this.passiveWeaponsManager.reset();
     }
@@ -1122,6 +1124,10 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       const spawnX = targetPlat.x + 16 + Math.floor(Math.random() * Math.max(10, targetPlat.w - 32));
       const spawnY = targetPlat.y - Math.round(34 * scaleMultiplier);
 
+      const allSkins = ['abyss', 'blood', 'gold', 'obsidian', 'ice', 'mud', 'ashen', 'infernal'];
+      const enemySkin = Math.random() < 0.65 ? (tier.enemySkin || 'abyss') : allSkins[Math.floor(Math.random() * allSkins.length)];
+      const enemyVariant = Math.floor(Math.random() * 4);
+
       const newEnemy = new SkeletonEnemy({
         x: spawnX,
         y: spawnY,
@@ -1131,7 +1137,8 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
         isMage: Math.random() < (tier.mageChance || 0.2),
         isElite: isElite,
         scaleMultiplier: scaleMultiplier,
-        skin: tier.enemySkin || 'abyss',
+        skin: enemySkin,
+        variant: enemyVariant,
         state: 'chase'
       });
 
@@ -1144,13 +1151,16 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     // 35% chance to spawn 1-2 aerial AbyssalBat dive chasers concurrently
     if (Math.random() < 0.35 && this.bats.filter(b => !b.isDead).length < 8) {
       const batCount = Math.random() < 0.4 ? 2 : 1;
+      const batSubTypes = ['abyss', 'blood', 'gargoyle', 'frost', 'toxic'];
       for (let b = 0; b < batCount; b++) {
         const batX = this.player.x + (Math.random() - 0.5) * 450;
         const batY = Math.max(100, this.player.y - 280 - Math.random() * 120);
+        const subType = batSubTypes[Math.floor(Math.random() * batSubTypes.length)];
         const newBat = new AbyssalBat({
           x: batX,
           y: batY,
-          hp: 24,
+          subType: subType,
+          hp: subType === 'gargoyle' ? 30 : 24,
           speed: 3.4
         });
         newBat.state = 'swoop';
@@ -2660,6 +2670,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
             en.state = 'dead';
             if (window.particleSystem) window.particleSystem.spawnBloodExplosion(en.x + en.w / 2, en.y + en.h / 2, 25);
             this.spawnSoulOrbs(en.x + en.w / 2, en.y + en.h / 2, 2, en.isElite ? 14 : 4);
+            this.spawnXpGems(en.x + en.w / 2, en.y + en.h / 2, en.isElite ? 2 : 1, en.isElite ? 30 : 15);
           }
         }
       }
@@ -2786,17 +2797,36 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     this.state = this.prevStateBeforeModal || 'PLAYING';
   }
 
-  // ─── VAMPIRE SURVIVORS LEVEL-UP MODAL ───
+  // ─── VAMPIRE SURVIVORS LEVEL-UP MODAL & QUEUE ───
+  queueLevelUps(count = 1) {
+    if (!this.pendingLevelUps) this.pendingLevelUps = 0;
+    this.pendingLevelUps += count;
+    if (this.state !== 'LEVEL_UP') {
+      this.openLevelUpModal();
+    }
+  }
+
   openLevelUpModal() {
     if (!window.progression) return;
+    if (!this.pendingLevelUps || this.pendingLevelUps < 1) {
+      this.pendingLevelUps = 1;
+    }
+
     const boons = window.progression.getRandomBoons(3, false);
-    if (boons.length === 0) return;
+    if (boons.length === 0) {
+      this.pendingLevelUps = 0;
+      return;
+    }
 
-    this.prevStateBeforeModal = this.state;
-    this.state = 'LEVEL_UP';
-    this.ui.interactionBadge.style.display = 'none';
+    if (this.state !== 'LEVEL_UP') {
+      this.prevStateBeforeModal = this.state;
+      this.state = 'LEVEL_UP';
+    }
+    if (this.ui && this.ui.interactionBadge) {
+      this.ui.interactionBadge.style.display = 'none';
+    }
 
-    if (this.ui.modalRunLevel) {
+    if (this.ui && this.ui.modalRunLevel) {
       this.ui.modalRunLevel.textContent = window.progression.runLevel;
     }
 
@@ -2807,11 +2837,13 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
     this.renderLevelUpCards(boons);
 
-    if (this.ui.btnLevelupReroll) {
+    if (this.ui && this.ui.btnLevelupReroll) {
       this.ui.btnLevelupReroll.disabled = !window.progression.canReroll();
     }
 
-    this.ui.levelUpModal.classList.remove('hidden');
+    if (this.ui && this.ui.levelUpModal) {
+      this.ui.levelUpModal.classList.remove('hidden');
+    }
   }
 
   renderLevelUpCards(boons) {
@@ -2877,7 +2909,15 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
   }
 
   closeLevelUpModal() {
-    if (this.ui.levelUpModal) this.ui.levelUpModal.classList.add('hidden');
+    if (this.pendingLevelUps > 1) {
+      this.pendingLevelUps--;
+      this.openLevelUpModal();
+      return;
+    }
+    this.pendingLevelUps = 0;
+    if (this.ui && this.ui.levelUpModal) {
+      this.ui.levelUpModal.classList.add('hidden');
+    }
     this.state = this.prevStateBeforeModal || 'PLAYING';
   }
 

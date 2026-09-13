@@ -312,6 +312,7 @@ class LevelManager {
             const scaleMultiplier = isElite ? (1.4 + Math.random() * 0.18) : 1.0;
             const baseHp = tier.enemyHp || 40;
             const hp = isElite ? Math.round(baseHp * 2.4) : baseHp;
+            const variant = Math.floor(Math.random() * 4);
             enemies.push({
               x: p.x + 30 + Math.floor(Math.random() * (p.w - 80)),
               y: p.y - Math.round(34 * scaleMultiplier),
@@ -320,6 +321,7 @@ class LevelManager {
               isElite,
               scaleMultiplier,
               skin: tier.enemySkin || 'abyss',
+              variant: variant,
               minX: p.x + 8,
               maxX: p.x + p.w - 8,
               hp: hp
@@ -336,10 +338,13 @@ class LevelManager {
 
       // Flying bat in open air
       if (Math.random() < 0.18) {
+        const batSubTypes = tier.batTypes || ['abyss', 'blood', 'gargoyle', 'frost', 'toxic'];
+        const subType = batSubTypes[Math.floor(Math.random() * batSubTypes.length)];
         bats.push({
           x: 180 + Math.floor(Math.random() * 600),
           y: currY + 30,
           type: 'bat',
+          subType: subType,
           speed: 2.8 + Math.random() * 0.8
         });
       }
@@ -413,9 +418,9 @@ class LevelManager {
       hasLava: true,
       basePlatformType: 'stone',
       tiers: [
-        { name: 'Limbo', minY: 2500, maxY: 3600, platformType: 'stone', mageChance: 0.0, enemyHp: 35, enemySkin: 'abyss' },
-        { name: 'Lujuria', minY: 1450, maxY: 2500, platformType: 'stone', mageChance: 0.25, enemyHp: 45, enemySkin: 'ashen' },
-        { name: 'Gula', minY: 300, maxY: 1450, platformType: 'bone', mageChance: 0.35, enemyHp: 55, enemySkin: 'abyss' }
+        { name: 'Limbo', minY: 2500, maxY: 3600, platformType: 'stone', mageChance: 0.0, enemyHp: 35, enemySkin: 'abyss', batTypes: ['abyss', 'gargoyle'] },
+        { name: 'Lujuria', minY: 1450, maxY: 2500, platformType: 'stone', mageChance: 0.25, enemyHp: 45, enemySkin: 'ashen', batTypes: ['abyss', 'blood'] },
+        { name: 'Gula', minY: 300, maxY: 1450, platformType: 'bone', mageChance: 0.35, enemyHp: 55, enemySkin: 'toxic', batTypes: ['toxic', 'abyss'] }
       ],
       wind: { force: 0.65, activeMinY: 1500, activeMaxY: 2500 },
       portalTarget: 'boss_minos',
@@ -487,9 +492,9 @@ class LevelManager {
       hasLava: true,
       basePlatformType: 'stone',
       tiers: [
-        { name: 'Avaricia', minY: 2600, maxY: 3800, platformType: 'gold', ladderType: 'gold', mageChance: 0.2, enemyHp: 48, enemySkin: 'gold' },
-        { name: 'Estigia', minY: 1450, maxY: 2600, platformType: 'mud', mageChance: 0.3, enemyHp: 58, enemySkin: 'mud' },
-        { name: 'Dite', minY: 300, maxY: 1450, platformType: 'obsidian', mageChance: 0.45, enemyHp: 68, enemySkin: 'obsidian' }
+        { name: 'Avaricia', minY: 2600, maxY: 3800, platformType: 'gold', ladderType: 'gold', mageChance: 0.2, enemyHp: 48, enemySkin: 'gold', batTypes: ['gargoyle', 'blood'] },
+        { name: 'Estigia', minY: 1450, maxY: 2600, platformType: 'mud', mageChance: 0.3, enemyHp: 58, enemySkin: 'mud', batTypes: ['toxic', 'gargoyle'] },
+        { name: 'Dite', minY: 300, maxY: 1450, platformType: 'obsidian', mageChance: 0.45, enemyHp: 68, enemySkin: 'obsidian', batTypes: ['blood', 'toxic'] }
       ],
       portalTarget: 'boss_flegias',
       portalLabel: 'Laguna Estigia — Guardián Flegias'
@@ -560,9 +565,9 @@ class LevelManager {
       hasLava: true,
       basePlatformType: 'obsidian',
       tiers: [
-        { name: 'Flegetonte', minY: 2800, maxY: 4200, platformType: 'obsidian', mageChance: 0.3, enemyHp: 65, enemySkin: 'obsidian' },
-        { name: 'Malebolge', minY: 1450, maxY: 2800, platformType: 'runic', mageChance: 0.4, enemyHp: 75, enemySkin: 'blood' },
-        { name: 'Cocito', minY: 300, maxY: 1450, platformType: 'ice', mageChance: 0.5, enemyHp: 85, enemySkin: 'ice' }
+        { name: 'Flegetonte', minY: 2800, maxY: 4200, platformType: 'obsidian', mageChance: 0.3, enemyHp: 65, enemySkin: 'obsidian', batTypes: ['blood', 'gargoyle'] },
+        { name: 'Malebolge', minY: 1450, maxY: 2800, platformType: 'runic', mageChance: 0.4, enemyHp: 75, enemySkin: 'blood', batTypes: ['blood', 'abyss'] },
+        { name: 'Cocito', minY: 300, maxY: 1450, platformType: 'ice', mageChance: 0.5, enemyHp: 85, enemySkin: 'ice', batTypes: ['frost', 'gargoyle'] }
       ],
       wind: { force: -0.75, activeMinY: 450, activeMaxY: 1450 },
       portalTarget: 'boss_azgalor',
@@ -889,4 +894,7 @@ class LevelManager {
   }
 }
 
-window.levelManager = new LevelManager();
+if (typeof window !== 'undefined') {
+  window.LevelManager = LevelManager;
+  window.levelManager = new LevelManager();
+}

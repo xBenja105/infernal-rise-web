@@ -9,6 +9,65 @@ class SpriteManager {
     this.skeletonSprites = {};
     this.sprites = {};
     this.loaded = false;
+    this.tintedSkeletonCache = {};
+  }
+
+  getSkeletonSkinPalette(skin) {
+    switch (skin) {
+      case 'blood':
+        return { tint: '#ef4444', mode: 'source-atop', alpha: 0.38, eyeColor: '#ff0054', eyeGlow: 'rgba(255,0,84,0.85)', name: 'Demonio Óseo de Malebolge' };
+      case 'gold':
+      case 'avarice':
+        return { tint: '#f59e0b', mode: 'source-atop', alpha: 0.42, eyeColor: '#ffb703', eyeGlow: 'rgba(255,183,3,0.85)', name: 'Esqueleto Avaro Maldito' };
+      case 'shadow':
+      case 'obsidian':
+        return { tint: '#312e81', mode: 'source-atop', alpha: 0.55, eyeColor: '#ff3c00', eyeGlow: 'rgba(255,60,0,0.85)', name: 'Esqueleto de Obsidiana Ígnea' };
+      case 'frost':
+      case 'ice':
+        return { tint: '#38bdf8', mode: 'source-atop', alpha: 0.45, eyeColor: '#00e5ff', eyeGlow: 'rgba(0,229,255,0.85)', name: 'Espectro Glacial del Cocito' };
+      case 'toxic':
+      case 'mud':
+        return { tint: '#22c55e', mode: 'source-atop', alpha: 0.42, eyeColor: '#70e000', eyeGlow: 'rgba(112,224,0,0.85)', name: 'Caminante del Fango Estigio' };
+      case 'spectral':
+      case 'ashen':
+        return { tint: '#c084fc', mode: 'source-atop', alpha: 0.38, eyeColor: '#c084fc', eyeGlow: 'rgba(192,132,252,0.85)', name: 'Cenizo Espectral del Limbo' };
+      case 'infernal':
+        return { tint: '#f97316', mode: 'source-atop', alpha: 0.45, eyeColor: '#ff2200', eyeGlow: 'rgba(255,34,0,0.85)', name: 'Esqueleto de Fuego Infernal' };
+      case 'abyss':
+      case 'normal':
+      default:
+        return { tint: '#94a3b8', mode: 'source-atop', alpha: 0.18, eyeColor: '#00f5d4', eyeGlow: 'rgba(0,245,212,0.85)', name: 'Condenado del Abismo' };
+    }
+  }
+
+  getTintedSkeletonSheet(action, skin = 'abyss') {
+    if (!this.tintedSkeletonCache) this.tintedSkeletonCache = {};
+    const key = `${action}_${skin}`;
+    if (this.tintedSkeletonCache[key]) {
+      return this.tintedSkeletonCache[key];
+    }
+    const sourceImg = this.skeletonSprites ? this.skeletonSprites[action] : null;
+    if (!sourceImg || !sourceImg.complete || sourceImg.naturalWidth === 0) {
+      return sourceImg;
+    }
+    const pal = this.getSkeletonSkinPalette(skin);
+    if (!pal || !pal.tint || pal.alpha === 0) {
+      this.tintedSkeletonCache[key] = sourceImg;
+      return sourceImg;
+    }
+
+    const { canvas, ctx } = this.createCanvas(sourceImg.naturalWidth, sourceImg.naturalHeight);
+    ctx.drawImage(sourceImg, 0, 0);
+
+    ctx.save();
+    ctx.globalCompositeOperation = pal.mode || 'source-atop';
+    ctx.globalAlpha = pal.alpha;
+    ctx.fillStyle = pal.tint;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+
+    this.tintedSkeletonCache[key] = canvas;
+    return canvas;
   }
 
   async loadAll() {
@@ -885,160 +944,282 @@ class SpriteManager {
     }
   }
 
-  // ─── ABYSSAL BAT / GARGOYLE (FLYING HARASSER, 6 FRAMES) ───
+  // ─── ABYSSAL BAT / GARGOYLE (FLYING HARASSER, 5 SPECIES × 6 FRAMES) ───
   generateBatSprites() {
-    this.sprites.bat = [];
+    this.sprites.batTypes = {
+      abyss: [],
+      blood: [],
+      gargoyle: [],
+      frost: [],
+      toxic: []
+    };
     const bw = 40, bh = 32;
 
-    for (let f = 0; f < 6; f++) {
-      const { canvas, ctx } = this.createCanvas(bw, bh);
-      const phase = f * Math.PI * 2 / 6;
+    const palettes = {
+      abyss: {
+        bodyDark: '#160917',
+        bodyMid: '#2d142c',
+        bodyLight: '#451c44',
+        earInner: '#801336',
+        eyeIris: '#ff0033',
+        eyePupil: '#ffaa00',
+        wingMem1: '#3b1c2b',
+        wingMem2: '#2b1220',
+        wingBone: '#6e2b47',
+        claw: '#cbd5e1'
+      },
+      blood: {
+        bodyDark: '#2a050d',
+        bodyMid: '#4d0b1a',
+        bodyLight: '#7a1129',
+        earInner: '#b51736',
+        eyeIris: '#ff1a40',
+        eyePupil: '#ffe6eb',
+        wingMem1: '#5c0a1a',
+        wingMem2: '#420713',
+        wingBone: '#9e152e',
+        claw: '#fca5a5'
+      },
+      gargoyle: {
+        bodyDark: '#1e242b',
+        bodyMid: '#334155',
+        bodyLight: '#475569',
+        earInner: '#64748b',
+        eyeIris: '#facc15',
+        eyePupil: '#fef08a',
+        wingMem1: '#334155',
+        wingMem2: '#1e293b',
+        wingBone: '#64748b',
+        claw: '#94a3b8'
+      },
+      frost: {
+        bodyDark: '#082f49',
+        bodyMid: '#0369a1',
+        bodyLight: '#0284c7',
+        earInner: '#38bdf8',
+        eyeIris: '#67e8f9',
+        eyePupil: '#ffffff',
+        wingMem1: '#0c4a6e',
+        wingMem2: '#075985',
+        wingBone: '#38bdf8',
+        claw: '#e0f2fe'
+      },
+      toxic: {
+        bodyDark: '#052e16',
+        bodyMid: '#14532d',
+        bodyLight: '#166534',
+        earInner: '#22c55e',
+        eyeIris: '#a855f7',
+        eyePupil: '#f3e8ff',
+        wingMem1: '#14532d',
+        wingMem2: '#0f3d21',
+        wingBone: '#22c55e',
+        claw: '#86efac'
+      }
+    };
 
-      // Wing animation angle & vertical body bob
-      const wingElevation = Math.sin(phase); // -1 (down) to +1 (up)
-      const bodyBob = Math.cos(phase) * 1.5;
+    for (const [typeKey, pal] of Object.entries(palettes)) {
+      for (let f = 0; f < 6; f++) {
+        const { canvas, ctx } = this.createCanvas(bw, bh);
+        const phase = f * Math.PI * 2 / 6;
 
-      const cx = 20;
-      const cy = 16 + bodyBob;
+        // Wing animation angle & vertical body bob
+        const wingElevation = Math.sin(phase); // -1 (down) to +1 (up)
+        const bodyBob = Math.cos(phase) * 1.5;
 
-      // 1. Torso & Abdomen
-      ctx.fillStyle = '#160917';
-      ctx.fillRect(cx - 3, cy - 2, 6, 8);
-      ctx.fillStyle = '#2d142c';
-      ctx.fillRect(cx - 2, cy - 1, 4, 6);
-      ctx.fillStyle = '#451c44';
-      ctx.fillRect(cx - 1, cy, 2, 4);
+        const cx = 20;
+        const cy = 16 + bodyBob;
 
-      // 2. Head with pointed ears & fangs
-      ctx.fillStyle = '#160917';
-      ctx.fillRect(cx - 4, cy - 8, 8, 7);
-      // Ears
-      ctx.fillRect(cx - 4, cy - 11, 2, 4);
-      ctx.fillRect(cx + 2, cy - 11, 2, 4);
-      ctx.fillStyle = '#801336';
-      ctx.fillRect(cx - 3, cy - 10, 1, 3);
-      ctx.fillRect(cx + 2, cy - 10, 1, 3);
+        // 1. Torso & Abdomen
+        ctx.fillStyle = pal.bodyDark;
+        ctx.fillRect(cx - 3, cy - 2, 6, 8);
+        ctx.fillStyle = pal.bodyMid;
+        ctx.fillRect(cx - 2, cy - 1, 4, 6);
+        ctx.fillStyle = pal.bodyLight;
+        ctx.fillRect(cx - 1, cy, 2, 4);
 
-      // Glowing crimson eyes
-      ctx.fillStyle = '#ff0033';
-      ctx.fillRect(cx - 3, cy - 6, 2, 2);
-      ctx.fillRect(cx + 1, cy - 6, 2, 2);
-      ctx.fillStyle = '#ffaa00';
-      ctx.fillRect(cx - 2, cy - 6, 1, 1);
-      ctx.fillRect(cx + 1, cy - 6, 1, 1);
+        // 2. Head with pointed ears & fangs
+        ctx.fillStyle = pal.bodyDark;
+        ctx.fillRect(cx - 4, cy - 8, 8, 7);
+        // Ears / horns
+        ctx.fillRect(cx - 4, cy - 11, 2, 4);
+        ctx.fillRect(cx + 2, cy - 11, 2, 4);
+        ctx.fillStyle = pal.earInner;
+        ctx.fillRect(cx - 3, cy - 10, 1, 3);
+        ctx.fillRect(cx + 2, cy - 10, 1, 3);
 
-      // Fangs
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(cx - 2, cy - 2, 1, 2);
-      ctx.fillRect(cx + 1, cy - 2, 1, 2);
+        // Glowing eyes
+        ctx.fillStyle = pal.eyeIris;
+        ctx.fillRect(cx - 3, cy - 6, 2, 2);
+        ctx.fillRect(cx + 1, cy - 6, 2, 2);
+        ctx.fillStyle = pal.eyePupil;
+        ctx.fillRect(cx - 2, cy - 6, 1, 1);
+        ctx.fillRect(cx + 1, cy - 6, 1, 1);
 
-      // 3. Articulated Wings (Left and Right)
-      const wingTipY = cy - 2 - wingElevation * 10;
-      const wingElbowY = cy - 4 - wingElevation * 6;
-      const wingElbowSpread = 10;
-      const wingTipSpread = 18;
+        // Fangs
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(cx - 2, cy - 2, 1, 2);
+        ctx.fillRect(cx + 1, cy - 2, 1, 2);
 
-      [-1, 1].forEach(side => {
-        const sx = cx + side * 3;
-        const ex = cx + side * (3 + wingElbowSpread);
-        const tx = cx + side * (3 + wingTipSpread);
+        // 3. Articulated Wings (Left and Right)
+        const wingTipY = cy - 2 - wingElevation * 10;
+        const wingElbowY = cy - 4 - wingElevation * 6;
+        const wingElbowSpread = 10;
+        const wingTipSpread = 18;
 
-        // Wing membrane polygon
-        ctx.fillStyle = f % 2 === 0 ? '#3b1c2b' : '#2b1220';
-        ctx.beginPath();
-        ctx.moveTo(sx, cy);
-        ctx.lineTo(ex, wingElbowY);
-        ctx.lineTo(tx, wingTipY);
-        ctx.lineTo(ex + side * 2, cy + 4);
-        ctx.lineTo(sx, cy + 5);
-        ctx.closePath();
-        ctx.fill();
+        [-1, 1].forEach(side => {
+          const sx = cx + side * 3;
+          const ex = cx + side * (3 + wingElbowSpread);
+          const tx = cx + side * (3 + wingTipSpread);
 
-        // Bone struts
-        ctx.strokeStyle = '#6e2b47';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(sx, cy - 2);
-        ctx.lineTo(ex, wingElbowY);
-        ctx.lineTo(tx, wingTipY);
-        ctx.stroke();
+          // Wing membrane polygon
+          ctx.fillStyle = f % 2 === 0 ? pal.wingMem1 : pal.wingMem2;
+          ctx.beginPath();
+          ctx.moveTo(sx, cy);
+          ctx.lineTo(ex, wingElbowY);
+          ctx.lineTo(tx, wingTipY);
+          ctx.lineTo(ex + side * 2, cy + 4);
+          ctx.lineTo(sx, cy + 5);
+          ctx.closePath();
+          ctx.fill();
 
-        ctx.beginPath();
-        ctx.moveTo(ex, wingElbowY);
-        ctx.lineTo(ex + side * 2, cy + 4);
-        ctx.stroke();
+          // Bone struts
+          ctx.strokeStyle = pal.wingBone;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(sx, cy - 2);
+          ctx.lineTo(ex, wingElbowY);
+          ctx.lineTo(tx, wingTipY);
+          ctx.stroke();
 
-        // Knuckle claw
-        ctx.fillStyle = '#cbd5e1';
-        ctx.fillRect(ex - 1, wingElbowY - 1, 2, 2);
-      });
+          ctx.beginPath();
+          ctx.moveTo(ex, wingElbowY);
+          ctx.lineTo(ex + side * 2, cy + 4);
+          ctx.stroke();
 
-      // 4. Little clawed feet
-      ctx.fillStyle = '#0f0511';
-      ctx.fillRect(cx - 3, cy + 6, 2, 3);
-      ctx.fillRect(cx + 1, cy + 6, 2, 3);
+          // Knuckle claw
+          ctx.fillStyle = pal.claw;
+          ctx.fillRect(ex - 1, wingElbowY - 1, 2, 2);
+        });
 
-      this.sprites.bat.push(canvas);
+        // 4. Little clawed feet
+        ctx.fillStyle = '#0f0511';
+        ctx.fillRect(cx - 3, cy + 6, 2, 3);
+        ctx.fillRect(cx + 1, cy + 6, 2, 3);
+
+        this.sprites.batTypes[typeKey].push(canvas);
+      }
     }
+
+    // Default reference
+    this.sprites.bat = this.sprites.batTypes.abyss;
   }
 
-  // ─── SKULL PROJECTILE (FIERY CRANIUM, 4 FRAMES) ───
+  // ─── SKULL PROJECTILE (ELEMENTAL CRANIUMS, 4 FRAMES) ───
   generateSkullProjectileSprites() {
-    this.sprites.skullProjectile = [];
+    this.sprites.skullProjectiles = {
+      skull: [],
+      frost: [],
+      necrotic: [],
+      toxic: []
+    };
     const pw = 24, ph = 24;
 
-    for (let f = 0; f < 4; f++) {
-      const { canvas, ctx } = this.createCanvas(pw, ph);
-      const fireWobble = Math.sin(f * Math.PI / 2) * 1.5;
+    const configs = {
+      skull: {
+        flameGrad: ['#ffffff', '#ffaa00', '#ff2200', 'rgba(255, 0, 0, 0)'],
+        boneBase: '#cbd5e1',
+        boneLight: '#f1f5f9',
+        boneBrow: '#94a3b8',
+        eyeOuter: '#ff2200',
+        eyeInner: '#ffea00',
+        flameCrown: ['#ff7700', '#ff3300']
+      },
+      frost: {
+        flameGrad: ['#ffffff', '#7dd3fc', '#0284c7', 'rgba(2, 132, 199, 0)'],
+        boneBase: '#bae6fd',
+        boneLight: '#f0f9ff',
+        boneBrow: '#38bdf8',
+        eyeOuter: '#00e5ff',
+        eyeInner: '#ffffff',
+        flameCrown: ['#38bdf8', '#0284c7']
+      },
+      necrotic: {
+        flameGrad: ['#f5d0fe', '#c084fc', '#7e22ce', 'rgba(126, 34, 206, 0)'],
+        boneBase: '#e9d5ff',
+        boneLight: '#faf5ff',
+        boneBrow: '#a855f7',
+        eyeOuter: '#d946ef',
+        eyeInner: '#fdf4ff',
+        flameCrown: ['#c084fc', '#7e22ce']
+      },
+      toxic: {
+        flameGrad: ['#dcfce7', '#4ade80', '#15803d', 'rgba(21, 128, 61, 0)'],
+        boneBase: '#bbf7d0',
+        boneLight: '#f0fdf4',
+        boneBrow: '#22c55e',
+        eyeOuter: '#84cc16',
+        eyeInner: '#facc15',
+        flameCrown: ['#4ade80', '#15803d']
+      }
+    };
 
-      // Fiery trailing wake
-      const grad = ctx.createRadialGradient(8, 12, 1, 8, 12, 10);
-      grad.addColorStop(0, '#ffffff');
-      grad.addColorStop(0.3, '#ffaa00');
-      grad.addColorStop(0.7, '#ff2200');
-      grad.addColorStop(1, 'rgba(255, 0, 0, 0)');
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(8 - f, 12 + fireWobble, 9, 0, Math.PI * 2);
-      ctx.fill();
+    for (const [key, cfg] of Object.entries(configs)) {
+      for (let f = 0; f < 4; f++) {
+        const { canvas, ctx } = this.createCanvas(pw, ph);
+        const fireWobble = Math.sin(f * Math.PI / 2) * 1.5;
 
-      // Skull Cranium
-      ctx.fillStyle = '#cbd5e1';
-      ctx.fillRect(10, 6, 9, 10);
-      ctx.fillStyle = '#f1f5f9';
-      ctx.fillRect(11, 7, 7, 8);
+        // Trailing elemental wake
+        const grad = ctx.createRadialGradient(8, 12, 1, 8, 12, 10);
+        grad.addColorStop(0, cfg.flameGrad[0]);
+        grad.addColorStop(0.3, cfg.flameGrad[1]);
+        grad.addColorStop(0.7, cfg.flameGrad[2]);
+        grad.addColorStop(1, cfg.flameGrad[3]);
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(8 - f, 12 + fireWobble, 9, 0, Math.PI * 2);
+        ctx.fill();
 
-      // Brow ridge
-      ctx.fillStyle = '#94a3b8';
-      ctx.fillRect(10, 9, 9, 2);
+        // Skull Cranium
+        ctx.fillStyle = cfg.boneBase;
+        ctx.fillRect(10, 6, 9, 10);
+        ctx.fillStyle = cfg.boneLight;
+        ctx.fillRect(11, 7, 7, 8);
 
-      // Glowing fiery eye sockets
-      ctx.fillStyle = '#ff2200';
-      ctx.fillRect(13, 10, 2, 2);
-      ctx.fillRect(16, 10, 2, 2);
-      ctx.fillStyle = '#ffea00';
-      ctx.fillRect(14, 10, 1, 1);
-      ctx.fillRect(17, 10, 1, 1);
+        // Brow ridge
+        ctx.fillStyle = cfg.boneBrow;
+        ctx.fillRect(10, 9, 9, 2);
 
-      // Nose cavity
-      ctx.fillStyle = '#475569';
-      ctx.fillRect(15, 12, 1, 2);
+        // Glowing eye sockets
+        ctx.fillStyle = cfg.eyeOuter;
+        ctx.fillRect(13, 10, 2, 2);
+        ctx.fillRect(16, 10, 2, 2);
+        ctx.fillStyle = cfg.eyeInner;
+        ctx.fillRect(14, 10, 1, 1);
+        ctx.fillRect(17, 10, 1, 1);
 
-      // Teeth
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(12, 14, 6, 2);
-      ctx.fillStyle = '#334155';
-      ctx.fillRect(13, 14, 1, 2);
-      ctx.fillRect(15, 14, 1, 2);
+        // Nose cavity
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(15, 12, 1, 2);
 
-      // Flickering flame crown on skull top
-      ctx.fillStyle = f % 2 === 0 ? '#ff7700' : '#ff3300';
-      ctx.fillRect(11, 4 + (f % 2), 2, 3);
-      ctx.fillRect(14, 3 + ((f + 1) % 2), 2, 4);
-      ctx.fillRect(17, 4 + (f % 2), 2, 3);
+        // Teeth
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(12, 14, 6, 2);
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(13, 14, 1, 2);
+        ctx.fillRect(15, 14, 1, 2);
 
-      this.sprites.skullProjectile.push(canvas);
+        // Flickering elemental crown on skull top
+        ctx.fillStyle = f % 2 === 0 ? cfg.flameCrown[0] : cfg.flameCrown[1];
+        ctx.fillRect(11, 4 + (f % 2), 2, 3);
+        ctx.fillRect(14, 3 + ((f + 1) % 2), 2, 4);
+        ctx.fillRect(17, 4 + (f % 2), 2, 3);
+
+        this.sprites.skullProjectiles[key].push(canvas);
+      }
     }
+
+    this.sprites.skullProjectile = this.sprites.skullProjectiles.skull;
   }
 
   // ─── BOSSES: AZGALOR & GLACIOR (HIGH-DENSITY 144x144 CANVAS) ───
@@ -2895,4 +3076,7 @@ class SpriteManager {
   }
 }
 
-window.spriteManager = new SpriteManager();
+if (typeof window !== 'undefined') {
+  window.SpriteManager = SpriteManager;
+  window.spriteManager = new SpriteManager();
+}

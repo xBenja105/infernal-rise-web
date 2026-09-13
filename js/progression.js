@@ -32,7 +32,7 @@ class ProgressionManager {
     // ─── VAMPIRE SURVIVORS XP & LEVELING ───
     this.runLevel = 1;
     this.runXp = 0;
-    this.runXpToNext = 50;
+    this.runXpToNext = 30;
 
     // ─── MEGABONK COMBO & MULTIPLIER ───
     this.bonkCombo = 0;
@@ -546,7 +546,7 @@ class ProgressionManager {
     this.activeJokers = [];
     this.runLevel = 1;
     this.runXp = 0;
-    this.runXpToNext = 50;
+    this.runXpToNext = 30;
     this.bonkCombo = 0;
     this.bonkComboTimer = 0;
     if (window.game && window.game.resetPassiveWeapons) {
@@ -558,15 +558,15 @@ class ProgressionManager {
   // ─── VAMPIRE SURVIVORS XP & LEVELING ───
   addRunXp(amount) {
     this.runXp += amount;
-    let leveledUp = false;
+    let levelsGained = 0;
     while (this.runXp >= this.runXpToNext) {
       this.runXp -= this.runXpToNext;
       this.runLevel++;
-      this.runXpToNext = Math.round(this.runXpToNext * 1.35 + 20);
-      leveledUp = true;
+      this.runXpToNext = Math.round(this.runXpToNext * 1.25 + 15);
+      levelsGained++;
     }
     this.updateHUD();
-    return leveledUp;
+    return levelsGained;
   }
 
   // ─── MEGABONK COMBO SYSTEM ───
@@ -951,4 +951,7 @@ class ProgressionManager {
   }
 }
 
-window.progression = new ProgressionManager();
+if (typeof window !== 'undefined') {
+  window.ProgressionManager = ProgressionManager;
+  window.progression = new ProgressionManager();
+}

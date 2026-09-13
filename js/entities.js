@@ -987,6 +987,7 @@ class SkeletonEnemy {
     this.isElite = !!data.isElite;
     this.scaleMultiplier = data.scaleMultiplier || (this.isElite ? 1.45 : 1.0);
     this.skin = data.skin || 'abyss';
+    this.variant = data.variant !== undefined ? data.variant : Math.floor(Math.random() * 4);
 
     this.w = Math.round(26 * this.scaleMultiplier);
     this.h = Math.round(34 * this.scaleMultiplier);
@@ -1319,13 +1320,18 @@ class SkeletonEnemy {
           const projY = this.y + 6;
           const pAngle = Math.atan2((player.y + player.h / 2) - projY, (player.x + player.w / 2) - projX);
           const spd = 3.8;
+          let pType = 'skull';
+          if (this.skin === 'ice' || this.skin === 'frost') pType = 'frost';
+          else if (this.skin === 'mud' || this.skin === 'toxic') pType = 'toxic';
+          else if (this.skin === 'ashen' || this.skin === 'spectral' || this.skin === 'obsidian' || this.skin === 'shadow') pType = 'necrotic';
+
           window.game.spawnEnemyProjectile(new EnemyProjectile({
             x: projX,
             y: projY,
             vx: Math.cos(pAngle) * spd,
             vy: Math.sin(pAngle) * spd,
-            type: 'skull',
-            damage: 35
+            type: pType,
+            damage: 20
           }));
         }
       }
@@ -1544,21 +1550,22 @@ class SkeletonEnemy {
     let sheet = null;
     let totalFrames = 13;
 
-    if (sm && sm.skeletonSprites) {
-      if (this.state === 'attack' && sm.skeletonSprites.Attack) {
-        sheet = sm.skeletonSprites.Attack;
+    if (sm) {
+      const getSheet = (action) => sm.getTintedSkeletonSheet ? sm.getTintedSkeletonSheet(action, this.skin) : (sm.skeletonSprites ? sm.skeletonSprites[action] : null);
+      if (this.state === 'attack') {
+        sheet = getSheet('Attack');
         totalFrames = 18;
-      } else if (this.state === 'dead' && sm.skeletonSprites.Dead) {
-        sheet = sm.skeletonSprites.Dead;
+      } else if (this.state === 'dead') {
+        sheet = getSheet('Dead');
         totalFrames = 15;
-      } else if (this.state === 'hit' && sm.skeletonSprites.Hit) {
-        sheet = sm.skeletonSprites.Hit;
+      } else if (this.state === 'hit') {
+        sheet = getSheet('Hit');
         totalFrames = 8;
-      } else if ((this.state === 'pause_turn' || this.state === 'alert' || this.state === 'shoot') && sm.skeletonSprites.Idle) {
-        sheet = sm.skeletonSprites.Idle;
+      } else if (this.state === 'pause_turn' || this.state === 'alert' || this.state === 'shoot') {
+        sheet = getSheet('Idle');
         totalFrames = 11;
-      } else if (sm.skeletonSprites.Walk) {
-        sheet = sm.skeletonSprites.Walk;
+      } else {
+        sheet = getSheet('Walk');
         totalFrames = 13;
       }
     }
@@ -1590,30 +1597,200 @@ class SkeletonEnemy {
     ctx.shadowBlur = 0;
     ctx.restore();
 
-    // Champion Horned Crown & Ruby if Elite / Giant
-    if (this.isElite) {
+    // ─── VISUAL EQUIPMENT & WEAPON OVERLAYS (VARIANTS 0-3, MAGE & ELITE) ───
+    if (this.state !== 'dead') {
       ctx.save();
-      ctx.fillStyle = '#ffd700';
-      ctx.shadowColor = '#ffb703';
-      ctx.shadowBlur = 5;
-      // Crown base rim
-      ctx.fillRect(10, 2, 12, 2);
-      // Crown spikes
-      ctx.fillRect(10, -2, 2, 4);
-      ctx.fillRect(15, -4, 2, 6);
-      ctx.fillRect(20, -2, 2, 4);
-      // Crown center ruby
-      ctx.fillStyle = '#ff0054';
-      ctx.fillRect(15, 0, 2, 2);
-      ctx.restore();
-    }
 
-    // Mage Runes Overlay
-    if (this.isMage) {
-      ctx.fillStyle = 'rgba(168, 85, 247, 0.45)';
-      ctx.beginPath();
-      ctx.arc(13, 8, 11, 0, Math.PI * 2);
-      ctx.fill();
+      if (this.isMage) {
+        // ── MAGE SKELETON: SORCERER HOOD, SHAWL & BONE STAFF ──
+        ctx.fillStyle = '#2e1065';
+        ctx.fillRect(12, 0, 11, 7); // Hood dome
+        ctx.fillStyle = '#7e22ce';
+        ctx.fillRect(11, 6, 3, 6);  // Draped cowl sides
+        ctx.fillRect(21, 6, 3, 6);
+        ctx.fillStyle = '#a855f7';  // Diadem rune stone
+        ctx.fillRect(16, 2, 3, 3);
+        ctx.fillStyle = '#f3e8ff';
+        ctx.fillRect(17, 3, 1, 1);
+
+        // Arcane Shawl
+        ctx.fillStyle = '#3b0764';
+        ctx.fillRect(12, 14, 10, 6);
+        ctx.fillStyle = '#c084fc';
+        ctx.fillRect(14, 16, 6, 2);
+
+        // Twisted Bone Staff with Arcane Skull Orb
+        ctx.fillStyle = '#78716c';
+        ctx.fillRect(24, 5, 2, 23); // Staff shaft
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fillRect(23, 3, 4, 3);  // Staff bone claw
+        ctx.fillStyle = '#a855f7';  // Glowing magic orb
+        ctx.shadowColor = '#c084fc';
+        ctx.shadowBlur = 8;
+        ctx.fillRect(24, 1, 3, 3);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(25, 2, 1, 1);
+        ctx.shadowBlur = 0;
+
+        // Floating Arcane Rune Circle
+        ctx.fillStyle = 'rgba(168, 85, 247, 0.4)';
+        ctx.beginPath();
+        ctx.arc(17, 7, 12, 0, Math.PI * 2);
+        ctx.fill();
+
+      } else if (this.isElite) {
+        // ── ELITE CHAMPION: GIANT DEMON HORNED CROWN, GOTHIC CUIRASS & GREATSWORD ──
+        // Horned crown
+        ctx.fillStyle = '#ffd700';
+        ctx.shadowColor = '#ffb703';
+        ctx.shadowBlur = 6;
+        ctx.fillRect(10, 2, 14, 3);
+        ctx.fillRect(9, -4, 3, 6);
+        ctx.fillRect(16, -6, 2, 8);
+        ctx.fillRect(22, -4, 3, 6);
+        ctx.fillStyle = '#ff0054';
+        ctx.fillRect(16, -1, 2, 2);
+        ctx.shadowBlur = 0;
+
+        // Obsidian Gothic Pauldrons
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(7, 12, 6, 7);
+        ctx.fillStyle = '#f43f5e';
+        ctx.fillRect(7, 11, 6, 2);
+
+        // Gothic Cuirass
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(13, 15, 9, 8);
+        ctx.fillStyle = '#ffd700';
+        ctx.fillRect(16, 17, 3, 4);
+
+        // Colossal Obsidian Greatsword
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(24, 20, 3, 6); // Hilt
+        ctx.fillStyle = '#ffd700';
+        ctx.fillRect(22, 18, 7, 3); // Crossguard
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(26, 4, 4, 15); // Broad Greatsword Blade
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(29, 4, 1, 15); // Gleam
+        ctx.fillStyle = '#f43f5e';  // Runes
+        ctx.shadowColor = '#f43f5e';
+        ctx.shadowBlur = 5;
+        ctx.fillRect(27, 7, 2, 9);
+        ctx.shadowBlur = 0;
+
+      } else if (this.variant === 1) {
+        // ── VARIANT 1: ARMORED BRUTE (SPIKED BARBUTE HELM, PAULDRON & CLEAVER) ──
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(13, 0, 9, 6);  // Helm dome
+        ctx.fillRect(13, 5, 2, 6);  // Cheek guard
+        ctx.fillRect(20, 5, 2, 6);
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(14, 1, 7, 2);
+        ctx.fillStyle = '#94a3b8';  // Top spike
+        ctx.fillRect(17, -3, 2, 4);
+
+        // Iron Pauldron
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(10, 13, 4, 5);
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillRect(9, 14, 2, 3);
+
+        // Segmented Chestplate
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(14, 16, 7, 4);
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(15, 17, 5, 1);
+
+        // Executioner Cleaver
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(20, 20, 4, 2); // Shaft
+        ctx.fillStyle = '#475569';
+        ctx.fillRect(24, 14, 7, 9); // Cleaver head
+        ctx.fillStyle = '#f1f5f9';
+        ctx.fillRect(30, 14, 1, 9); // Sharp bevel
+        ctx.fillStyle = '#991b1b';
+        ctx.fillRect(26, 20, 3, 2); // Bloodstain
+
+      } else if (this.variant === 2) {
+        // ── VARIANT 2: BARBARIAN BERSERKER (DUAL HORNS, SASH & SCIMITAR) ──
+        ctx.fillStyle = '#b45309';
+        ctx.fillRect(13, 4, 9, 2); // Bronze brow band
+        ctx.fillStyle = '#d97706';
+        ctx.fillRect(16, 3, 3, 2);
+        // Dual curved beast horns
+        ctx.fillStyle = '#fde68a';
+        ctx.fillRect(11, 0, 2, 4);
+        ctx.fillRect(9, -2, 2, 3);
+        ctx.fillRect(21, 0, 2, 4);
+        ctx.fillRect(23, -2, 2, 3);
+
+        // Tattered Crimson Sash
+        ctx.fillStyle = '#881337';
+        ctx.fillRect(14, 24, 7, 6);
+        ctx.fillStyle = '#be123c';
+        ctx.fillRect(15, 25, 4, 4);
+
+        // Curved Falchion / Scimitar
+        ctx.fillStyle = '#b45309';
+        ctx.fillRect(21, 20, 2, 3); // Bronze hilt
+        ctx.fillStyle = '#cbd5e1';
+        ctx.fillRect(23, 19, 5, 2);
+        ctx.fillRect(27, 17, 4, 3);
+        ctx.fillRect(30, 15, 3, 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(32, 14, 1, 2);
+
+      } else if (this.variant === 3) {
+        // ── VARIANT 3: SHADOW CULTIST (DARK COWL, RAGGED CAPE & DUAL DAGGERS) ──
+        ctx.fillStyle = '#09090b';
+        ctx.fillRect(12, 1, 11, 7); // Dark cowl
+        ctx.fillRect(11, 7, 3, 6);  // Draped neck
+        ctx.fillRect(20, 7, 3, 6);
+        ctx.fillStyle = '#18181b';
+        ctx.fillRect(13, 2, 9, 3);
+
+        // Ragged Shadow Capelet
+        ctx.fillStyle = '#09090b';
+        ctx.fillRect(6, 13, 6, 13);
+        ctx.fillStyle = '#18181b';
+        ctx.fillRect(7, 15, 4, 9);
+
+        // Dual Spectral Daggers
+        ctx.fillStyle = '#6366f1';
+        ctx.fillRect(22, 17, 7, 2);
+        ctx.fillRect(9, 21, 5, 2);
+        ctx.fillStyle = '#c7d2fe';
+        ctx.fillRect(23, 17, 5, 1);
+        ctx.fillRect(9, 21, 3, 1);
+
+      } else {
+        // ── VARIANT 0: RUSTED GRUNT (CRACKED SKULL RIVETS, LEATHER STRAP & BROADSWORD) ──
+        ctx.fillStyle = '#57534e';
+        ctx.fillRect(14, 2, 7, 2);  // Rusty skull plate
+        ctx.fillStyle = '#b45309';
+        ctx.fillRect(17, 1, 3, 2);
+        ctx.fillStyle = '#292524';
+        ctx.fillRect(15, 3, 1, 1);
+
+        // Cross-chest Leather Strap
+        ctx.fillStyle = '#451a03';
+        ctx.fillRect(14, 16, 3, 8);
+        ctx.fillStyle = '#78716c';
+        ctx.fillRect(15, 19, 2, 2); // Buckle
+
+        // Rusted Notched Broadsword
+        ctx.fillStyle = '#78716c';
+        ctx.fillRect(21, 19, 2, 6); // Crossguard
+        ctx.fillStyle = '#d6d3d1';
+        ctx.fillRect(23, 17, 10, 2); // Blade
+        ctx.fillStyle = '#b45309';
+        ctx.fillRect(27, 17, 2, 1);  // Rust notch
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(32, 17, 1, 2);  // Tip
+      }
+
+      ctx.restore();
     }
 
     ctx.restore();
@@ -1724,7 +1901,7 @@ class SkeletonEnemy {
 
         // Vampire Survivors In-Run XP Gems
         if (window.game.spawnXpGems) {
-          const xpVal = this.isElite ? 25 : 12;
+          const xpVal = this.isElite ? 30 : 15;
           window.game.spawnXpGems(this.x + this.w / 2, this.y + this.h / 2, this.isElite ? 2 : 1, xpVal);
         }
 
@@ -2595,12 +2772,16 @@ class XpGem {
     }
 
     // Pickup collision
-    if (dist < 22) {
+    if (dist < 28) {
       this.isCollected = true;
       if (window.progression) {
-        const leveledUp = window.progression.addRunXp(this.value);
-        if (leveledUp && window.game && window.game.openLevelUpModal) {
-          window.game.openLevelUpModal();
+        const levelsGained = window.progression.addRunXp(this.value);
+        if (levelsGained > 0 && window.game) {
+          if (window.game.queueLevelUps) {
+            window.game.queueLevelUps(levelsGained);
+          } else if (window.game.openLevelUpModal) {
+            window.game.openLevelUpModal();
+          }
         }
       }
       if (soundEng && soundEng.playSoulPickup) soundEng.playSoulPickup();
@@ -3468,7 +3649,7 @@ class BossProjectile {
   }
 }
 
-// 9. ABYSSAL BAT / GARGOYLE (FLYING HARASSER)
+// 9. ABYSSAL BAT / GARGOYLE (FLYING HARASSER, 5 SPECIES)
 class AbyssalBat {
   constructor(data) {
     this.x = data.x;
@@ -3477,9 +3658,11 @@ class AbyssalBat {
     this.startY = data.y;
     this.w = 26;
     this.h = 20;
-    this.hp = data.hp || 18;
+    this.subType = data.subType || 'abyss';
+    this.hp = data.hp || (this.subType === 'gargoyle' ? 26 : 18);
     this.maxHp = this.hp;
     this.damage = data.damage || 16; // Rebalanced from 28 to 16
+    if (this.subType === 'gargoyle') this.damage = data.damage || 20;
 
     this.vx = 0;
     this.vy = 0;
@@ -3604,7 +3787,14 @@ class AbyssalBat {
     ctx.translate(-this.w / 2, -this.h / 2);
 
     const sm = window.spriteManager;
-    const batFrames = sm && sm.sprites ? sm.sprites.bat : null;
+    let batFrames = null;
+    if (sm && sm.sprites) {
+      if (sm.sprites.batTypes && sm.sprites.batTypes[this.subType]) {
+        batFrames = sm.sprites.batTypes[this.subType];
+      } else {
+        batFrames = sm.sprites.bat;
+      }
+    }
 
     if (batFrames && batFrames[this.animFrame]) {
       ctx.drawImage(batFrames[this.animFrame], -6, -6);
@@ -3651,7 +3841,12 @@ class AbyssalBat {
       if (particleSys) particleSys.spawnBloodExplosion(this.x + this.w / 2, this.y + this.h / 2, 20);
       if (window.game) {
         window.game.spawnSoulOrbs(this.x + this.w / 2, this.y + this.h / 2, 1, 2);
-        if (Math.random() < 0.25) {
+        // Vampire Survivors In-Run XP Gem Drop (Fix: Bats now grant XP gems on kill!)
+        if (window.game.spawnXpGems) {
+          const xpVal = this.subType === 'gargoyle' ? 14 : 10;
+          window.game.spawnXpGems(this.x + this.w / 2, this.y + this.h / 2, 1, xpVal);
+        }
+        if (window.game.spawnHealthOrb && Math.random() < 0.25) {
           window.game.spawnHealthOrb(this.x + this.w / 2, this.y + this.h / 2, 15);
         }
       }
@@ -3723,7 +3918,14 @@ class EnemyProjectile {
 
     ctx.save();
     const sm = window.spriteManager;
-    const skullFrames = sm && sm.sprites ? sm.sprites.skullProjectile : null;
+    let skullFrames = null;
+    if (sm && sm.sprites) {
+      if (sm.sprites.skullProjectiles && sm.sprites.skullProjectiles[this.type]) {
+        skullFrames = sm.sprites.skullProjectiles[this.type];
+      } else {
+        skullFrames = sm.sprites.skullProjectile;
+      }
+    }
 
     if (skullFrames && skullFrames[this.animFrame]) {
       const facing = this.vx < 0 ? -1 : 1;
@@ -3731,11 +3933,12 @@ class EnemyProjectile {
       ctx.scale(facing, 1.0);
       ctx.drawImage(skullFrames[this.animFrame], -12, -12);
     } else {
-      ctx.fillStyle = '#ff4400';
+      const col = this.type === 'frost' ? '#38bdf8' : (this.type === 'toxic' ? '#22c55e' : (this.type === 'necrotic' ? '#c084fc' : '#ff4400'));
+      ctx.fillStyle = col;
       ctx.beginPath();
       ctx.arc(rx + 10, ry + 10, 8, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = '#ffff00';
+      ctx.fillStyle = '#ffffff';
       ctx.beginPath();
       ctx.arc(rx + 10, ry + 10, 4, 0, Math.PI * 2);
       ctx.fill();
@@ -3824,6 +4027,8 @@ class HealthOrb {
 if (typeof window !== 'undefined') {
   window.Player = Player;
   window.SkeletonEnemy = SkeletonEnemy;
+  window.AbyssalBat = AbyssalBat;
+  window.EnemyProjectile = EnemyProjectile;
   window.Boss = Boss;
   window.SoulOrb = SoulOrb;
   window.XpGem = XpGem;
