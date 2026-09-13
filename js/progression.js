@@ -18,13 +18,14 @@ class ProgressionManager {
 
     // Upgrades: level of each upgrade
     this.upgrades = {
-      vitality: 0,        // +10 Max HP per level & 0.08 HP/s regen
+      vitality: 0,        // +10 Max HP per level (up to 200 HP)
+      healthRegen: 0,     // Health regen per second (+0.5 HP/s per level)
       spikeResist: 0,     // Level 1 allows surviving spikes! Reduces spike damage further each lvl
       agility: 0,         // Movement & air control speed (+3.5% per lvl)
       jumpPower: 0,       // Jump force (+2% per lvl)
       bladeMastery: 0,    // Sword damage (+2.5 dmg per lvl)
-      soulGreed: 0,       // +12% souls gained from height & kills per lvl
-      altarOfTorment: 0,  // Passive souls per second (+0.4/s per lvl base)
+      soulGreed: 0,       // +10% souls gained from height & kills per lvl
+      altarOfTorment: 0,  // Passive souls per second (+0.08/s per lvl base)
       doubleJump: 0       // Unlocks mid-air double jump (costs 2 Humanity Shards)
     };
 
@@ -258,12 +259,21 @@ class ProgressionManager {
     this.upgradeDefinitions = {
       vitality: {
         name: 'Vitalidad de Kael',
-        desc: 'Incrementa la vida máxima en +10 HP y regenera salud gradualmente (+0.08 HP/s).',
+        desc: 'Incrementa la vida máxima en +10 HP por nivel (hasta 200 HP totales).',
         currency: 'souls',
         baseCost: 50,
         costMult: 1.45,
         maxLvl: 10,
         icon: '❤️'
+      },
+      healthRegen: {
+        name: 'Regeneración Carmesí',
+        desc: 'Regenera la salud de Kael continuamente en el tiempo (+0.5 HP/segundo por nivel).',
+        currency: 'souls',
+        baseCost: 65,
+        costMult: 1.5,
+        maxLvl: 8,
+        icon: '🩸'
       },
       spikeResist: {
         name: 'Piel de Obsidiana',
@@ -498,7 +508,7 @@ class ProgressionManager {
   getPlayerStats() {
     return {
       maxHp: 100 + (this.upgrades.vitality * 10),
-      hpRegen: this.upgrades.vitality * 0.08,
+      hpRegen: (this.upgrades.healthRegen || 0) * 0.5,
       hasSpikeResist: this.upgrades.spikeResist > 0,
       spikeDamageRatio: Math.max(0.35, 0.70 - (this.upgrades.spikeResist * 0.07)),
       moveSpeedMult: 1.0 + (this.upgrades.agility * 0.035),
@@ -806,6 +816,7 @@ class ProgressionManager {
     // Reset base upgrades and current souls (keep humanity shards & prestige ashes)
     this.souls = 0;
     this.upgrades.vitality = 0;
+    this.upgrades.healthRegen = 0;
     this.upgrades.spikeResist = 0;
     this.upgrades.agility = 0;
     this.upgrades.jumpPower = 0;

@@ -454,6 +454,7 @@ class Player {
   }
 
   resolvePlatformCollisions(platforms) {
+    if (!platforms || !Array.isArray(platforms)) return;
     const feetY = this.y + this.h;
     const prevFeetY = this.prevY + this.h;
     this.onIce = false;
