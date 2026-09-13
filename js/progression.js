@@ -28,6 +28,25 @@ class ProgressionManager {
       doubleJump: 0       // Unlocks mid-air double jump (costs 2 Humanity Shards)
     };
 
+    // ─── VAMPIRE SURVIVORS XP & LEVELING ───
+    this.runLevel = 1;
+    this.runXp = 0;
+    this.runXpToNext = 50;
+
+    // ─── MEGABONK COMBO & MULTIPLIER ───
+    this.bonkCombo = 0;
+    this.bonkComboTimer = 0;
+    this.bonkMaxComboTimer = 3.5;
+
+    // ─── BALATRO CHIPS × MULT ENGINE ───
+    this.activeJokers = [];
+    this.maxJokers = 5;
+    this.lastBalatroScore = { chips: 0, mult: 1, xMult: 1, totalSouls: 0 };
+    this.rerollCost = 15;
+
+    // ─── SCRITCHY SCRATCHY ───
+    this.activeScratchCard = null;
+
     // Active rogue-lite boons for the current run
     this.activeBoons = [];
 
@@ -134,6 +153,105 @@ class ProgressionManager {
         rarity: 'Común',
         desc: 'Arma Pasiva: Un halo carmesí continuo rodea a Kael, dañando y repeliendo a cualquier criatura.',
         icon: '📿'
+      },
+      // ─── TOMOS PASIVOS (VAMPIRE SURVIVORS SYNERGY TOMES) ───
+      {
+        id: 'tome_candelabro',
+        isTome: true,
+        name: 'Candelabro del Averno',
+        rarity: 'Rara',
+        desc: 'Tomo Pasivo: +25% de tamaño y radio a todas las armas, ondas y auras.',
+        icon: '🕯️'
+      },
+      {
+        id: 'tome_spinach',
+        isTome: true,
+        name: 'Espinacas Infernales',
+        rarity: 'Rara',
+        desc: 'Tomo Pasivo: +20% de daño a todos los ataques, proyectiles y armas.',
+        icon: '🌿'
+      },
+      {
+        id: 'tome_hourglass',
+        isTome: true,
+        name: 'Reloj de Arena Vacío',
+        rarity: 'Épica',
+        desc: 'Tomo Pasivo: -15% de tiempo de recarga en todas las armas automáticas.',
+        icon: '⏳'
+      },
+      {
+        id: 'tome_clover',
+        isTome: true,
+        name: 'Trébol de Dante',
+        rarity: 'Común',
+        desc: 'Tomo Pasivo: +15% de probabilidad de asestar Golpes Críticos y MEGABONK.',
+        icon: '🍀'
+      },
+      {
+        id: 'tome_gauntlet',
+        isTome: true,
+        name: 'Guantelete Titánico',
+        rarity: 'Rara',
+        desc: 'Tomo Pasivo: +60% de fuerza de empuje MEGABONK y doble daño por colisión dominó.',
+        icon: '🥊'
+      },
+      // ─── COMODINES DE BALATRO (JOKERS DE DANTE) ───
+      {
+        id: 'joker_fool',
+        isJoker: true,
+        name: 'El Bufón del Limbo',
+        rarity: 'Común',
+        desc: 'Comodín: Otorga +4 Mult 🔴 en cada muerte enemiga ejecutada en el aire.',
+        icon: '🃏'
+      },
+      {
+        id: 'joker_greedy',
+        isJoker: true,
+        name: 'El Avaro de Dite',
+        rarity: 'Rara',
+        desc: 'Comodín: Si posees más de 150 almas, otorga ×1.5 Mult 🟣 a todas las almas obtenidas.',
+        icon: '💰'
+      },
+      {
+        id: 'joker_wheel',
+        isJoker: true,
+        name: 'La Rueda del Averno',
+        rarity: 'Épica',
+        desc: 'Comodín: 25% de probabilidad de triplicar (×3.0 🟣) el valor de almas.',
+        icon: '🎡'
+      },
+      {
+        id: 'joker_hanged',
+        isJoker: true,
+        name: 'El Colgado',
+        rarity: 'Rara',
+        desc: 'Comodín: Al sufrir daño, detona una onda sísmica que aniquila enemigos menores.',
+        icon: '🪢'
+      },
+      {
+        id: 'joker_death',
+        isJoker: true,
+        name: 'La Muerte Roja',
+        rarity: 'Épica',
+        desc: 'Comodín: Las explosiones de esqueletos transmiten fuego ardiente a los adyacentes.',
+        icon: '☠️'
+      },
+      {
+        id: 'joker_bonk',
+        isJoker: true,
+        name: 'El Gran Bonk',
+        rarity: 'Rara',
+        desc: 'Comodín: Cada golpe MEGABONK añade +10 Mult 🔴 temporal a la racha de almas.',
+        icon: '🔨'
+      },
+      // ─── SCRITCHY SCRATCHY (TARJETA DE RASPAR) ───
+      {
+        id: 'scratch_card_ticket',
+        isScratchCard: true,
+        name: 'Rascador del Inframundo',
+        rarity: 'Épica',
+        desc: '¡Rascador de la Fortuna! Rasca 3 casillas para ganar almas instantáneas, comodines o el JACKPOT.',
+        icon: '🎟️'
       }
     ];
 
@@ -362,10 +480,204 @@ class ProgressionManager {
   // ─── ROGUE-LITE BOONS & PASSIVE WEAPONS PER RUN ───
   resetRunBoons() {
     this.activeBoons = [];
+    this.activeJokers = [];
+    this.runLevel = 1;
+    this.runXp = 0;
+    this.runXpToNext = 50;
+    this.bonkCombo = 0;
+    this.bonkComboTimer = 0;
     if (window.game && window.game.resetPassiveWeapons) {
       window.game.resetPassiveWeapons();
     }
     this.updateHUD();
+  }
+
+  // ─── VAMPIRE SURVIVORS XP & LEVELING ───
+  addRunXp(amount) {
+    this.runXp += amount;
+    let leveledUp = false;
+    while (this.runXp >= this.runXpToNext) {
+      this.runXp -= this.runXpToNext;
+      this.runLevel++;
+      this.runXpToNext = Math.round(this.runXpToNext * 1.35 + 20);
+      leveledUp = true;
+    }
+    this.updateHUD();
+    return leveledUp;
+  }
+
+  // ─── MEGABONK COMBO SYSTEM ───
+  updateBonkCombo(dt) {
+    if (this.bonkComboTimer > 0) {
+      this.bonkComboTimer -= dt;
+      if (this.bonkComboTimer <= 0) {
+        this.bonkCombo = 0;
+        this.updateHUD();
+      }
+    }
+  }
+
+  addBonkHit(isMegabonk = false) {
+    this.bonkCombo++;
+    this.bonkComboTimer = this.bonkMaxComboTimer;
+    if (isMegabonk) {
+      this.bonkCombo += 1;
+    }
+    this.updateHUD();
+    return this.bonkCombo;
+  }
+
+  // ─── BALATRO CHIPS × MULT SCORING ENGINE ───
+  calculateBalatroScore(baseChips, context = {}) {
+    let bonusChips = 0;
+    let addMult = Math.min(12, Math.floor(this.bonkCombo * 0.5));
+    let xMult = context.isMegabonk ? 2.5 : 1.0;
+
+    // Apply Jokers
+    for (const joker of this.activeJokers) {
+      if (joker.edition === 'foil') bonusChips += 50;
+      else if (joker.edition === 'holo') addMult += 10;
+      else if (joker.edition === 'polychrome') xMult *= 1.5;
+
+      switch (joker.id) {
+        case 'joker_fool':
+          if (context.inAir) addMult += 4;
+          break;
+        case 'joker_greedy':
+          if (this.souls >= 150) xMult *= 1.5;
+          break;
+        case 'joker_wheel':
+          if (Math.random() < 0.25) xMult *= 3.0;
+          break;
+        case 'joker_bonk':
+          if (context.isMegabonk) addMult += 10;
+          break;
+        case 'joker_golden':
+          bonusChips += 35;
+          break;
+      }
+    }
+
+    const prestige = this.getPrestigeMultiplier();
+    const finalChips = Math.round((baseChips + bonusChips) * prestige);
+    const finalMult = Math.max(1, 1 + addMult);
+    const totalSouls = Math.max(1, Math.round(finalChips * finalMult * xMult));
+
+    this.addSouls(totalSouls);
+    this.lastBalatroScore = { chips: finalChips, mult: finalMult, xMult: xMult, totalSouls: totalSouls };
+    this.updateHUD();
+
+    return {
+      chips: finalChips,
+      mult: finalMult,
+      xMult: xMult,
+      totalSouls: totalSouls
+    };
+  }
+
+  acquireJoker(jokerData) {
+    if (this.activeJokers.length >= this.maxJokers) {
+      this.activeJokers.shift();
+    }
+    const r = Math.random();
+    const edition = r < 0.05 ? 'polychrome' : (r < 0.18 ? 'holo' : (r < 0.38 ? 'foil' : 'standard'));
+    const joker = {
+      ...jokerData,
+      edition: jokerData.edition || edition,
+      instanceId: 'joker_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4)
+    };
+    this.activeJokers.push(joker);
+    this.updateHUD();
+    return joker;
+  }
+
+  // ─── SCRITCHY SCRATCHY (RASCADOR DEL INFRAMUNDO) ───
+  generateScratchCard() {
+    const symbols = [
+      { id: 'souls_50', icon: '🔮', name: '50 Almas', type: 'souls', value: 50 },
+      { id: 'souls_100', icon: '🔮', name: '100 Almas', type: 'souls', value: 100 },
+      { id: 'souls_200', icon: '✨', name: '200 Almas', type: 'souls', value: 200 },
+      { id: 'shard', icon: '💠', name: '1 Fragmento', type: 'shard', value: 1 },
+      { id: 'megabonk', icon: '💥', name: 'Megabonk', type: 'megabonk', value: 3 },
+      { id: 'joker', icon: '🃏', name: 'Comodín', type: 'joker', value: 1 }
+    ];
+
+    const isJackpot = Math.random() < 0.28;
+    let cells;
+    if (isJackpot) {
+      const pick = symbols[Math.floor(Math.random() * symbols.length)];
+      cells = [{ ...pick }, { ...pick }, { ...pick }];
+    } else {
+      cells = [
+        { ...symbols[Math.floor(Math.random() * symbols.length)] },
+        { ...symbols[Math.floor(Math.random() * symbols.length)] },
+        { ...symbols[Math.floor(Math.random() * symbols.length)] }
+      ];
+      if (cells[0].id === cells[1].id && cells[1].id === cells[2].id) {
+        cells[2] = { ...symbols[(symbols.indexOf(cells[0]) + 1) % symbols.length] };
+      }
+    }
+
+    this.activeScratchCard = {
+      id: 'scritch_' + Date.now(),
+      cells: cells,
+      scratched: [false, false, false],
+      isClaimed: false,
+      isJackpot: cells[0].id === cells[1].id && cells[1].id === cells[2].id
+    };
+
+    return this.activeScratchCard;
+  }
+
+  claimScratchReward(card) {
+    if (!card || card.isClaimed) return 0;
+    card.isClaimed = true;
+    let totalSoulsAwarded = 0;
+
+    if (card.isJackpot) {
+      const sym = card.cells[0];
+      if (sym.type === 'souls') {
+        totalSoulsAwarded = sym.value * 4;
+        this.addSouls(totalSoulsAwarded);
+      } else if (sym.type === 'shard') {
+        this.addHumanityShards(3);
+      } else if (sym.type === 'joker') {
+        this.acquireJoker({ id: 'joker_wheel', name: 'La Rueda del Averno', rarity: 'Épica', desc: 'Comodín: 25% prob triplicar almas', icon: '🎡', edition: 'polychrome' });
+      } else {
+        totalSoulsAwarded = 350;
+        this.addSouls(350);
+      }
+    } else {
+      for (const c of card.cells) {
+        if (c.type === 'souls') {
+          totalSoulsAwarded += c.value;
+          this.addSouls(c.value);
+        } else if (c.type === 'shard') {
+          this.addHumanityShards(c.value);
+        } else {
+          totalSoulsAwarded += 40;
+          this.addSouls(40);
+        }
+      }
+    }
+
+    this.updateHUD();
+    return totalSoulsAwarded;
+  }
+
+  // ─── REROLL SYSTEM (BALATRO / VAMPIRE SURVIVORS) ───
+  canReroll() {
+    return this.souls >= this.rerollCost;
+  }
+
+  performReroll() {
+    if (!this.canReroll()) return false;
+    this.souls -= this.rerollCost;
+    this.updateHUD();
+    if (window.soundEngine && window.soundEngine.playUiClick) {
+      window.soundEngine.playUiClick();
+    }
+    return true;
   }
 
   getRandomBoons(count = 3, isRelic = false) {
@@ -374,25 +686,35 @@ class ProgressionManager {
       if (b.isWeapon) {
         if (!pwm) return true;
         const lvl = pwm.getLevel(b.weaponType);
-        if (lvl >= 5) return false; // Max level reached
-        // If not owned, allow if player has fewer than 4 weapons
+        if (lvl >= 5) return false;
         if (lvl === 0 && pwm.weapons.size >= 4) return false;
         return true;
-      } else {
-        // Standard boon: once per run
-        return !this.activeBoons.some(a => a.id === b.id);
       }
+      if (b.isTome) {
+        const tCount = this.activeBoons.filter(a => a.id === b.id).length;
+        return tCount < 3;
+      }
+      if (b.isJoker) {
+        return this.activeJokers.length < this.maxJokers;
+      }
+      return !this.activeBoons.some(a => a.id === b.id);
     });
 
+    // Check weapon evolutions
+    if (pwm && pwm.getAvailableEvolutions) {
+      const evoList = pwm.getAvailableEvolutions();
+      if (evoList.length > 0) {
+        available = [...evoList, ...available];
+      }
+    }
+
     if (isRelic) {
-      // Prioritize Weapons and Rare/Epic Boons for Boss Relics!
-      const highTier = available.filter(b => b.isWeapon || b.rarity === 'Épica' || b.rarity === 'Rara');
+      const highTier = available.filter(b => b.isEvolution || b.isWeapon || b.isJoker || b.isScratchCard || b.rarity === 'Épica' || b.rarity === 'Rara');
       if (highTier.length >= count) {
         available = highTier;
       }
     }
 
-    // Shuffle
     const shuffled = [...available].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, count);
   }
@@ -404,6 +726,19 @@ class ProgressionManager {
       }
       if (!this.activeBoons.some(b => b.id === boon.id)) {
         this.activeBoons.push(boon);
+      }
+    } else if (boon.isEvolution) {
+      if (window.game && window.game.passiveWeaponsManager) {
+        window.game.passiveWeaponsManager.evolveWeapon(boon.baseWeaponType);
+      }
+      if (!this.activeBoons.some(b => b.id === boon.id)) {
+        this.activeBoons.push(boon);
+      }
+    } else if (boon.isJoker) {
+      this.acquireJoker(boon);
+    } else if (boon.isScratchCard) {
+      if (window.game && window.game.openScratchCardModal) {
+        window.game.openScratchCardModal(this.generateScratchCard());
       }
     } else {
       this.activeBoons.push(boon);
@@ -485,6 +820,53 @@ class ProgressionManager {
 
     const ashesEl = document.getElementById('hud-ashes-count');
     if (ashesEl) ashesEl.textContent = this.penitenceAshes;
+
+    // Vampire Survivors Run Level & XP Bar
+    const runLvlEl = document.getElementById('hud-run-level');
+    if (runLvlEl) runLvlEl.textContent = this.runLevel;
+
+    const modalLvlEl = document.getElementById('modal-run-level');
+    if (modalLvlEl) modalLvlEl.textContent = this.runLevel;
+
+    const xpFill = document.getElementById('hud-xp-fill');
+    if (xpFill) {
+      const pct = Math.min(100, Math.max(0, (this.runXp / this.runXpToNext) * 100));
+      xpFill.style.width = `${pct.toFixed(1)}%`;
+    }
+
+    // Megabonk Combo Badge
+    const comboEl = document.getElementById('hud-bonk-combo');
+    if (comboEl) {
+      if (this.bonkCombo > 1) {
+        comboEl.classList.remove('hidden');
+        comboEl.textContent = `💥 BONK ×${this.bonkCombo}!`;
+        comboEl.style.transform = `scale(${Math.min(1.35, 1.0 + this.bonkCombo * 0.03)})`;
+      } else {
+        comboEl.classList.add('hidden');
+      }
+    }
+
+    // Balatro Chips × Mult HUD Widget
+    const balatroEl = document.getElementById('hud-balatro-score');
+    if (balatroEl && this.lastBalatroScore) {
+      balatroEl.classList.remove('hidden');
+      const xMultText = this.lastBalatroScore.xMult > 1.05 ? ` <span class="xmult-val">(×${this.lastBalatroScore.xMult.toFixed(1)} 🟣)</span>` : '';
+      balatroEl.innerHTML = `<span class="chips-val">${this.lastBalatroScore.chips} 🔵</span> × <span class="mult-val">+${this.lastBalatroScore.mult} 🔴</span>${xMultText} = <b style="color:#f4d06f;">+${this.lastBalatroScore.totalSouls} 🔮</b>`;
+    }
+
+    // Balatro Active Jokers Row
+    const jokersContainer = document.getElementById('hud-jokers-container');
+    if (jokersContainer) {
+      jokersContainer.innerHTML = '';
+      for (const j of this.activeJokers) {
+        const badge = document.createElement('span');
+        const editionClass = j.edition ? `joker-${j.edition}` : 'joker-standard';
+        badge.className = `joker-badge ${editionClass}`;
+        badge.title = `${j.name} [${(j.edition || 'standard').toUpperCase()}]: ${j.desc}`;
+        badge.textContent = j.icon || '🃏';
+        jokersContainer.appendChild(badge);
+      }
+    }
 
     // Boons icons
     const boonsContainer = document.getElementById('hud-active-boons');

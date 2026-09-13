@@ -78,7 +78,170 @@ class PassiveWeaponsManager {
     return newWeapon;
   }
 
+  isEvolved(type) {
+    const w = this.weapons.get(type);
+    return !!(w && w.isEvolved);
+  }
+
+  canEvolve(type) {
+    const w = this.weapons.get(type);
+    return !!(w && w.level >= 5 && !w.isEvolved);
+  }
+
+  getTomeAreaMultiplier() {
+    const count = (window.progression && window.progression.activeBoons) ? window.progression.activeBoons.filter(b => b.id === 'tome_candelabro').length : 0;
+    return 1.0 + count * 0.25;
+  }
+
+  getTomeDamageMultiplier() {
+    const count = (window.progression && window.progression.activeBoons) ? window.progression.activeBoons.filter(b => b.id === 'tome_spinach').length : 0;
+    return 1.0 + count * 0.20;
+  }
+
+  getTomeCooldownMultiplier() {
+    const count = (window.progression && window.progression.activeBoons) ? window.progression.activeBoons.filter(b => b.id === 'tome_hourglass').length : 0;
+    return Math.max(0.35, 1.0 - count * 0.15);
+  }
+
+  getTomeCritBonus() {
+    const count = (window.progression && window.progression.activeBoons) ? window.progression.activeBoons.filter(b => b.id === 'tome_clover').length : 0;
+    return count * 0.15;
+  }
+
+  getTomeKnockbackMultiplier() {
+    const count = (window.progression && window.progression.activeBoons) ? window.progression.activeBoons.filter(b => b.id === 'tome_gauntlet').length : 0;
+    return 1.0 + count * 0.60;
+  }
+
+  getAvailableEvolutions() {
+    const evolutions = [];
+    for (const [type, w] of this.weapons.entries()) {
+      if (w.level >= 5 && !w.isEvolved) {
+        switch (type) {
+          case 'holy_cross':
+            evolutions.push({
+              id: 'evo_holy_cross',
+              isEvolution: true,
+              baseWeaponType: 'holy_cross',
+              name: 'Corona Sagrada del Serafín',
+              rarity: 'Legendaria',
+              desc: 'SUPER EVOLUCIÓN: 8 cruces giratorias titánicas que vaporizan proyectiles e infligen 60 de daño.',
+              icon: '👑'
+            });
+            break;
+          case 'hellfire_orb':
+            evolutions.push({
+              id: 'evo_hellfire_orb',
+              isEvolution: true,
+              baseWeaponType: 'hellfire_orb',
+              name: 'Cataclismo de Belcebú',
+              rarity: 'Legendaria',
+              desc: 'SUPER EVOLUCIÓN: 3 meteoros colosales teledirigidos con rastro de fuego y 80 de daño explosivo.',
+              icon: '☄️'
+            });
+            break;
+          case 'celestial_lightning':
+            evolutions.push({
+              id: 'evo_celestial_lightning',
+              isEvolution: true,
+              baseWeaponType: 'celestial_lightning',
+              name: 'Ira del Trueno de Zeus',
+              rarity: 'Legendaria',
+              desc: 'SUPER EVOLUCIÓN: 4 rayos celestes simultáneos devastadores con radio de choque expandido a 85px.',
+              icon: '⚡'
+            });
+            break;
+          case 'death_scythe':
+            evolutions.push({
+              id: 'evo_death_scythe',
+              isEvolution: true,
+              baseWeaponType: 'death_scythe',
+              name: 'Guadaña de la Muerte Eterna',
+              rarity: 'Legendaria',
+              desc: 'SUPER EVOLUCIÓN: 4 guadañas gigantes en cruz omnidireccional que atraviesan todas las dimensiones.',
+              icon: '🪓'
+            });
+            break;
+          case 'blood_garlic':
+            evolutions.push({
+              id: 'evo_blood_garlic',
+              isEvolution: true,
+              baseWeaponType: 'blood_garlic',
+              name: 'Devorador Carmesí de Almas',
+              rarity: 'Legendaria',
+              desc: 'SUPER EVOLUCIÓN: Halo titánico vampírico (115px) que drena vida para curar a Kael y succiona todas las almas.',
+              icon: '📿'
+            });
+            break;
+        }
+      }
+    }
+    return evolutions;
+  }
+
+  evolveWeapon(type) {
+    const w = this.weapons.get(type);
+    if (!w) return null;
+    w.isEvolved = true;
+    switch (type) {
+      case 'holy_cross':
+        w.name = 'Corona Sagrada del Serafín';
+        w.icon = '👑';
+        w.count = 8;
+        w.radius = 78;
+        w.damage = 60;
+        w.orbitSpeed = 5.6;
+        break;
+      case 'hellfire_orb':
+        w.name = 'Cataclismo de Belcebú';
+        w.icon = '☄️';
+        w.count = 3;
+        w.maxCooldown = 0.55;
+        w.damage = 80;
+        w.range = 460;
+        w.speed = 7.4;
+        break;
+      case 'celestial_lightning':
+        w.name = 'Ira del Trueno de Zeus';
+        w.icon = '⚡';
+        w.count = 4;
+        w.maxCooldown = 0.85;
+        w.damage = 110;
+        w.range = 480;
+        w.radius = 85;
+        break;
+      case 'death_scythe':
+        w.name = 'Guadaña de la Muerte Eterna';
+        w.icon = '🪓';
+        w.count = 4;
+        w.maxCooldown = 0.75;
+        w.damage = 65;
+        w.speed = 6.8;
+        w.scale = 1.8;
+        break;
+      case 'blood_garlic':
+        w.name = 'Devorador Carmesí de Almas';
+        w.icon = '📿';
+        w.maxCooldown = 0.35;
+        w.damage = 38;
+        w.radius = 115;
+        break;
+    }
+    if (window.particleSystem) {
+      window.particleSystem.triggerScreenShake(0.3, 8);
+      if (window.game && window.game.player) {
+        window.particleSystem.spawnTeleportSparks(window.game.player.x + 12, window.game.player.y + 19);
+      }
+    }
+    if (window.soundEngine && window.soundEngine.playPrestige) {
+      window.soundEngine.playPrestige();
+    }
+    this.updateHUD();
+    return w;
+  }
+
   applyLevelStats(w) {
+    if (w.isEvolved) return;
     switch (w.type) {
       case 'holy_cross':
         w.name = 'Cruces de Luz';
@@ -131,6 +294,10 @@ class PassiveWeaponsManager {
   update(dt, player, level, enemies, bats, boss, enemyProjectiles, soundEng, particleSys) {
     if (!player || player.hp <= 0) return;
 
+    const areaMult = this.getTomeAreaMultiplier();
+    const dmgMult = this.getTomeDamageMultiplier();
+    const cdMult = this.getTomeCooldownMultiplier();
+
     // Collect all living targets for auto-targeting
     const targets = [];
     if (enemies) {
@@ -155,13 +322,16 @@ class PassiveWeaponsManager {
     if (crossWeapon) {
       this.holyOrbitAngle += dt * crossWeapon.orbitSpeed;
       const step = (Math.PI * 2) / crossWeapon.count;
+      const effectiveRadius = crossWeapon.radius * areaMult;
+      const effectiveDmg = Math.round(crossWeapon.damage * dmgMult);
+
       for (let i = 0; i < crossWeapon.count; i++) {
         const angle = this.holyOrbitAngle + i * step;
-        const cx = px + Math.cos(angle) * crossWeapon.radius;
-        const cy = py + Math.sin(angle) * crossWeapon.radius;
+        const cx = px + Math.cos(angle) * effectiveRadius;
+        const cy = py + Math.sin(angle) * effectiveRadius;
 
         // Sparkle particles occasionally
-        if (Math.random() < 0.12 && particleSys) {
+        if (Math.random() < (crossWeapon.isEvolved ? 0.25 : 0.12) && particleSys) {
           particleSys.spawnDust(cx, cy, 1);
         }
 
@@ -170,10 +340,10 @@ class PassiveWeaponsManager {
           const tx = t.x + (t.w ? t.w / 2 : 12);
           const ty = t.y + (t.h ? t.h / 2 : 16);
           const dist = Math.hypot(tx - cx, ty - cy);
-          if (dist < 26) {
+          if (dist < (crossWeapon.isEvolved ? 34 : 26)) {
             if (!t._holyCrossCooldown || t._holyCrossCooldown <= 0) {
-              if (t.takeDamage) t.takeDamage(crossWeapon.damage, px, soundEng, particleSys);
-              t._holyCrossCooldown = 0.32;
+              if (t.takeDamage) t.takeDamage(effectiveDmg, px, soundEng, particleSys);
+              t._holyCrossCooldown = crossWeapon.isEvolved ? 0.22 : 0.32;
               if (particleSys) particleSys.spawnSlashSparks(cx, cy, Math.sign(Math.cos(angle)));
             }
           }
@@ -183,7 +353,7 @@ class PassiveWeaponsManager {
         if (enemyProjectiles) {
           for (const ep of enemyProjectiles) {
             if (!ep.isDead) {
-              if (Math.hypot(ep.x - cx, ep.y - cy) < 22) {
+              if (Math.hypot(ep.x - cx, ep.y - cy) < (crossWeapon.isEvolved ? 30 : 22)) {
                 ep.isDead = true;
                 if (soundEng && soundEng.playParry) soundEng.playParry();
                 if (particleSys) particleSys.spawnSlashSparks(ep.x, ep.y, 1);
@@ -203,7 +373,7 @@ class PassiveWeaponsManager {
     // ─── 2. UPDATE HELLFIRE ORBS ───
     const fireWeapon = this.weapons.get('hellfire_orb');
     if (fireWeapon) {
-      fireWeapon.timer -= dt;
+      fireWeapon.timer -= dt / cdMult;
       if (fireWeapon.timer <= 0) {
         // Find nearest living target
         let nearest = null;
@@ -221,8 +391,10 @@ class PassiveWeaponsManager {
         if (nearest) {
           fireWeapon.timer = fireWeapon.maxCooldown;
           const count = fireWeapon.count;
+          const effectiveDmg = Math.round(fireWeapon.damage * dmgMult);
+
           for (let i = 0; i < count; i++) {
-            const spread = (i - (count - 1) / 2) * 0.22;
+            const spread = (i - (count - 1) / 2) * 0.24;
             const targetX = nearest.x + (nearest.w ? nearest.w / 2 : 12);
             const targetY = nearest.y + (nearest.h ? nearest.h / 2 : 16);
             const baseAngle = Math.atan2(targetY - py, targetX - px) + spread;
@@ -232,9 +404,10 @@ class PassiveWeaponsManager {
               y: py,
               vx: Math.cos(baseAngle) * fireWeapon.speed,
               vy: Math.sin(baseAngle) * fireWeapon.speed,
-              damage: fireWeapon.damage,
+              damage: effectiveDmg,
+              isEvolved: !!fireWeapon.isEvolved,
               target: nearest,
-              life: 2.2,
+              life: 2.5,
               trailTimer: 0
             });
           }
@@ -246,7 +419,7 @@ class PassiveWeaponsManager {
     // ─── 3. UPDATE CELESTIAL LIGHTNING ───
     const lightningWeapon = this.weapons.get('celestial_lightning');
     if (lightningWeapon) {
-      lightningWeapon.timer -= dt;
+      lightningWeapon.timer -= dt / cdMult;
       if (lightningWeapon.timer <= 0) {
         // Select target(s) within range
         const inRange = targets.filter(t => {
@@ -258,6 +431,9 @@ class PassiveWeaponsManager {
         if (inRange.length > 0) {
           lightningWeapon.timer = lightningWeapon.maxCooldown;
           const strikesCount = Math.min(inRange.length, lightningWeapon.count);
+          const effectiveDmg = Math.round(lightningWeapon.damage * dmgMult);
+          const effectiveRadius = lightningWeapon.radius * areaMult;
+
           // Pick distinct targets
           const chosen = [];
           for (let i = 0; i < strikesCount; i++) {
@@ -281,8 +457,8 @@ class PassiveWeaponsManager {
             for (const t of targets) {
               const ex = t.x + (t.w ? t.w / 2 : 12);
               const ey = t.y + (t.h ? t.h / 2 : 16);
-              if (Math.hypot(ex - tx, ey - ty) <= lightningWeapon.radius) {
-                if (t.takeDamage) t.takeDamage(lightningWeapon.damage, tx, soundEng, particleSys);
+              if (Math.hypot(ex - tx, ey - ty) <= effectiveRadius) {
+                if (t.takeDamage) t.takeDamage(effectiveDmg, tx, soundEng, particleSys);
               }
             }
 
@@ -304,25 +480,39 @@ class PassiveWeaponsManager {
     // ─── 4. UPDATE DEATH SCYTHES ───
     const scytheWeapon = this.weapons.get('death_scythe');
     if (scytheWeapon) {
-      scytheWeapon.timer -= dt;
+      scytheWeapon.timer -= dt / cdMult;
       if (scytheWeapon.timer <= 0) {
         scytheWeapon.timer = scytheWeapon.maxCooldown;
         const facing = player.facing || 1;
         const count = scytheWeapon.count;
+        const effectiveDmg = Math.round(scytheWeapon.damage * dmgMult);
+        const effectiveScale = (scytheWeapon.scale || (scytheWeapon.level >= 3 ? 1.4 : 1.1)) * areaMult;
 
         for (let i = 0; i < count; i++) {
-          const dir = (count === 2 && i === 1) ? -facing : facing;
+          let vx = 0;
+          let vy = 0;
+          if (scytheWeapon.isEvolved && count >= 4) {
+            // Omnidirectional cross: Right, Left, Up, Down
+            if (i === 0) vx = scytheWeapon.speed;
+            else if (i === 1) vx = -scytheWeapon.speed;
+            else if (i === 2) vy = -scytheWeapon.speed;
+            else if (i === 3) vy = scytheWeapon.speed;
+          } else {
+            const dir = (count === 2 && i === 1) ? -facing : facing;
+            vx = dir * scytheWeapon.speed;
+          }
+
           this.projectiles.push({
             type: 'scythe',
             x: px,
             y: py - 4,
-            vx: dir * scytheWeapon.speed,
-            vy: 0,
+            vx: vx,
+            vy: vy,
             angle: 0,
-            damage: scytheWeapon.damage,
+            damage: effectiveDmg,
             pierced: new Set(),
-            life: 1.8,
-            scale: scytheWeapon.level >= 3 ? 1.4 : 1.1
+            life: 2.0,
+            scale: effectiveScale
           });
         }
         if (soundEng && soundEng.playScytheThrow) {
@@ -336,28 +526,49 @@ class PassiveWeaponsManager {
     // ─── 5. UPDATE BLOOD GARLIC AURA ───
     const garlicWeapon = this.weapons.get('blood_garlic');
     if (garlicWeapon) {
-      garlicWeapon.timer -= dt;
+      garlicWeapon.timer -= dt / cdMult;
       if (garlicWeapon.timer <= 0) {
         garlicWeapon.timer = garlicWeapon.maxCooldown;
         this.garlicPulse.active = true;
         this.garlicPulse.timer = 0.22;
-        this.garlicPulse.radius = garlicWeapon.radius;
+        const effectiveRadius = garlicWeapon.radius * areaMult;
+        const effectiveDmg = Math.round(garlicWeapon.damage * dmgMult);
+        this.garlicPulse.radius = effectiveRadius;
 
+        let hitAnyEnemy = false;
         // Damage & push all enemies inside the aura
         for (const t of targets) {
           const tx = t.x + (t.w ? t.w / 2 : 12);
           const ty = t.y + (t.h ? t.h / 2 : 16);
           const dist = Math.hypot(tx - px, ty - py);
-          if (dist <= garlicWeapon.radius) {
-            if (t.takeDamage) t.takeDamage(garlicWeapon.damage, px, soundEng, particleSys);
+          if (dist <= effectiveRadius) {
+            if (t.takeDamage) t.takeDamage(effectiveDmg, px, soundEng, particleSys);
             if (particleSys) particleSys.spawnSlashSparks(tx, ty, Math.sign(tx - px));
+            hitAnyEnemy = true;
+          }
+        }
+
+        // Vampire Evolution Leech: Heal player +2 HP when dealing damage
+        if (garlicWeapon.isEvolved && hitAnyEnemy && player.hp < player.maxHp) {
+          player.hp = Math.min(player.maxHp, player.hp + 2);
+          if (particleSys) particleSys.spawnDust(player.x + 12, player.y + 19, 3);
+        }
+
+        // Vampire Evolution Vacuum: Draw all nearby soul orbs aggressively towards player
+        if (garlicWeapon.isEvolved && window.game && window.game.soulOrbs) {
+          for (const s of window.game.soulOrbs) {
+            if (!s.isCollected && Math.hypot(s.x - px, s.y - py) < effectiveRadius * 1.6) {
+              const d = Math.max(10, Math.hypot(px - s.x, py - s.y));
+              s.vx += ((px - s.x) / d) * 4.2;
+              s.vy += ((py - s.y) / d) * 4.2;
+            }
           }
         }
 
         // Destroy any nearby skull projectiles
         if (enemyProjectiles) {
           for (const ep of enemyProjectiles) {
-            if (!ep.isDead && Math.hypot(ep.x - px, ep.y - py) <= garlicWeapon.radius) {
+            if (!ep.isDead && Math.hypot(ep.x - px, ep.y - py) <= effectiveRadius) {
               ep.isDead = true;
               if (particleSys) particleSys.spawnDust(ep.x, ep.y, 6);
             }
@@ -654,17 +865,18 @@ class PassiveWeaponsManager {
     `;
     container.appendChild(daggerSlot);
 
-    // 2. Equipped Passive Weapons (Auto-attacks)
+    // 2. Equipped Passive Weapons (Auto-attacks & Evolutions)
     for (const [type, w] of this.weapons.entries()) {
       const slot = document.createElement('div');
-      slot.className = 'weapon-hud-slot';
-      slot.title = `${w.name} (Nivel ${w.level}): Auto-ataque pasivo de área/proyectil.`;
+      const isEvo = !!w.isEvolved;
+      slot.className = `weapon-hud-slot ${isEvo ? 'weapon-evolved-slot' : ''}`;
+      slot.title = `${w.name} ${isEvo ? '★ SUPER EVOLUCIÓN ★' : `(Nivel ${w.level})`}: Auto-ataque pasivo devastador.`;
 
       slot.innerHTML = `
         <span class="weapon-hud-icon">${w.icon}</span>
         <div class="weapon-hud-info">
           <span class="weapon-hud-name">${w.name}</span>
-          <span class="weapon-hud-lvl">Nv.${w.level}</span>
+          <span class="weapon-hud-lvl ${isEvo ? 'lvl-evolved' : ''}">${isEvo ? '★ MÁX' : `Nv.${w.level}`}</span>
         </div>
       `;
       container.appendChild(slot);

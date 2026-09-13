@@ -17,6 +17,8 @@ class ParticleSystem {
     this.shakeX = 0;
     this.shakeY = 0;
 
+    this.floatingTexts = [];
+
     this.initRain();
   }
 
@@ -39,6 +41,47 @@ class ParticleSystem {
     this.shakeDuration = Math.min(0.20, Math.max(0.08, duration * 0.5));
     this.shakeIntensity = Math.min(3.2, Math.max(1.0, intensity * 0.3));
     this.shakeMaxDuration = this.shakeDuration;
+  }
+
+  // ─── FLOATING COMBAT & BALATRO TEXTS (MEGABONK, CRITS, CHIPS & MULT) ───
+  spawnFloatingText(text, x, y, options = {}) {
+    const isBonk = !!options.isBonk;
+    const isCrit = !!options.isCrit;
+    const isBalatro = !!options.isBalatro;
+
+    let defaultColor = '#ffffff';
+    let defaultSize = 15;
+    let defaultVy = -2.6;
+
+    if (isBonk) {
+      defaultColor = '#ff0055';
+      defaultSize = 22;
+      defaultVy = -3.8;
+      this.triggerScreenShake(0.15, 3);
+    } else if (isCrit) {
+      defaultColor = '#ffd700';
+      defaultSize = 18;
+      defaultVy = -3.2;
+    } else if (isBalatro) {
+      defaultColor = options.color || '#38bdf8';
+      defaultSize = 16;
+      defaultVy = -2.2;
+    }
+
+    this.floatingTexts.push({
+      text: String(text),
+      x: x + (Math.random() - 0.5) * 14,
+      y: y,
+      vx: options.vx !== undefined ? options.vx : (Math.random() - 0.5) * 1.8,
+      vy: options.vy !== undefined ? options.vy : defaultVy,
+      color: options.color || defaultColor,
+      size: options.size || defaultSize,
+      isBonk: isBonk,
+      isCrit: isCrit,
+      isBalatro: isBalatro,
+      life: options.life || (isBonk ? 1.25 : 0.95),
+      maxLife: options.life || (isBonk ? 1.25 : 0.95)
+    });
   }
 
   // ─── BLOOD EXPLOSION (ON DEATH BY TRAP OR ENEMY) ───
@@ -258,6 +301,18 @@ class ParticleSystem {
         this.meteorites.splice(i, 1);
       }
     }
+
+    // 4. Update Floating Combat & Balatro Texts
+    for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+      const ft = this.floatingTexts[i];
+      ft.life -= dt;
+      ft.x += ft.vx * dt * 60;
+      ft.y += ft.vy * dt * 60;
+      ft.vy += 0.08; // subtle gravity curve
+      if (ft.life <= 0) {
+        this.floatingTexts.splice(i, 1);
+      }
+    }
   }
 
   draw(ctx, camX, camY) {
@@ -295,6 +350,24 @@ class ParticleSystem {
       ctx.beginPath();
       ctx.arc(rx, ry, m.size * 2, 0, Math.PI * 2);
       ctx.fill();
+    }
+
+    // 4. Draw Floating Combat & Balatro Texts
+    for (const ft of this.floatingTexts) {
+      const rx = Math.round(ft.x - camX);
+      const ry = Math.round(ft.y - camY);
+      const alpha = Math.min(1.0, ft.life / 0.28);
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, alpha);
+      ctx.font = `${ft.isBonk ? '900' : (ft.isCrit ? 'bold' : '700')} ${ft.size}px 'Cinzel', 'Segoe UI', sans-serif`;
+      ctx.textAlign = 'center';
+      // Thick comic outline
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = ft.isBonk ? 4.5 : 3.0;
+      ctx.strokeText(ft.text, rx, ry);
+      ctx.fillStyle = ft.color || '#ffffff';
+      ctx.fillText(ft.text, rx, ry);
+      ctx.restore();
     }
 
     ctx.restore();

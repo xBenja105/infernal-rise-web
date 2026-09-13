@@ -50,11 +50,13 @@ class Game {
 
     // Incremental & Roguelite Collections
     this.soulOrbs = [];
+    this.xpGems = [];
     this.healthOrbs = [];
     this.chests = [];
     this.urns = [];
     this.flameWaves = [];
     this.activeChest = null;
+    this.activeScratchCard = null;
     this.lastReportedAltitude = 0;
 
     // Vampire Survivors style Passive Auto-Attacking Weapons
@@ -101,7 +103,22 @@ class Game {
       tabPanelPrestige: document.getElementById('sanctuary-tab-prestige'),
       upgradesGrid: document.getElementById('upgrades-grid'),
       btnPerformPrestige: document.getElementById('btn-perform-prestige'),
-      boonCardsContainer: document.getElementById('boon-cards-container')
+      boonCardsContainer: document.getElementById('boon-cards-container'),
+      btnBoonReroll: document.getElementById('btn-boon-reroll'),
+
+      // Vampire Survivors Level-Up & Reroll
+      levelUpModal: document.getElementById('level-up-modal'),
+      modalRunLevel: document.getElementById('modal-run-level'),
+      levelupCardsContainer: document.getElementById('levelup-cards-container'),
+      btnLevelupReroll: document.getElementById('btn-levelup-reroll'),
+
+      // Scritchy Scratchy Modal
+      scratchCardModal: document.getElementById('scratch-card-modal'),
+      scratchGrid: document.getElementById('scratch-grid'),
+      scratchResultMsg: document.getElementById('scratch-result-msg'),
+      btnClaimScratch: document.getElementById('btn-claim-scratch'),
+      btnScratchAll: document.getElementById('btn-scratch-all'),
+      btnCloseScratch: document.getElementById('btn-close-scratch')
     };
 
     this.lastTime = 0;
@@ -168,6 +185,10 @@ class Game {
       if (e.code === 'Escape') {
         if (this.state === 'SANCTUARY') {
           this.closeSanctuaryModal();
+        } else if (this.state === 'SCRATCH_CARD') {
+          this.closeScratchCardModal();
+        } else if (this.state === 'BOON_SELECT' || this.state === 'LEVEL_UP') {
+          // Keep modal active until choice is selected
         } else {
           this.togglePause();
         }
@@ -340,6 +361,33 @@ class Game {
 
     // Intro Screen Click
     this.ui.introScreen.addEventListener('click', () => this.advanceIntroScreen());
+
+    // Vampire Survivors Level-Up Reroll Button
+    if (this.ui.btnLevelupReroll) {
+      this.ui.btnLevelupReroll.addEventListener('click', () => {
+        if (window.progression && window.progression.performReroll()) {
+          const fresh = window.progression.getRandomBoons(3, false);
+          this.renderLevelUpCards(fresh);
+          this.ui.btnLevelupReroll.disabled = !window.progression.canReroll();
+        }
+      });
+    }
+
+    // Boon Modal Reroll Button
+    if (this.ui.btnBoonReroll) {
+      this.ui.btnBoonReroll.addEventListener('click', () => {
+        if (window.progression && window.progression.performReroll()) {
+          const fresh = window.progression.getRandomBoons(3, !!this._isCurrentBoonRelic);
+          this.renderBoonCards(fresh);
+          this.ui.btnBoonReroll.disabled = !window.progression.canReroll();
+        }
+      });
+    }
+
+    // Scritchy Scratchy Modal Actions
+    if (this.ui.btnCloseScratch) {
+      this.ui.btnCloseScratch.addEventListener('click', () => this.closeScratchCardModal());
+    }
   }
 
   // ─── STATE / SCREEN TRANSITIONS ───
@@ -350,14 +398,12 @@ class Game {
     this.ui.bossHud.style.display = 'none';
     if (this.ui.playerHealthWrap) this.ui.playerHealthWrap.style.display = 'none';
     this.ui.interactionBadge.style.display = 'none';
+    this.xpGems = [];
     if (this.passiveWeaponsManager) {
       this.passiveWeaponsManager.reset();
     }
     if (window.progression) {
-      window.progression.activeBoons = [];
-      if (window.progression.updateHUD) {
-        window.progression.updateHUD();
-      }
+      window.progression.resetRunBoons();
     }
     if (window.soundEngine) window.soundEngine.playMusic('menu');
   }
@@ -459,6 +505,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
     // Reset collectibles and interactables
     this.soulOrbs = [];
+    this.xpGems = [];
     this.healthOrbs = [];
     this.flameWaves = [];
     this.activeChest = null;
@@ -643,14 +690,12 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     }
 
     // True Permadeath Run Reset: reset run passive weapons & boons
+    this.xpGems = [];
     if (this.passiveWeaponsManager) {
       this.passiveWeaponsManager.reset();
     }
     if (window.progression) {
-      window.progression.activeBoons = [];
-      if (window.progression.updateHUD) {
-        window.progression.updateHUD();
-      }
+      window.progression.resetRunBoons();
     }
     // Return to the Lobby (prologue)
     this.loadLevel('prologue');
@@ -683,6 +728,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     if (!this.boss.hasDropped) {
       this.boss.hasDropped = true;
       this.spawnSoulOrbs(this.boss.x + this.boss.w / 2, this.boss.y + this.boss.h / 2, 10, 350, true);
+      this.spawnXpGems(this.boss.x + this.boss.w / 2, this.boss.y + this.boss.h / 2, 8, 120);
       if (window.progression) window.progression.addHumanityShards(2);
     }
 
@@ -1116,13 +1162,25 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     }
     this.activeChest = nearChest;
 
-    // 7. Update Soul Orbs
+    // 7. Update Soul Orbs & XP Gems
     for (let i = this.soulOrbs.length - 1; i >= 0; i--) {
       const orb = this.soulOrbs[i];
       orb.update(dt, this.player, window.soundEngine, window.particleSystem);
       if (orb.isCollected || orb.life > orb.maxLife) {
         this.soulOrbs.splice(i, 1);
       }
+    }
+    for (let i = this.xpGems.length - 1; i >= 0; i--) {
+      const gem = this.xpGems[i];
+      gem.update(dt, this.player, window.soundEngine, window.particleSystem);
+      if (gem.isCollected || gem.life > gem.maxLife) {
+        this.xpGems.splice(i, 1);
+      }
+    }
+
+    // 7b. Update Megabonk Combo Decay
+    if (window.progression) {
+      window.progression.updateBonkCombo(dt);
     }
 
     // 8. Update Flame Waves
@@ -1325,9 +1383,12 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       bp.draw(this.ctx, finalCamX, finalCamY);
     }
 
-    // 10. Draw Soul Orbs, Health Orbs & Flame Waves
+    // 10. Draw Soul Orbs, XP Gems, Health Orbs & Flame Waves
     for (const o of this.soulOrbs) {
       o.draw(this.ctx, finalCamX, finalCamY);
+    }
+    for (const g of this.xpGems) {
+      g.draw(this.ctx, finalCamX, finalCamY);
     }
     for (const ho of this.healthOrbs) {
       ho.draw(this.ctx, finalCamX, finalCamY);
@@ -2118,6 +2179,12 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     }
   }
 
+  spawnXpGems(x, y, count = 1, value = 15) {
+    for (let i = 0; i < count; i++) {
+      this.xpGems.push(new XpGem(x, y, Math.round(value / count)));
+    }
+  }
+
   spawnFlameWave(x, y, dir) {
     const stats = window.progression ? window.progression.getPlayerStats() : null;
     const dmg = stats ? stats.swordDamage : 20;
@@ -2179,6 +2246,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
   openBoonSelectionModal(isRelic = false) {
     if (!window.progression) return;
+    this._isCurrentBoonRelic = isRelic;
     const boons = window.progression.getRandomBoons(3, isRelic);
     if (boons.length === 0) return;
 
@@ -2192,6 +2260,17 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       modalTitle.innerHTML = isRelic ? '👑 RELIQUIA DE JEFE DERROTADO' : 'GRACIAS Y ARMAS DEL ABISMO';
     }
 
+    this.renderBoonCards(boons);
+
+    if (this.ui.btnBoonReroll) {
+      this.ui.btnBoonReroll.disabled = !window.progression.canReroll();
+    }
+
+    this.ui.boonModal.classList.remove('hidden');
+  }
+
+  renderBoonCards(boons) {
+    if (!this.ui.boonCardsContainer) return;
     this.ui.boonCardsContainer.innerHTML = '';
     for (const b of boons) {
       const card = document.createElement('div');
@@ -2201,7 +2280,11 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       let titleHtml = b.name;
       let btnText = 'Elegir Gracia';
 
-      if (b.isWeapon) {
+      if (b.isEvolution) {
+        badgeHtml = `<span class="boon-rarity" style="background:rgba(255,215,0,0.25);border:1.5px solid #ffd700;color:#ffd700;text-shadow:0 0 10px #ffd700;">★ SUPER EVOLUCIÓN ★</span>`;
+        titleHtml = `<span style="color:#ffd700;">${b.name}</span>`;
+        btnText = 'Evolucionar';
+      } else if (b.isWeapon) {
         const currentLvl = this.passiveWeaponsManager ? this.passiveWeaponsManager.getLevel(b.weaponType) : 0;
         if (currentLvl > 0) {
           badgeHtml = `<span class="boon-rarity weapon-tag">⚔️ MEJORA DE ARMA</span>`;
@@ -2212,6 +2295,15 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
           titleHtml = `${b.name} <span class="weapon-lvl-tag">Nueva Arma</span>`;
           btnText = 'Empuñar Arma';
         }
+      } else if (b.isJoker) {
+        badgeHtml = `<span class="boon-rarity" style="background:rgba(181,23,158,0.25);border:1.5px solid #b5179e;color:#f72585;">🃏 COMODÍN BALATRO</span>`;
+        btnText = 'Equipar Comodín';
+      } else if (b.isTome) {
+        badgeHtml = `<span class="boon-rarity" style="background:rgba(0,180,216,0.25);border:1.5px solid #00b4d8;color:#90e0ef;">📖 TOMO PASIVO</span>`;
+        btnText = 'Aprender Tomo';
+      } else if (b.isScratchCard) {
+        badgeHtml = `<span class="boon-rarity" style="background:rgba(255,209,102,0.25);border:1.5px solid #ffd166;color:#ffd166;">🎟️ RASCADOR DE LA SUERTE</span>`;
+        btnText = '¡Raspar Tarjeta!';
       } else {
         const rarityClass = b.rarity.toLowerCase() === 'épica' ? 'rarity-epica' : (b.rarity.toLowerCase() === 'rara' ? 'rarity-rara' : 'rarity-comun');
         badgeHtml = `<span class="boon-rarity ${rarityClass}">${b.rarity}</span>`;
@@ -2236,12 +2328,199 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
       this.ui.boonCardsContainer.appendChild(card);
     }
-
-    this.ui.boonModal.classList.remove('hidden');
   }
 
   closeBoonSelectionModal() {
     this.ui.boonModal.classList.add('hidden');
+    this.state = this.prevStateBeforeModal || 'PLAYING';
+  }
+
+  // ─── VAMPIRE SURVIVORS LEVEL-UP MODAL ───
+  openLevelUpModal() {
+    if (!window.progression) return;
+    const boons = window.progression.getRandomBoons(3, false);
+    if (boons.length === 0) return;
+
+    this.prevStateBeforeModal = this.state;
+    this.state = 'LEVEL_UP';
+    this.ui.interactionBadge.style.display = 'none';
+
+    if (this.ui.modalRunLevel) {
+      this.ui.modalRunLevel.textContent = window.progression.runLevel;
+    }
+
+    if (window.soundEngine) {
+      if (window.soundEngine.playPrestige) window.soundEngine.playPrestige();
+      else if (window.soundEngine.playBoonSelect) window.soundEngine.playBoonSelect();
+    }
+
+    this.renderLevelUpCards(boons);
+
+    if (this.ui.btnLevelupReroll) {
+      this.ui.btnLevelupReroll.disabled = !window.progression.canReroll();
+    }
+
+    this.ui.levelUpModal.classList.remove('hidden');
+  }
+
+  renderLevelUpCards(boons) {
+    if (!this.ui.levelupCardsContainer) return;
+    this.ui.levelupCardsContainer.innerHTML = '';
+
+    for (const b of boons) {
+      const card = document.createElement('div');
+      card.className = 'boon-card';
+
+      let badgeHtml = '';
+      let titleHtml = b.name;
+      let btnText = 'Elegir';
+
+      if (b.isEvolution) {
+        badgeHtml = `<span class="boon-rarity" style="background:rgba(255,215,0,0.25);border:1.5px solid #ffd700;color:#ffd700;text-shadow:0 0 10px #ffd700;">★ SUPER EVOLUCIÓN ★</span>`;
+        titleHtml = `<span style="color:#ffd700;">${b.name}</span>`;
+        btnText = 'Evolucionar';
+      } else if (b.isWeapon) {
+        const currentLvl = this.passiveWeaponsManager ? this.passiveWeaponsManager.getLevel(b.weaponType) : 0;
+        if (currentLvl > 0) {
+          badgeHtml = `<span class="boon-rarity weapon-tag">⚔️ MEJORA DE ARMA</span>`;
+          titleHtml = `${b.name} <span class="weapon-lvl-tag">Nivel ${currentLvl + 1}</span>`;
+          btnText = 'Mejorar Arma';
+        } else {
+          badgeHtml = `<span class="boon-rarity weapon-tag">⚔️ ARMA PASIVA</span>`;
+          titleHtml = `${b.name} <span class="weapon-lvl-tag">Nueva Arma</span>`;
+          btnText = 'Empuñar';
+        }
+      } else if (b.isJoker) {
+        badgeHtml = `<span class="boon-rarity" style="background:rgba(181,23,158,0.25);border:1.5px solid #b5179e;color:#f72585;">🃏 COMODÍN BALATRO</span>`;
+        btnText = 'Equipar Comodín';
+      } else if (b.isTome) {
+        badgeHtml = `<span class="boon-rarity" style="background:rgba(0,180,216,0.25);border:1.5px solid #00b4d8;color:#90e0ef;">📖 TOMO PASIVO</span>`;
+        btnText = 'Aprender Tomo';
+      } else if (b.isScratchCard) {
+        badgeHtml = `<span class="boon-rarity" style="background:rgba(255,209,102,0.25);border:1.5px solid #ffd166;color:#ffd166;">🎟️ RASCADOR DE LA SUERTE</span>`;
+        btnText = '¡Raspar Tarjeta!';
+      } else {
+        const rarityClass = b.rarity.toLowerCase() === 'épica' ? 'rarity-epica' : (b.rarity.toLowerCase() === 'rara' ? 'rarity-rara' : 'rarity-comun');
+        badgeHtml = `<span class="boon-rarity ${rarityClass}">${b.rarity}</span>`;
+      }
+
+      card.innerHTML = `
+        ${badgeHtml}
+        <div class="boon-icon-large">${b.icon}</div>
+        <div class="boon-card-title">${titleHtml}</div>
+        <div class="boon-card-desc">${b.desc}</div>
+        <button class="btn-choose-boon">${btnText}</button>
+      `;
+
+      card.addEventListener('mouseenter', () => {
+        if (window.soundEngine) window.soundEngine.playUiHover();
+      });
+
+      card.addEventListener('click', () => {
+        window.progression.chooseBoon(b);
+        this.closeLevelUpModal();
+      });
+
+      this.ui.levelupCardsContainer.appendChild(card);
+    }
+  }
+
+  closeLevelUpModal() {
+    if (this.ui.levelUpModal) this.ui.levelUpModal.classList.add('hidden');
+    this.state = this.prevStateBeforeModal || 'PLAYING';
+  }
+
+  // ─── SCRITCHY SCRATCHY (RASCADOR DEL INFRAMUNDO) ───
+  openScratchCardModal(card) {
+    if (!card) return;
+    this.activeScratchCard = card;
+    this.prevStateBeforeModal = this.state;
+    this.state = 'SCRATCH_CARD';
+    this.ui.interactionBadge.style.display = 'none';
+
+    this.ui.scratchGrid.innerHTML = '';
+    this.ui.scratchResultMsg.textContent = '¡Rasca o haz clic en las 3 casillas doradas!';
+    this.ui.btnClaimScratch.disabled = true;
+
+    for (let i = 0; i < 3; i++) {
+      const cellData = card.cells[i];
+      const cell = document.createElement('div');
+      cell.className = 'scratch-cell' + (card.scratched[i] ? ' scratched' : '');
+      cell.innerHTML = `
+        <div class="scratch-foil">
+          <span>✨</span>
+          <span>RASPAR</span>
+        </div>
+        <div class="scratch-cell-inner">
+          <span class="scratch-cell-icon">${cellData.icon}</span>
+          <span class="scratch-cell-label">${cellData.name}</span>
+        </div>
+      `;
+
+      const scratchOne = () => {
+        if (card.scratched[i]) return;
+        card.scratched[i] = true;
+        cell.classList.add('scratched');
+        if (window.soundEngine && window.soundEngine.playSwordSlash) {
+          window.soundEngine.playSwordSlash();
+        }
+        if (window.particleSystem) {
+          window.particleSystem.spawnDust(this.vWidth / 2 + (i - 1) * 80, this.vHeight / 2, 8);
+        }
+
+        const scratchedCount = card.scratched.filter(s => s).length;
+        if (scratchedCount === 3) {
+          this.ui.btnClaimScratch.disabled = false;
+          if (card.isJackpot) {
+            this.ui.scratchResultMsg.innerHTML = '🎉 ¡¡JACKPOT TRIPLE!! ¡Premio multiplicado ×4!';
+            if (window.particleSystem) {
+              window.particleSystem.triggerScreenShake(0.35, 7);
+              window.particleSystem.spawnTeleportSparks(this.vWidth / 2, this.vHeight / 2);
+            }
+            if (window.soundEngine && window.soundEngine.playPrestige) {
+              window.soundEngine.playPrestige();
+            }
+          } else {
+            this.ui.scratchResultMsg.innerHTML = '✨ ¡Casillas reveladas! Reclama tu botín.';
+          }
+        }
+      };
+
+      cell.addEventListener('click', scratchOne);
+      this.ui.scratchGrid.appendChild(cell);
+    }
+
+    this.ui.btnScratchAll.onclick = () => {
+      const cells = this.ui.scratchGrid.querySelectorAll('.scratch-cell');
+      cells.forEach((c, idx) => {
+        card.scratched[idx] = true;
+        c.classList.add('scratched');
+      });
+      this.ui.btnClaimScratch.disabled = false;
+      if (card.isJackpot) {
+        this.ui.scratchResultMsg.innerHTML = '🎉 ¡¡JACKPOT TRIPLE!! ¡Premio multiplicado ×4!';
+        if (window.particleSystem) {
+          window.particleSystem.triggerScreenShake(0.35, 7);
+        }
+        if (window.soundEngine && window.soundEngine.playPrestige) window.soundEngine.playPrestige();
+      } else {
+        this.ui.scratchResultMsg.innerHTML = '✨ ¡Casillas reveladas! Reclama tu botín.';
+      }
+    };
+
+    this.ui.btnClaimScratch.onclick = () => {
+      const reward = window.progression.claimScratchReward(card);
+      if (window.soundEngine && window.soundEngine.playSoulPickup) {
+        window.soundEngine.playSoulPickup();
+      }
+      this.closeScratchCardModal();
+    };
+
+    this.ui.scratchCardModal.classList.remove('hidden');
+  }
+
+  closeScratchCardModal() {
+    if (this.ui.scratchCardModal) this.ui.scratchCardModal.classList.add('hidden');
     this.state = this.prevStateBeforeModal || 'PLAYING';
   }
 

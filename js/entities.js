@@ -946,12 +946,61 @@ class SkeletonEnemy {
       return;
     }
 
-    // Hit reaction playback
+    // Hit reaction playback (Megabonk Domino Collisions & Overkill)
     if (this.state === 'hit') {
       this.hitTimer -= dt;
       this.animFrame = Math.min(7, Math.floor((0.35 - this.hitTimer) / 0.044));
-      this.currentVx *= 0.85;
+      this.currentVx *= 0.88;
       this.x += this.currentVx;
+      this.vy += this.gravity;
+      this.y += this.vy;
+
+      // Megabonk Domino Collision: Flying enemy crashes into other enemies
+      if (Math.abs(this.currentVx) > 2.6) {
+        const enemiesList = (level && Array.isArray(level.enemies)) ? level.enemies : ((window.game && Array.isArray(window.game.enemies)) ? window.game.enemies : []);
+        const dominoMult = (window.progression && window.progression.hasBoon('tome_gauntlet')) ? 2.0 : 1.0;
+        for (const other of enemiesList) {
+          if (other !== this && !other.isDead && other.hp > 0 && other.state !== 'dead') {
+            if (Math.abs((this.x + this.w / 2) - (other.x + other.w / 2)) < (this.w + other.w) * 0.48 &&
+                Math.abs((this.y + this.h / 2) - (other.y + other.h / 2)) < (this.h + other.h) * 0.48) {
+              const dominoDmg = Math.round(26 * dominoMult);
+              other.takeDamage(dominoDmg, this.x, soundEng, particleSys);
+              this.currentVx *= 0.5;
+              if (particleSys && particleSys.spawnFloatingText) {
+                particleSys.spawnFloatingText('💥 DOMINO!', other.x + other.w / 2, other.y - 12, { isMegabonk: true });
+                particleSys.triggerScreenShake(0.12, 4);
+              }
+              break;
+            }
+          }
+        }
+      }
+
+      // Spike / Lava Overkill
+      if (level) {
+        if (level.spikes) {
+          for (const sp of level.spikes) {
+            if (this.x + this.w > sp.x && this.x < sp.x + sp.w &&
+                this.y + this.h >= sp.y && this.y < sp.y + sp.h) {
+              if (particleSys && particleSys.spawnFloatingText) {
+                particleSys.spawnFloatingText('💥 OVERKILL!', this.x + this.w / 2, this.y - 15, { isMegabonk: true });
+                particleSys.spawnBloodExplosion(this.x + this.w / 2, this.y + this.h / 2, 40);
+              }
+              this.takeDamage(999, this.x, soundEng, particleSys);
+              return;
+            }
+          }
+        }
+        if (level.lavaY !== undefined && (this.y + this.h >= level.lavaY)) {
+          if (particleSys && particleSys.spawnFloatingText) {
+            particleSys.spawnFloatingText('💥 OVERKILL!', this.x + this.w / 2, this.y - 15, { isMegabonk: true });
+            particleSys.spawnBloodExplosion(this.x + this.w / 2, this.y + this.h / 2, 40);
+          }
+          this.takeDamage(999, this.x, soundEng, particleSys);
+          return;
+        }
+      }
+
       if (this.hitTimer <= 0) {
         this.state = 'chase'; // Immediately turn around and chase aggressor!
         this.hasAlerted = true;
@@ -1433,11 +1482,41 @@ class SkeletonEnemy {
     if (this.isDead || this.hp <= 0) return;
     this.hp -= amount;
     const hitDir = sourceX !== undefined ? (this.x > sourceX ? 1 : -1) : (this.dir ? -this.dir : 1);
-    this.x += hitDir * 6;
-    this.vy = -3.0;
+
+    // Megabonk & Kinetic Knockback Physics
+    const pwm = window.game ? window.game.passiveWeaponsManager : null;
+    const knockbackMult = pwm && pwm.getTomeKnockbackMultiplier ? pwm.getTomeKnockbackMultiplier() : 1.0;
+    const critBonus = pwm && pwm.getTomeCritBonus ? pwm.getTomeCritBonus() : 0;
+    const isMegabonk = amount >= 32 || (Math.random() < (0.16 + critBonus));
+
+    const baseForce = this.isElite ? 4.8 : 6.8;
+    const finalForce = baseForce * knockbackMult * (isMegabonk ? 1.75 : 1.0);
+    this.currentVx = hitDir * finalForce;
+    this.vy = isMegabonk ? -5.2 : -3.2;
     this.isGrounded = false;
+    this.x += hitDir * 4;
+
+    // Megabonk Combo & Balatro Scoring Engine
+    if (window.progression) {
+      window.progression.addBonkHit(isMegabonk);
+      const isPlayerInAir = (window.game && window.game.player) ? !window.game.player.isGrounded : false;
+      const score = window.progression.calculateBalatroScore(amount, { isMegabonk, inAir: isPlayerInAir });
+
+      // Comic-book Floating Text
+      if (particleSys && particleSys.spawnFloatingText) {
+        if (isMegabonk) {
+          particleSys.spawnFloatingText(`💥 MEGABONK! -${amount}`, this.x + this.w / 2, this.y - 12, { isMegabonk: true });
+          particleSys.triggerScreenShake(0.16, 5);
+        } else {
+          particleSys.spawnFloatingText(`-${amount}`, this.x + this.w / 2, this.y - 4);
+        }
+      }
+    }
+
     if (particleSys) particleSys.spawnSlashSparks(this.x + this.w / 2, this.y + this.h / 2, hitDir);
     if (soundEng && soundEng.playHit) soundEng.playHit();
+    if (isMegabonk && soundEng && soundEng.playMeteorExplosion) soundEng.playMeteorExplosion();
+
     if (window.progression && window.progression.hasBoon('vampirism') && window.game && window.game.player) {
       window.game.player.hp = Math.min(window.game.player.maxHp, window.game.player.hp + 5);
     }
@@ -1449,10 +1528,25 @@ class SkeletonEnemy {
       this.animFrame = 0;
       if (particleSys) particleSys.spawnBloodExplosion(this.x + this.w / 2, this.y + this.h / 2, this.isElite ? 45 : 25);
       if (window.game) {
-        const souls = this.isElite ? 3 : 2;
-        window.game.spawnSoulOrbs(this.x + this.w / 2, this.y + this.h / 2, souls, this.isElite ? 60 : 20);
-        if (Math.random() < (this.isElite ? 0.65 : 0.28)) {
+        const souls = this.isElite ? 4 : 2;
+        if (window.game.spawnSoulOrbs) {
+          window.game.spawnSoulOrbs(this.x + this.w / 2, this.y + this.h / 2, souls, this.isElite ? 60 : 20);
+        }
+
+        // Vampire Survivors In-Run XP Gems
+        if (window.game.spawnXpGems) {
+          const xpVal = this.isElite ? 45 : 18;
+          window.game.spawnXpGems(this.x + this.w / 2, this.y + this.h / 2, this.isElite ? 2 : 1, xpVal);
+        }
+
+        if (window.game.spawnHealthOrb && Math.random() < (this.isElite ? 0.65 : 0.28)) {
           window.game.spawnHealthOrb(this.x + this.w / 2, this.y + this.h / 2, this.isElite ? 25 : 15);
+        }
+        // Scritchy Scratchy Ticket Drop (12% from elites, 4% from normal)
+        if (window.progression && Math.random() < (this.isElite ? 0.12 : 0.04)) {
+          if (window.game.openScratchCardModal) {
+            window.game.openScratchCardModal(window.progression.generateScratchCard());
+          }
         }
         // BoonChest drop from Giant / Elite enemies (10% rare drop)
         if (this.isElite && window.game.spawnBoonChest && Math.random() < 0.10) {
@@ -2267,6 +2361,106 @@ class SoulOrb {
     ctx.restore();
   }
 }
+
+// ─── VAMPIRE SURVIVORS IN-RUN XP GEMS ───
+class XpGem {
+  constructor(x, y, value = 15) {
+    this.x = x;
+    this.y = y;
+    this.vx = (Math.random() - 0.5) * 4.0;
+    this.vy = -(2.8 + Math.random() * 3.2);
+    this.value = value;
+    this.life = 0;
+    this.maxLife = 35.0;
+    this.isCollected = false;
+  }
+
+  update(dt, player, soundEng, particleSys) {
+    if (this.isCollected) return;
+    this.life += dt;
+    if (this.life > this.maxLife) {
+      this.isCollected = true;
+      return;
+    }
+
+    // Floating physics
+    this.vy += 0.12;
+    this.vx *= 0.95;
+    this.x += this.vx;
+    this.y += this.vy;
+
+    if (!player || player.hp <= 0) return;
+
+    // Magnetic pull to Kael
+    const stats = window.progression ? window.progression.getPlayerStats() : { magnetRadius: 70 };
+    const px = player.x + player.w / 2;
+    const py = player.y + player.h / 2;
+    const dx = px - this.x;
+    const dy = py - this.y;
+    const dist = Math.hypot(dx, dy);
+
+    if (dist < stats.magnetRadius + 45) {
+      const pull = Math.min(16, 600 / Math.max(20, dist));
+      this.vx += (dx / dist) * pull * 0.45;
+      this.vy += (dy / dist) * pull * 0.45;
+    }
+
+    // Pickup collision
+    if (dist < 22) {
+      this.isCollected = true;
+      if (window.progression) {
+        const leveledUp = window.progression.addRunXp(this.value);
+        if (leveledUp && window.game && window.game.openLevelUpModal) {
+          window.game.openLevelUpModal();
+        }
+      }
+      if (soundEng && soundEng.playSoulPickup) soundEng.playSoulPickup();
+      if (particleSys) particleSys.spawnSlashSparks(this.x, this.y, 1);
+    }
+  }
+
+  draw(ctx, camX, camY) {
+    if (this.isCollected) return;
+    const rx = Math.round(this.x - camX);
+    const ry = Math.round(this.y - camY);
+
+    ctx.save();
+    const pulse = Math.sin(this.life * 8) * 1.2;
+    const size = 5 + pulse;
+
+    // Outer glow (emerald green)
+    ctx.fillStyle = 'rgba(46, 213, 115, 0.45)';
+    ctx.beginPath();
+    ctx.arc(rx, ry, size * 2.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Diamond faceted gem shape
+    ctx.fillStyle = '#2ed573';
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(rx, ry - size);
+    ctx.lineTo(rx + size * 0.85, ry);
+    ctx.lineTo(rx, ry + size);
+    ctx.lineTo(rx - size * 0.85, ry);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Inner bright facet
+    ctx.fillStyle = '#7bed9f';
+    ctx.beginPath();
+    ctx.moveTo(rx, ry - size * 0.6);
+    ctx.lineTo(rx + size * 0.45, ry);
+    ctx.lineTo(rx, ry + size * 0.6);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+  }
+}
+
+window.XpGem = XpGem;
 
 // 2. ROGUE-LITE BOON CHEST
 class BoonChest {
@@ -3436,4 +3630,15 @@ class HealthOrb {
     ctx.fill();
     ctx.restore();
   }
+}
+
+if (typeof window !== 'undefined') {
+  window.Player = Player;
+  window.SkeletonEnemy = SkeletonEnemy;
+  window.Boss = Boss;
+  window.SoulOrb = SoulOrb;
+  window.XpGem = XpGem;
+  window.BoonChest = BoonChest;
+  window.BreakableUrn = BreakableUrn;
+  window.HealthOrb = HealthOrb;
 }

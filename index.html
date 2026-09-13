@@ -33,9 +33,25 @@
               <span id="hud-ashes-count">0</span>
             </div>
           </div>
+
+          <!-- Vampire Survivors In-Run Level & XP Bar -->
+          <div class="hud-xp-container" title="Nivel del Ascenso y Experiencia">
+            <span class="hud-level-badge">NV.<span id="hud-run-level">1</span></span>
+            <div class="hud-xp-track">
+              <div id="hud-xp-fill" class="hud-xp-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Megabonk & Balatro Dynamic Scores -->
+        <div class="hud-dynamic-scoring">
+          <div id="hud-bonk-combo" class="hud-bonk-badge hidden">💥 BONK ×0!</div>
+          <div id="hud-balatro-score" class="hud-balatro-pill hidden">0 🔵 × +1 🔴</div>
         </div>
 
         <div class="hud-top-right">
+          <!-- Balatro Active Jokers Row -->
+          <div id="hud-jokers-container" class="hud-jokers-row" title="Comodines de Balatro"></div>
           <!-- Sanctuary shop is now located physically in the Lobby world as an interactive altar -->
           <button id="btn-open-sanctuary" class="hud-sanctuary-btn" style="display: none !important;"></button>
           <div id="player-health-wrap" style="display: none !important;"><div id="player-health-fill"></div></div>
@@ -192,6 +208,43 @@
         <h2 class="game-title" style="font-size: 32px; margin-bottom: 6px; color: var(--gold); text-shadow: 0 0 25px rgba(244, 208, 111, 0.8);">Gracia del Purgatorio</h2>
         <div class="boon-modal-subtitle">Has abierto un Cofre Sagrado. Selecciona una bendición para este ascenso:</div>
         <div id="boon-cards-container" class="boon-cards-container"></div>
+        <div class="modal-footer-actions">
+          <button id="btn-boon-reroll" class="btn-infernal btn-reroll">🎲 Reroll (15 🔮)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Level-Up Modal (Vampire Survivors 3-Card Draft) -->
+    <div id="level-up-modal" class="screen-overlay hidden">
+      <div class="boon-modal-container levelup-container">
+        <div class="levelup-header">
+          <span class="levelup-icon">⚡</span>
+          <h2 class="game-title" style="font-size: 32px; margin-bottom: 4px; color: #5ce1e6; text-shadow: 0 0 25px rgba(92, 225, 230, 0.9);">¡SUBIDA DE NIVEL!</h2>
+          <div class="levelup-level-title">Nivel <span id="modal-run-level">2</span> Alcanzado</div>
+        </div>
+        <div class="boon-modal-subtitle">Elige una bendición, arma o comodín para forjar tu ascenso:</div>
+        <div id="levelup-cards-container" class="boon-cards-container"></div>
+        <div class="modal-footer-actions">
+          <button id="btn-levelup-reroll" class="btn-infernal btn-reroll">🎲 Reroll (15 🔮)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scritchy Scratchy Modal (Rascador del Inframundo) -->
+    <div id="scratch-card-modal" class="screen-overlay hidden">
+      <div class="scratch-modal-container">
+        <div class="scratch-header">
+          <span class="scratch-icon">🎟️</span>
+          <h2 class="game-title" style="font-size: 28px; margin: 0; color: #ffd166; text-shadow: 0 0 20px rgba(255, 209, 102, 0.8);">Rascador del Inframundo</h2>
+          <div class="scratch-subtitle">¡Haz clic o raspa las 3 casillas para descubrir tu fortuna infernal!</div>
+        </div>
+        <div class="scratch-grid" id="scratch-grid"></div>
+        <div id="scratch-result-msg" class="scratch-result-msg">¡Rasca las 3 casillas doradas!</div>
+        <div class="scratch-actions">
+          <button id="btn-claim-scratch" class="btn-infernal" disabled>Reclamar Recompensa</button>
+          <button id="btn-scratch-all" class="btn-infernal btn-secondary">✨ Raspar Todo</button>
+          <button id="btn-close-scratch" class="btn-infernal btn-danger" style="display:none;">Cerrar</button>
+        </div>
       </div>
     </div>
 
