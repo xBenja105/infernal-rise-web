@@ -75,7 +75,23 @@ class Game {
 
     // UI elements
     this.ui = {
+      hud: document.getElementById('hud'),
       mainMenu: document.getElementById('main-menu'),
+      menuViewHome: document.getElementById('menu-view-home'),
+      menuViewCodex: document.getElementById('menu-view-codex'),
+      menuViewSettings: document.getElementById('menu-view-settings'),
+      btnOpenCodex: document.getElementById('btn-open-codex'),
+      btnOpenSettings: document.getElementById('btn-open-settings'),
+      btnBackCodex: document.getElementById('btn-back-codex'),
+      btnBackSettings: document.getElementById('btn-back-settings'),
+      menuStatSouls: document.getElementById('menu-stat-souls'),
+      menuStatShards: document.getElementById('menu-stat-shards'),
+      menuStatAshes: document.getElementById('menu-stat-ashes'),
+      menuStatDeaths: document.getElementById('menu-stat-deaths'),
+      settingsStatSouls: document.getElementById('settings-stat-souls'),
+      settingsStatShards: document.getElementById('settings-stat-shards'),
+      settingsStatAshes: document.getElementById('settings-stat-ashes'),
+      settingsStatDeaths: document.getElementById('settings-stat-deaths'),
       introScreen: document.getElementById('intro-screen'),
       introTypewriter: document.getElementById('intro-typewriter'),
       pauseScreen: document.getElementById('pause-screen'),
@@ -96,7 +112,6 @@ class Game {
       boonModal: document.getElementById('boon-modal'),
       btnOpenSanctuary: document.getElementById('btn-open-sanctuary'),
       btnCloseSanctuary: document.getElementById('btn-close-sanctuary'),
-      btnMenuSanctuary: document.getElementById('btn-menu-sanctuary'),
       tabBtnUpgrades: document.getElementById('tab-btn-upgrades'),
       tabBtnPrestige: document.getElementById('tab-btn-prestige'),
       tabPanelUpgrades: document.getElementById('sanctuary-tab-upgrades'),
@@ -400,9 +415,6 @@ class Game {
     if (this.ui.btnOpenSanctuary) {
       this.ui.btnOpenSanctuary.addEventListener('click', () => this.openSanctuaryModal());
     }
-    if (this.ui.btnMenuSanctuary) {
-      this.ui.btnMenuSanctuary.addEventListener('click', () => this.openSanctuaryModal());
-    }
     if (this.ui.btnCloseSanctuary) {
       this.ui.btnCloseSanctuary.addEventListener('click', () => this.closeSanctuaryModal());
     }
@@ -438,20 +450,42 @@ class Game {
     }
 
     // Start Game
-    document.getElementById('btn-start').addEventListener('click', () => {
-      this.startStoryMode();
-    });
+    const btnStart = document.getElementById('btn-start');
+    if (btnStart) {
+      btnStart.addEventListener('click', () => {
+        this.startStoryMode();
+      });
+    }
 
     // Infernal Mode
-    document.getElementById('btn-infernal-mode').addEventListener('click', () => {
-      this.startInfernalMode();
-    });
+    const btnInfernal = document.getElementById('btn-infernal-mode');
+    if (btnInfernal) {
+      btnInfernal.addEventListener('click', () => {
+        this.startInfernalMode();
+      });
+    }
+
+    // Main Menu Subview Navigation (Códice & Ajustes)
+    if (this.ui.btnOpenCodex) {
+      this.ui.btnOpenCodex.addEventListener('click', () => this.switchMenuSubView('codex'));
+    }
+    if (this.ui.btnBackCodex) {
+      this.ui.btnBackCodex.addEventListener('click', () => this.switchMenuSubView('home'));
+    }
+    if (this.ui.btnOpenSettings) {
+      this.ui.btnOpenSettings.addEventListener('click', () => this.switchMenuSubView('settings'));
+    }
+    if (this.ui.btnBackSettings) {
+      this.ui.btnBackSettings.addEventListener('click', () => this.switchMenuSubView('home'));
+    }
 
     // Sound Toggle
-    this.ui.soundToggle.addEventListener('click', () => {
-      const enabled = window.soundEngine.toggleSound();
-      this.ui.soundToggle.textContent = `Sonido: ${enabled ? 'ON' : 'OFF'}`;
-    });
+    if (this.ui.soundToggle) {
+      this.ui.soundToggle.addEventListener('click', () => {
+        const enabled = window.soundEngine.toggleSound();
+        this.ui.soundToggle.textContent = `Sonido: ${enabled ? 'ON' : 'OFF'}`;
+      });
+    }
 
     // Pause Screen Buttons
     document.getElementById('btn-resume').addEventListener('click', () => this.togglePause());
@@ -545,10 +579,46 @@ class Game {
   }
 
   // ─── STATE / SCREEN TRANSITIONS ───
+  switchMenuSubView(viewName) {
+    if (this.ui.menuViewHome) this.ui.menuViewHome.classList.add('hidden');
+    if (this.ui.menuViewCodex) this.ui.menuViewCodex.classList.add('hidden');
+    if (this.ui.menuViewSettings) this.ui.menuViewSettings.classList.add('hidden');
+
+    if (viewName === 'codex' && this.ui.menuViewCodex) {
+      this.ui.menuViewCodex.classList.remove('hidden');
+    } else if (viewName === 'settings' && this.ui.menuViewSettings) {
+      this.ui.menuViewSettings.classList.remove('hidden');
+      this.updateMainMenuStats();
+    } else if (this.ui.menuViewHome) {
+      this.ui.menuViewHome.classList.remove('hidden');
+      this.updateMainMenuStats();
+    }
+  }
+
+  updateMainMenuStats() {
+    const souls = window.progression ? window.progression.souls : 0;
+    const shards = window.progression ? window.progression.humanityShards : 0;
+    const ashes = window.progression ? window.progression.penitenceAshes : 0;
+    const deaths = this.deathCount || 0;
+
+    if (this.ui.menuStatSouls) this.ui.menuStatSouls.textContent = souls;
+    if (this.ui.menuStatShards) this.ui.menuStatShards.textContent = shards;
+    if (this.ui.menuStatAshes) this.ui.menuStatAshes.textContent = ashes;
+    if (this.ui.menuStatDeaths) this.ui.menuStatDeaths.textContent = deaths;
+
+    if (this.ui.settingsStatSouls) this.ui.settingsStatSouls.textContent = `${souls} 🔮`;
+    if (this.ui.settingsStatShards) this.ui.settingsStatShards.textContent = `${shards} 💠`;
+    if (this.ui.settingsStatAshes) this.ui.settingsStatAshes.textContent = `${ashes} 🔥`;
+    if (this.ui.settingsStatDeaths) this.ui.settingsStatDeaths.textContent = `${deaths} 💀`;
+  }
+
   showMainMenu() {
     this.state = 'MENU';
     this.hideAllScreens();
     this.ui.mainMenu.classList.remove('hidden');
+    this.switchMenuSubView('home');
+    this.updateMainMenuStats();
+    if (this.ui.hud) this.ui.hud.classList.add('hidden');
     this.ui.bossHud.style.display = 'none';
     if (this.ui.playerHealthWrap) this.ui.playerHealthWrap.style.display = 'none';
     this.ui.interactionBadge.style.display = 'none';
@@ -572,6 +642,7 @@ class Game {
     this.loadLevel('infernal');
     this.hideAllScreens();
     this.state = 'PLAYING';
+    if (this.ui.hud) this.ui.hud.classList.remove('hidden');
     if (window.soundEngine) window.soundEngine.playMusic('infernal');
   }
 
@@ -634,6 +705,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
   loadLevel(levelId) {
     if (this.ui.victoryScreen) this.ui.victoryScreen.classList.add('hidden');
+    if (this.ui.hud) this.ui.hud.classList.remove('hidden');
     this.state = 'PLAYING';
     this.level = window.levelManager.loadLevel(levelId);
     this.player = new Player(this.level.spawn.x, this.level.spawn.y);
@@ -3389,6 +3461,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     this.renderSanctuaryWallet();
     this.renderSanctuaryUpgrades();
     this.renderSanctuaryPrestige();
+    this.updateMainMenuStats();
 
     const toast = document.getElementById('reset-toast');
     if (toast) {

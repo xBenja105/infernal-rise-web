@@ -57,9 +57,6 @@
 
         <div class="hud-top-right">
           <button id="btn-touch-pause" class="hud-pause-btn" title="Pausar juego" aria-label="Pausa">⏸</button>
-          <!-- Sanctuary shop is now located physically in the Lobby world as an interactive altar -->
-          <button id="btn-open-sanctuary" class="hud-sanctuary-btn" style="display: none !important;"></button>
-          <div id="player-health-wrap" style="display: none !important;"><div id="player-health-fill"></div></div>
         </div>
       </div>
 
@@ -100,25 +97,208 @@
       </div>
     </div>
 
-    <!-- Main Menu Screen -->
+    <!-- Main Menu Screen (Nueva Vista Reestructurada & Organizada) -->
     <div id="main-menu" class="screen-overlay">
-      <h1 class="game-title">Infernal Rise 2.0</h1>
-      <div class="game-subtitle">El Ascenso hacia la Redención</div>
-      <div class="menu-buttons">
-        <button id="btn-start" class="btn-infernal">Comenzar</button>
-        <button id="btn-menu-sanctuary" class="btn-infernal">⛩️ Santuario de Mejoras</button>
-        <button id="btn-infernal-mode" class="btn-infernal">Modo Infernal</button>
-        <button id="btn-sound-toggle" class="btn-infernal" style="font-size: 16px;">Sonido: ON</button>
-        <button id="btn-reset-save" class="btn-infernal btn-danger" style="font-size: 14px;">⚠️ Reiniciar Progreso</button>
+      <div class="menu-backdrop-glow"></div>
+
+      <!-- VISTA 1: MENÚ PRINCIPAL (HERO / INICIO) -->
+      <div id="menu-view-home" class="menu-subview active">
+        <div class="menu-hero-header">
+          <div class="menu-emblem">
+            <svg viewBox="0 0 100 100" class="emblem-svg" width="60" height="60">
+              <defs>
+                <linearGradient id="emblemGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#ffd700" />
+                  <stop offset="50%" stop-color="#ff4500" />
+                  <stop offset="100%" stop-color="#800020" />
+                </linearGradient>
+                <filter id="emblemGlow">
+                  <feGaussianBlur stdDeviation="2.5" result="glow"/>
+                  <feComposite in="SourceGraphic" in2="glow" operator="over"/>
+                </filter>
+              </defs>
+              <path d="M50 6 L54 36 L88 18 L62 48 L94 68 L58 64 L50 94 L42 64 L6 68 L38 48 L12 18 L46 36 Z" fill="none" stroke="url(#emblemGrad)" stroke-width="2.5" filter="url(#emblemGlow)" />
+              <circle cx="50" cy="50" r="14" fill="#14060c" stroke="#d4af37" stroke-width="1.8" />
+              <path d="M50 42 L50 58 M42 50 L58 50" stroke="#ff3b30" stroke-width="2.5" />
+            </svg>
+          </div>
+
+          <h1 class="game-title">INFERNAL RISE</h1>
+
+          <div class="menu-badge-row">
+            <span class="menu-version-pill">2.0 ROGUELITE</span>
+            <span class="menu-subtitle-text">El Ascenso hacia la Redención</span>
+          </div>
+        </div>
+
+        <div class="menu-buttons-organized">
+          <button id="btn-start" class="btn-infernal btn-primary-cta" title="Iniciar aventura desde el Santuario">
+            <span class="btn-icon">⚔️</span>
+            <span class="btn-text">Comenzar Ascenso</span>
+          </button>
+
+          <button id="btn-infernal-mode" class="btn-infernal btn-mode-infernal" title="Torre infinita con lava ascendente sin fin">
+            <span class="btn-icon">🔥</span>
+            <span class="btn-text">Modo Infernal (Endless)</span>
+          </button>
+
+          <div class="menu-secondary-row">
+            <button id="btn-open-codex" class="btn-infernal btn-subnav" title="Ver controles y guía del inframundo">
+              <span class="btn-icon">📜</span>
+              <span>Guía y Códice</span>
+            </button>
+            <button id="btn-open-settings" class="btn-infernal btn-subnav" title="Ajustes de sonido y gestión de datos">
+              <span class="btn-icon">⚙️</span>
+              <span>Ajustes y Datos</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Persistent Save Status Summary Bar -->
+        <div class="menu-player-summary-bar">
+          <div class="menu-summary-chip" title="Almas recolectadas"><span class="chip-icon">🔮</span> <b id="menu-stat-souls">0</b></div>
+          <div class="menu-summary-chip" title="Fragmentos de Humanidad"><span class="chip-icon">💠</span> <b id="menu-stat-shards">0</b></div>
+          <div class="menu-summary-chip" title="Cenizas de Penitencia"><span class="chip-icon">🔥</span> <b id="menu-stat-ashes">0</b></div>
+          <div class="menu-summary-chip" title="Contador de Muertes"><span class="chip-icon">💀</span> <b id="menu-stat-deaths">0</b></div>
+        </div>
       </div>
-      <div class="controls-guide">
-        <span><b>[A] / [D]</b> Moverse</span>
-        <span><b>[W] / [S]</b> Trepar Escaleras</span>
-        <span><b>[Espacio]</b> Saltar / Doble Salto</span>
-        <span><b>[Z] / [Click]</b> Atacar</span>
-        <span><b>[E]</b> Interactuar / Abrir Cofres</span>
-        <span><b>[P]</b> Santuario</span>
-        <span><b>[ESC]</b> Pausa</span>
+
+      <!-- VISTA 2: CÓDICE Y GUÍA DEL AVERNO -->
+      <div id="menu-view-codex" class="menu-subview hidden">
+        <div class="subview-header">
+          <h2 class="subview-title">📜 Códice y Guía del Averno</h2>
+          <div class="subview-subtitle">Conoce los secretos y domina los controles para escapar de la condenación</div>
+        </div>
+
+        <div class="codex-content-scroll">
+          <!-- Sección 1: Controles -->
+          <div class="codex-card">
+            <h3 class="codex-card-title">🎮 Controles del Jugador</h3>
+            <div class="codex-controls-grid">
+              <div class="control-key-item">
+                <span class="key-badge">[A] [D] / [◀] [▶]</span>
+                <span class="key-desc">Correr / Desplazarse</span>
+              </div>
+              <div class="control-key-item">
+                <span class="key-badge">[W] [S] / [▲] [▼]</span>
+                <span class="key-desc">Trepar / Bajar Escaleras</span>
+              </div>
+              <div class="control-key-item">
+                <span class="key-badge">[Espacio] / [🦘]</span>
+                <span class="key-desc">Saltar (¡Doble Salto si posees alas!)</span>
+              </div>
+              <div class="control-key-item">
+                <span class="key-badge">[Z] [Click] / [⚔]</span>
+                <span class="key-desc">Atacar con Dagas y Armas</span>
+              </div>
+              <div class="control-key-item">
+                <span class="key-badge">[E] / [✋]</span>
+                <span class="key-desc">Interactuar / Abrir Cofres / Altar / Ruleta</span>
+              </div>
+              <div class="control-key-item">
+                <span class="key-badge">[ESC] / [⏸]</span>
+                <span class="key-desc">Pausar Partida / Ajustes</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sección 2: El Refugio de los Caídos (Lobby) -->
+          <div class="codex-card">
+            <h3 class="codex-card-title">🏰 El Refugio de los Caídos (Lobby Inicial)</h3>
+            <p class="codex-text">Antes de iniciar tu ascenso en la torre, te encuentras en un santuario gótico seguro con estaciones interactivas:</p>
+            <div class="lobby-stations-grid">
+              <div class="station-feature-item">
+                <div class="station-icon">🎰</div>
+                <div class="station-info">
+                  <b>Ruleta de las Armas (Ala Izquierda)</b>
+                  <span>Paga 80 🔮 almas para girar los rodillos. ¡Si obtienes 3 armas iguales, comienzas la run con esa arma letal! (Si mueres en la run, el arma se pierde).</span>
+                </div>
+              </div>
+              <div class="station-feature-item">
+                <div class="station-icon">⛩️</div>
+                <div class="station-info">
+                  <b>Santuario de las Almas (Centro - Altar Mayor)</b>
+                  <span>Acércate y pulsa [E] para comprar mejoras permanentes de Vitalidad, Daño, Velocidad y Regeneración de Salud 🩸. También puedes realizar la <b>Penitencia</b> para obtener Cenizas permanentes.</span>
+                </div>
+              </div>
+              <div class="station-feature-item">
+                <div class="station-icon">🌀</div>
+                <div class="station-info">
+                  <b>Portal de la Torre (Ala Derecha)</b>
+                  <span>Traspasa el umbral para iniciar la escalada a través de los círculos infernales y purgar tus culpas.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sección 3: Mecánicas Roguelite y Balatro -->
+          <div class="codex-card">
+            <h3 class="codex-card-title">🃏 Fervor, Frenesí y Arcanos del Averno</h3>
+            <p class="codex-text">Cada enemigo abatido activa el <b>Tributo del Averno</b>: tus fichas de Esencia 🔵 se multiplican por tu Fervor 🔴 y Cólera 🟣, acumulando almas masivas con combos encadenados.</p>
+          </div>
+        </div>
+
+        <div class="subview-footer">
+          <button id="btn-back-codex" class="btn-infernal btn-back">◀ Volver al Menú</button>
+        </div>
+      </div>
+
+      <!-- VISTA 3: AJUSTES Y GESTIÓN DE PROGRESO -->
+      <div id="menu-view-settings" class="menu-subview hidden">
+        <div class="subview-header">
+          <h2 class="subview-title">⚙️ Ajustes y Archivo del Alma</h2>
+          <div class="subview-subtitle">Configura el audio del juego y administra tus datos guardados</div>
+        </div>
+
+        <div class="settings-content-card">
+          <div class="settings-group">
+            <h3 class="settings-group-title">🔊 Audio y Efectos</h3>
+            <div class="settings-row">
+              <div class="settings-label">
+                <b>Sonido General y Música</b>
+                <span>Música ambiental, impactos demoníacos y efectos sonoros</span>
+              </div>
+              <button id="btn-sound-toggle" class="btn-infernal btn-toggle-sound">Sonido: ON</button>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <h3 class="settings-group-title">📊 Registro de Penitencia</h3>
+            <div class="save-stats-grid">
+              <div class="stat-box">
+                <div class="stat-label">Almas en Posesión</div>
+                <div class="stat-value" id="settings-stat-souls" style="color: #e0aaff;">0 🔮</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">Fragmentos de Jefes</div>
+                <div class="stat-value" id="settings-stat-shards" style="color: #caf0f8;">0 💠</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">Cenizas de Penitencia</div>
+                <div class="stat-value" id="settings-stat-ashes" style="color: #ff5722;">0 🔥</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">Muertes Sufridas</div>
+                <div class="stat-value" id="settings-stat-deaths" style="color: #ff4757;">0 💀</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-group danger-group">
+            <h3 class="settings-group-title" style="color: #ff4757;">⚠️ Zona de Peligro</h3>
+            <div class="settings-row">
+              <div class="settings-label">
+                <b style="color: #ff6b6b;">Restablecer Todo el Progreso</b>
+                <span>Borra todas las almas, cenizas, mejoras y regresa a cero de forma irreversible</span>
+              </div>
+              <button id="btn-reset-save" class="btn-infernal btn-danger">Borrar Progreso</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="subview-footer">
+          <button id="btn-back-settings" class="btn-infernal btn-back">◀ Volver al Menú</button>
+        </div>
       </div>
     </div>
 
