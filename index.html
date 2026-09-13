@@ -34,7 +34,7 @@
             </div>
           </div>
 
-          <!-- Vampire Survivors In-Run Level & XP Bar -->
+          <!-- In-Run Level & Soul XP Bar -->
           <div class="hud-xp-container" title="Nivel del Ascenso y Experiencia">
             <span class="hud-level-badge">NV.<span id="hud-run-level">1</span></span>
             <div class="hud-xp-track">
@@ -43,22 +43,22 @@
           </div>
         </div>
 
-        <!-- Megabonk & Balatro Dynamic Scores -->
-        <div class="hud-dynamic-scoring">
-          <div id="hud-bonk-combo" class="hud-bonk-badge hidden">💥 BONK ×0!</div>
-          <div id="hud-balatro-score" class="hud-balatro-pill hidden">0 🔵 × +1 🔴</div>
+        <!-- Dynamic Scores: Frenesí de Impactos & Tributo del Averno -->
+        <div id="hud-combo-container" class="hud-combo-wrapper">
+          <div id="hud-bonk-combo" class="hud-bonk-pill hidden">🔥 IMPACTO ×1!</div>
+          <div id="hud-balatro-score" class="hud-balatro-pill hidden" title="Tributo del Averno: Esencia 🔵 × Fervor 🔴 (×Cólera 🟣)">0 🔵 × +1 🔴</div>
+          <!-- Arcanos del Averno Activos -->
+          <div id="hud-jokers-container" class="hud-jokers-row" title="Arcanos del Averno Activos"></div>
         </div>
 
         <div class="hud-top-right">
-          <!-- Balatro Active Jokers Row -->
-          <div id="hud-jokers-container" class="hud-jokers-row" title="Comodines de Balatro"></div>
           <!-- Sanctuary shop is now located physically in the Lobby world as an interactive altar -->
           <button id="btn-open-sanctuary" class="hud-sanctuary-btn" style="display: none !important;"></button>
           <div id="player-health-wrap" style="display: none !important;"><div id="player-health-fill"></div></div>
         </div>
       </div>
 
-      <!-- Active Rogue-lite Boons & Passive Weapons (Vampire Survivors style) -->
+      <!-- Active Rogue-lite Boons & Autonomous Weapons -->
       <div id="hud-active-boons" class="hud-boons-bar"></div>
       <div id="hud-passive-weapons" class="hud-weapons-bar"></div>
 
@@ -202,48 +202,118 @@
       </div>
     </div>
 
-    <!-- Boon Selection Modal (In-Run Roguelite Blessings) -->
+    <!-- Gracia del Purgatorio Modal (Cofres) -->
     <div id="boon-modal" class="screen-overlay hidden">
       <div class="boon-modal-container">
         <h2 class="game-title" style="font-size: 32px; margin-bottom: 6px; color: var(--gold); text-shadow: 0 0 25px rgba(244, 208, 111, 0.8);">Gracia del Purgatorio</h2>
         <div class="boon-modal-subtitle">Has abierto un Cofre Sagrado. Selecciona una bendición para este ascenso:</div>
         <div id="boon-cards-container" class="boon-cards-container"></div>
         <div class="modal-footer-actions">
-          <button id="btn-boon-reroll" class="btn-infernal btn-reroll">🎲 Reroll (15 🔮)</button>
+          <button id="btn-boon-reroll" class="btn-infernal btn-reroll">🎲 Barajar Destino (15 🔮)</button>
         </div>
       </div>
     </div>
 
-    <!-- Level-Up Modal (Vampire Survivors 3-Card Draft) -->
+    <!-- Ascenso del Alma Modal (Subida de Nivel) -->
     <div id="level-up-modal" class="screen-overlay hidden">
       <div class="boon-modal-container levelup-container">
         <div class="levelup-header">
           <span class="levelup-icon">⚡</span>
-          <h2 class="game-title" style="font-size: 32px; margin-bottom: 4px; color: #5ce1e6; text-shadow: 0 0 25px rgba(92, 225, 230, 0.9);">¡SUBIDA DE NIVEL!</h2>
+          <h2 class="game-title" style="font-size: 32px; margin-bottom: 4px; color: #5ce1e6; text-shadow: 0 0 25px rgba(92, 225, 230, 0.9);">¡ASCENSO DEL ALMA!</h2>
           <div class="levelup-level-title">Nivel <span id="modal-run-level">2</span> Alcanzado</div>
         </div>
-        <div class="boon-modal-subtitle">Elige una bendición, arma o comodín para forjar tu ascenso:</div>
+        <div class="boon-modal-subtitle">Elige una reliquia, arma autónoma o arcano para forjar tu ascenso:</div>
         <div id="levelup-cards-container" class="boon-cards-container"></div>
         <div class="modal-footer-actions">
-          <button id="btn-levelup-reroll" class="btn-infernal btn-reroll">🎲 Reroll (15 🔮)</button>
+          <button id="btn-levelup-reroll" class="btn-infernal btn-reroll">🎲 Barajar Destino (15 🔮)</button>
         </div>
       </div>
     </div>
 
-    <!-- Scritchy Scratchy Modal (Rascador del Inframundo) -->
+    <!-- Tablilla Rascable del Destino -->
     <div id="scratch-card-modal" class="screen-overlay hidden">
       <div class="scratch-modal-container">
         <div class="scratch-header">
           <span class="scratch-icon">🎟️</span>
-          <h2 class="game-title" style="font-size: 28px; margin: 0; color: #ffd166; text-shadow: 0 0 20px rgba(255, 209, 102, 0.8);">Rascador del Inframundo</h2>
-          <div class="scratch-subtitle">¡Haz clic o raspa las 3 casillas para descubrir tu fortuna infernal!</div>
+          <h2 class="game-title" style="font-size: 28px; margin: 0; color: #ffd166; text-shadow: 0 0 20px rgba(255, 209, 102, 0.8);">Tablilla Rascable del Destino</h2>
+          <div class="scratch-subtitle">¡Haz clic o raspa las 3 runas malditas para descubrir tu tributo infernal!</div>
         </div>
         <div class="scratch-grid" id="scratch-grid"></div>
-        <div id="scratch-result-msg" class="scratch-result-msg">¡Rasca las 3 casillas doradas!</div>
+        <div id="scratch-result-msg" class="scratch-result-msg">¡Rasca las 3 runas malditas!</div>
         <div class="scratch-actions">
           <button id="btn-claim-scratch" class="btn-infernal" disabled>Reclamar Recompensa</button>
-          <button id="btn-scratch-all" class="btn-infernal btn-secondary">✨ Raspar Todo</button>
+          <button id="btn-scratch-all" class="btn-infernal btn-secondary">✨ Revelar Todo</button>
           <button id="btn-close-scratch" class="btn-infernal btn-danger" style="display:none;">Cerrar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slot Machine Modal (Ruleta de Armas del Averno) -->
+    <div id="slot-machine-modal" class="screen-overlay hidden" style="z-index: 9500;">
+      <div class="slot-machine-container">
+        <div class="slot-header">
+          <div class="slot-title-wrap">
+            <h2 class="game-title" style="font-size: 26px; margin: 0; color: #ffd166; text-shadow: 0 0 20px rgba(255, 209, 102, 0.8);">🎰 Ruleta de Armas del Averno</h2>
+            <div class="slot-subtitle">Paga 80 Almas y tienta a la suerte para comenzar tu ascenso con un arma sagrada o impía</div>
+          </div>
+          <button id="btn-close-slot" class="btn-modal-close" title="Cerrar">✕</button>
+        </div>
+
+        <div class="slot-wallet-bar">
+          <div class="slot-wallet-item"><span>🔮 Tus Almas:</span> <b id="slot-player-souls">0</b></div>
+          <div class="slot-wallet-item slot-cost-badge"><span>Costo por Giro:</span> <b>80 🔮</b></div>
+          <div class="slot-wallet-item"><span>Armas Actuales:</span> <b id="slot-current-weapons">0 equipadas</b></div>
+        </div>
+
+        <!-- The Slot Machine Cabinet -->
+        <div class="slot-cabinet">
+          <div class="slot-cabinet-top-lights">
+            <span class="slot-bulb"></span><span class="slot-bulb"></span><span class="slot-bulb"></span><span class="slot-bulb"></span><span class="slot-bulb"></span><span class="slot-bulb"></span><span class="slot-bulb"></span>
+          </div>
+
+          <div class="slot-display-stage">
+            <!-- 3 Spinning Reels -->
+            <div class="slot-reels-housing">
+              <div class="slot-reel-window" id="slot-reel-1">
+                <div class="slot-reel-strip" id="reel-strip-1">
+                  <div class="slot-symbol">✝️</div>
+                </div>
+              </div>
+              <div class="slot-reel-separator"></div>
+              <div class="slot-reel-window" id="slot-reel-2">
+                <div class="slot-reel-strip" id="reel-strip-2">
+                  <div class="slot-symbol">☄️</div>
+                </div>
+              </div>
+              <div class="slot-reel-separator"></div>
+              <div class="slot-reel-window" id="slot-reel-3">
+                <div class="slot-reel-strip" id="reel-strip-3">
+                  <div class="slot-symbol">⚡</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mechanical Lever -->
+            <div class="slot-lever-container" id="slot-lever-hitbox" title="¡Tira de la Palanca!">
+              <div class="slot-lever-base"></div>
+              <div class="slot-lever-shaft" id="slot-lever-shaft">
+                <div class="slot-lever-knob"></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="slot-status-box" class="slot-status-box">
+            Tira de la palanca o pulsa Girar para forjar tu arma inicial (80 🔮)
+          </div>
+        </div>
+
+        <div class="slot-footer-actions">
+          <button id="btn-spin-slot" class="btn-infernal btn-gold" style="font-size: 15px; padding: 12px 28px;">🎰 Girar Ruleta (80 🔮)</button>
+          <button id="btn-slot-start-run" class="btn-infernal btn-secondary">Comenzar Run ➔</button>
+        </div>
+
+        <div class="slot-disclaimer-note">
+          ⚠️ <b>Nota de Permadeath:</b> Si mueres en la run, el arma se pierde para siempre. El uso de la ruleta es 100% opcional; puedes entrar al portal sin usarla.
         </div>
       </div>
     </div>

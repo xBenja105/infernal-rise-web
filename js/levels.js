@@ -73,6 +73,15 @@ class LevelManager {
         h: 90,
         label: 'Santuario de Mejoras'
       },
+      // In-World Slot Machine / Ruleta de Armas (80 Almas)
+      slotMachine: {
+        x: 1140,
+        y: 340,
+        w: 60,
+        h: 70,
+        cost: 80,
+        label: 'Ruleta de las Armas'
+      },
       ladders: [],
       movingPlatforms: [],
       crumblingPlatforms: [],

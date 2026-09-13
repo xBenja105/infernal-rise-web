@@ -158,15 +158,15 @@ class ProgressionManager {
       {
         id: 'tome_candelabro',
         isTome: true,
-        name: 'Candelabro del Averno',
+        name: 'Cáliz de Fuego Negro',
         rarity: 'Rara',
-        desc: 'Tomo Pasivo: +25% de tamaño y radio a todas las armas, ondas y auras.',
+        desc: 'Tomo Pasivo: +25% de tamaño y radio de alcance a todas las armas, ondas y auras.',
         icon: '🕯️'
       },
       {
         id: 'tome_spinach',
         isTome: true,
-        name: 'Espinacas Infernales',
+        name: 'Extracto de Sangre Impía',
         rarity: 'Rara',
         desc: 'Tomo Pasivo: +20% de daño a todos los ataques, proyectiles y armas.',
         icon: '🌿'
@@ -174,7 +174,7 @@ class ProgressionManager {
       {
         id: 'tome_hourglass',
         isTome: true,
-        name: 'Reloj de Arena Vacío',
+        name: 'Reliquia del Tiempo Condenado',
         rarity: 'Épica',
         desc: 'Tomo Pasivo: -15% de tiempo de recarga en todas las armas automáticas.',
         icon: '⏳'
@@ -182,75 +182,75 @@ class ProgressionManager {
       {
         id: 'tome_clover',
         isTome: true,
-        name: 'Trébol de Dante',
+        name: 'Sello de Fortuna Infernal',
         rarity: 'Común',
-        desc: 'Tomo Pasivo: +15% de probabilidad de asestar Golpes Críticos y MEGABONK.',
+        desc: 'Tomo Pasivo: +15% de probabilidad de asestar Golpes Críticos e Impactos Demoledores.',
         icon: '🍀'
       },
       {
         id: 'tome_gauntlet',
         isTome: true,
-        name: 'Guantelete Titánico',
+        name: 'Guantelete de los Gigantes',
         rarity: 'Rara',
-        desc: 'Tomo Pasivo: +60% de fuerza de empuje MEGABONK y doble daño por colisión dominó.',
+        desc: 'Tomo Pasivo: +60% de fuerza de empuje demoledor y doble daño por reacción en cadena.',
         icon: '🥊'
       },
-      // ─── COMODINES DE BALATRO (JOKERS DE DANTE) ───
+      // ─── ARCANOS DEL AVERNO (TALISMANES Y BENDICIONES DE DANTE) ───
       {
         id: 'joker_fool',
         isJoker: true,
-        name: 'El Bufón del Limbo',
+        name: 'Arcano: El Hereje del Limbo',
         rarity: 'Común',
-        desc: 'Comodín: Otorga +4 Mult 🔴 en cada muerte enemiga ejecutada en el aire.',
+        desc: 'Arcano: Otorga +4 Fervor 🔴 en cada muerte enemiga ejecutada en el aire.',
         icon: '🃏'
       },
       {
         id: 'joker_greedy',
         isJoker: true,
-        name: 'El Avaro de Dite',
+        name: 'Arcano: El Avaro de Dite',
         rarity: 'Rara',
-        desc: 'Comodín: Si posees más de 150 almas, otorga ×1.5 Mult 🟣 a todas las almas obtenidas.',
+        desc: 'Arcano: Si posees más de 150 almas, otorga ×1.5 Cólera 🟣 a todas las almas obtenidas.',
         icon: '💰'
       },
       {
         id: 'joker_wheel',
         isJoker: true,
-        name: 'La Rueda del Averno',
+        name: 'Arcano: La Rueda del Destino',
         rarity: 'Épica',
-        desc: 'Comodín: 25% de probabilidad de triplicar (×3.0 🟣) el valor de almas.',
+        desc: 'Arcano: 25% de probabilidad de triplicar (×3.0 🟣) el valor de almas.',
         icon: '🎡'
       },
       {
         id: 'joker_hanged',
         isJoker: true,
-        name: 'El Colgado',
+        name: 'Arcano: El Penitente Colgado',
         rarity: 'Rara',
-        desc: 'Comodín: Al sufrir daño, detona una onda sísmica que aniquila enemigos menores.',
+        desc: 'Arcano: Al sufrir daño, detona una onda sísmica que aniquila enemigos menores.',
         icon: '🪢'
       },
       {
         id: 'joker_death',
         isJoker: true,
-        name: 'La Muerte Roja',
+        name: 'Arcano: El Juicio Carmesí',
         rarity: 'Épica',
-        desc: 'Comodín: Las explosiones de esqueletos transmiten fuego ardiente a los adyacentes.',
+        desc: 'Arcano: Las explosiones de enemigos transmiten fuego ardiente a los adyacentes.',
         icon: '☠️'
       },
       {
         id: 'joker_bonk',
         isJoker: true,
-        name: 'El Gran Bonk',
+        name: 'Arcano: El Rompehuesos Titánico',
         rarity: 'Rara',
-        desc: 'Comodín: Cada golpe MEGABONK añade +10 Mult 🔴 temporal a la racha de almas.',
+        desc: 'Arcano: Cada Impacto Demoledor añade +10 Fervor 🔴 temporal a la racha de almas.',
         icon: '🔨'
       },
-      // ─── SCRITCHY SCRATCHY (TARJETA DE RASPAR) ───
+      // ─── TABLILLA RASCABLE DEL DESTINO ───
       {
         id: 'scratch_card_ticket',
         isScratchCard: true,
-        name: 'Rascador del Inframundo',
+        name: 'Tablilla Rascable del Destino',
         rarity: 'Épica',
-        desc: '¡Rascador de la Fortuna! Rasca 3 casillas para ganar almas instantáneas, comodines o el JACKPOT.',
+        desc: '¡Tablilla Arcana! Rasca las 3 runas malditas para ganar almas instantáneas, arcanos o el Gran Tributo.',
         icon: '🎟️'
       }
     ];
@@ -598,8 +598,8 @@ class ProgressionManager {
       { id: 'souls_100', icon: '🔮', name: '100 Almas', type: 'souls', value: 100 },
       { id: 'souls_200', icon: '✨', name: '200 Almas', type: 'souls', value: 200 },
       { id: 'shard', icon: '💠', name: '1 Fragmento', type: 'shard', value: 1 },
-      { id: 'megabonk', icon: '💥', name: 'Megabonk', type: 'megabonk', value: 3 },
-      { id: 'joker', icon: '🃏', name: 'Comodín', type: 'joker', value: 1 }
+      { id: 'megabonk', icon: '💥', name: 'Impacto Titánico', type: 'megabonk', value: 3 },
+      { id: 'joker', icon: '🃏', name: 'Arcano', type: 'joker', value: 1 }
     ];
 
     const isJackpot = Math.random() < 0.28;
@@ -642,7 +642,7 @@ class ProgressionManager {
       } else if (sym.type === 'shard') {
         this.addHumanityShards(3);
       } else if (sym.type === 'joker') {
-        this.acquireJoker({ id: 'joker_wheel', name: 'La Rueda del Averno', rarity: 'Épica', desc: 'Comodín: 25% prob triplicar almas', icon: '🎡', edition: 'polychrome' });
+        this.acquireJoker({ id: 'joker_wheel', name: 'Arcano: La Rueda del Destino', rarity: 'Épica', desc: 'Arcano: 25% prob triplicar almas', icon: '🎡', edition: 'polychrome' });
       } else {
         totalSoulsAwarded = 350;
         this.addSouls(350);
@@ -834,35 +834,36 @@ class ProgressionManager {
       xpFill.style.width = `${pct.toFixed(1)}%`;
     }
 
-    // Megabonk Combo Badge
+    // Combo de Impactos Demoledores
     const comboEl = document.getElementById('hud-bonk-combo');
     if (comboEl) {
       if (this.bonkCombo > 1) {
         comboEl.classList.remove('hidden');
-        comboEl.textContent = `💥 BONK ×${this.bonkCombo}!`;
+        comboEl.textContent = this.bonkCombo >= 5 ? `⚡ ¡FRENESÍ TITÁNICO! ×${this.bonkCombo}` : `🔥 IMPACTO ×${this.bonkCombo}!`;
         comboEl.style.transform = `scale(${Math.min(1.35, 1.0 + this.bonkCombo * 0.03)})`;
       } else {
         comboEl.classList.add('hidden');
       }
     }
 
-    // Balatro Chips × Mult HUD Widget
+    // Tributo del Averno (Esencia × Fervor × Cólera = Almas)
     const balatroEl = document.getElementById('hud-balatro-score');
     if (balatroEl && this.lastBalatroScore) {
       balatroEl.classList.remove('hidden');
       const xMultText = this.lastBalatroScore.xMult > 1.05 ? ` <span class="xmult-val">(×${this.lastBalatroScore.xMult.toFixed(1)} 🟣)</span>` : '';
-      balatroEl.innerHTML = `<span class="chips-val">${this.lastBalatroScore.chips} 🔵</span> × <span class="mult-val">+${this.lastBalatroScore.mult} 🔴</span>${xMultText} = <b style="color:#f4d06f;">+${this.lastBalatroScore.totalSouls} 🔮</b>`;
+      balatroEl.innerHTML = `<span class="chips-val" title="Esencia Base">${this.lastBalatroScore.chips} 🔵</span> × <span class="mult-val" title="+Fervor">+${this.lastBalatroScore.mult} 🔴</span>${xMultText} = <b style="color:#f4d06f;" title="Almas Ganadas">+${this.lastBalatroScore.totalSouls} 🔮</b>`;
     }
 
-    // Balatro Active Jokers Row
+    // Arcanos del Averno Activos
     const jokersContainer = document.getElementById('hud-jokers-container');
     if (jokersContainer) {
       jokersContainer.innerHTML = '';
       for (const j of this.activeJokers) {
         const badge = document.createElement('span');
         const editionClass = j.edition ? `joker-${j.edition}` : 'joker-standard';
+        const editionName = j.edition === 'polychrome' ? 'PRISMÁTICO' : (j.edition === 'holo' ? 'RELUCIENTE' : (j.edition === 'foil' ? 'ESPECTRAL' : 'ESTÁNDAR'));
         badge.className = `joker-badge ${editionClass}`;
-        badge.title = `${j.name} [${(j.edition || 'standard').toUpperCase()}]: ${j.desc}`;
+        badge.title = `${j.name} [${editionName}]: ${j.desc}`;
         badge.textContent = j.icon || '🃏';
         jokersContainer.appendChild(badge);
       }

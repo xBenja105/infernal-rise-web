@@ -118,7 +118,17 @@ class Game {
       scratchResultMsg: document.getElementById('scratch-result-msg'),
       btnClaimScratch: document.getElementById('btn-claim-scratch'),
       btnScratchAll: document.getElementById('btn-scratch-all'),
-      btnCloseScratch: document.getElementById('btn-close-scratch')
+      btnCloseScratch: document.getElementById('btn-close-scratch'),
+
+      // Ruleta de Armas (Slot Machine) Modal
+      slotMachineModal: document.getElementById('slot-machine-modal'),
+      btnSpinSlot: document.getElementById('btn-spin-slot'),
+      btnCloseSlot: document.getElementById('btn-close-slot'),
+      btnSlotStartRun: document.getElementById('btn-slot-start-run'),
+      slotLeverHitbox: document.getElementById('slot-lever-hitbox'),
+      slotStatusBox: document.getElementById('slot-status-box'),
+      slotPlayerSouls: document.getElementById('slot-player-souls'),
+      slotCurrentWeapons: document.getElementById('slot-current-weapons')
     };
 
     this.lastTime = 0;
@@ -171,6 +181,8 @@ class Game {
           window.dialogueManager.advance();
         } else if (this.activeChest) {
           this.openBoonChest(this.activeChest);
+        } else if (this.nearSlotMachine) {
+          this.openSlotMachineModal();
         } else if (this.nearSanctuary) {
           this.openSanctuaryModal();
         } else {
@@ -185,6 +197,8 @@ class Game {
       if (e.code === 'Escape') {
         if (this.state === 'SANCTUARY') {
           this.closeSanctuaryModal();
+        } else if (this.state === 'SLOT_MACHINE') {
+          this.closeSlotMachineModal();
         } else if (this.state === 'SCRATCH_CARD') {
           this.closeScratchCardModal();
         } else if (this.state === 'BOON_SELECT' || this.state === 'LEVEL_UP') {
@@ -387,6 +401,20 @@ class Game {
     // Scritchy Scratchy Modal Actions
     if (this.ui.btnCloseScratch) {
       this.ui.btnCloseScratch.addEventListener('click', () => this.closeScratchCardModal());
+    }
+
+    // Ruleta de Armas (Slot Machine) Modal Actions
+    if (this.ui.btnCloseSlot) {
+      this.ui.btnCloseSlot.addEventListener('click', () => this.closeSlotMachineModal());
+    }
+    if (this.ui.btnSlotStartRun) {
+      this.ui.btnSlotStartRun.addEventListener('click', () => this.closeSlotMachineModal());
+    }
+    if (this.ui.btnSpinSlot) {
+      this.ui.btnSpinSlot.addEventListener('click', () => this.spinSlotMachine());
+    }
+    if (this.ui.slotLeverHitbox) {
+      this.ui.slotLeverHitbox.addEventListener('click', () => this.spinSlotMachine());
     }
   }
 
@@ -1259,13 +1287,25 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
   updateHudPositions() {
     if (!this.player) return;
 
-    // Interaction Badge (Chest, Sanctuary, or NPC)
+    // Interaction Badge (Chest, Slot Machine, Sanctuary, or NPC)
     this.nearSanctuary = false;
+    this.nearSlotMachine = false;
     if (this.activeChest) {
       this.ui.interactionBadge.style.display = 'block';
       this.ui.interactionBadge.textContent = '[E] Abrir Cofre';
       const screenX = ((this.activeChest.x + this.activeChest.w / 2 - this.camX) / this.vWidth) * 100;
       const screenY = ((this.activeChest.y - 14 - this.camY) / this.vHeight) * 100;
+      this.ui.interactionBadge.style.left = `${screenX}%`;
+      this.ui.interactionBadge.style.top = `${screenY}%`;
+    } else if (this.level && this.level.slotMachine && Math.hypot(
+        (this.player.x + this.player.w / 2) - (this.level.slotMachine.x + this.level.slotMachine.w / 2),
+        (this.player.y + this.player.h / 2) - (this.level.slotMachine.y + this.level.slotMachine.h / 2)
+      ) < 75 && this.state !== 'DIALOGUE') {
+      this.nearSlotMachine = true;
+      this.ui.interactionBadge.style.display = 'block';
+      this.ui.interactionBadge.textContent = '🎰 [E] Ruleta de Armas (80 🔮)';
+      const screenX = ((this.level.slotMachine.x + this.level.slotMachine.w / 2 - this.camX) / this.vWidth) * 100;
+      const screenY = ((this.level.slotMachine.y - 18 - this.camY) / this.vHeight) * 100;
       this.ui.interactionBadge.style.left = `${screenX}%`;
       this.ui.interactionBadge.style.top = `${screenY}%`;
     } else if (this.level && this.level.sanctuary && Math.hypot(
@@ -1340,6 +1380,11 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     // 4b. Draw In-World Sanctuary Altar (Lobby)
     if (this.level && this.level.sanctuary) {
       this.drawSanctuaryAltar(this.level.sanctuary, finalCamX, finalCamY);
+    }
+
+    // 4c. Draw In-World Slot Machine (Lobby)
+    if (this.level && this.level.slotMachine) {
+      this.drawSlotMachine(this.level.slotMachine, finalCamX, finalCamY);
     }
 
     // 5. Draw Portal
@@ -2021,6 +2066,120 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     this.ctx.restore();
   }
 
+  drawSlotMachine(sm, camX, camY) {
+    const rx = Math.round(sm.x - camX);
+    const ry = Math.round(sm.y - camY);
+    const w = sm.w || 60;
+    const h = sm.h || 70;
+    const time = Date.now() / 250;
+
+    this.ctx.save();
+
+    // 1. Shadow beneath cabinet
+    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    this.ctx.fillRect(rx - 4, ry + h - 6, w + 8, 8);
+
+    // 2. Main Outer Cabinet (Iron chassis with gothic red/gold borders)
+    const cabGrad = this.ctx.createLinearGradient(rx, ry, rx + w, ry + h);
+    cabGrad.addColorStop(0, '#2b1224');
+    cabGrad.addColorStop(0.5, '#170814');
+    cabGrad.addColorStop(1, '#0c040a');
+    this.ctx.fillStyle = cabGrad;
+    this.ctx.fillRect(rx, ry, w, h);
+
+    this.ctx.strokeStyle = '#ffd166';
+    this.ctx.lineWidth = 1.8;
+    this.ctx.strokeRect(rx, ry, w, h);
+
+    // Demon horn crests on top left & right
+    this.ctx.fillStyle = '#ff4d6d';
+    this.ctx.beginPath();
+    this.ctx.moveTo(rx, ry);
+    this.ctx.lineTo(rx - 6, ry - 10);
+    this.ctx.lineTo(rx + 8, ry);
+    this.ctx.fill();
+
+    this.ctx.beginPath();
+    this.ctx.moveTo(rx + w, ry);
+    this.ctx.lineTo(rx + w + 6, ry - 10);
+    this.ctx.lineTo(rx + w - 8, ry);
+    this.ctx.fill();
+
+    // 3. Glowing Marquee Sign on Top
+    const pulse = 0.65 + Math.sin(time * 2.0) * 0.35;
+    this.ctx.fillStyle = `rgba(255, 183, 3, ${pulse})`;
+    this.ctx.fillRect(rx + 4, ry + 4, w - 8, 12);
+    this.ctx.fillStyle = '#100508';
+    this.ctx.font = 'bold 8px Cinzel, MedievalSharp, sans-serif';
+    this.ctx.textAlign = 'center';
+    this.ctx.fillText('🎰 RULETA', rx + w / 2, ry + 13);
+
+    // 4. Three Reel Windows
+    const reelW = 12;
+    const reelH = 22;
+    const reelY = ry + 22;
+    const spacing = (w - 8 - (reelW * 3)) / 4;
+
+    const icons = ['✝️', '☄️', '⚡'];
+    for (let i = 0; i < 3; i++) {
+      const reelX = rx + 4 + spacing + i * (reelW + spacing);
+      this.ctx.fillStyle = '#060208';
+      this.ctx.fillRect(reelX, reelY, reelW, reelH);
+      this.ctx.strokeStyle = 'rgba(255, 209, 102, 0.6)';
+      this.ctx.lineWidth = 1;
+      this.ctx.strokeRect(reelX, reelY, reelW, reelH);
+
+      // Icon preview
+      this.ctx.font = '9px sans-serif';
+      this.ctx.textAlign = 'center';
+      this.ctx.fillText(icons[i], reelX + reelW / 2, reelY + 15);
+    }
+
+    // 5. Coin insert & Paytable Tray
+    this.ctx.fillStyle = '#1a0d16';
+    this.ctx.fillRect(rx + 8, ry + 48, w - 16, 10);
+    this.ctx.strokeStyle = '#ffb703';
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeRect(rx + 8, ry + 48, w - 16, 10);
+
+    // Coin slot
+    this.ctx.fillStyle = '#ffd166';
+    this.ctx.fillRect(rx + w / 2 - 6, ry + 51, 12, 3);
+
+    // 6. Mechanical Lever on the Right
+    this.ctx.strokeStyle = '#d4af37';
+    this.ctx.lineWidth = 2.5;
+    this.ctx.beginPath();
+    this.ctx.moveTo(rx + w, ry + 36);
+    this.ctx.lineTo(rx + w + 8, ry + 22);
+    this.ctx.stroke();
+
+    // Lever red knob
+    this.ctx.fillStyle = '#ff0054';
+    this.ctx.beginPath();
+    this.ctx.arc(rx + w + 8, ry + 20, 4.5, 0, Math.PI * 2);
+    this.ctx.fill();
+    this.ctx.strokeStyle = '#ffd166';
+    this.ctx.lineWidth = 1;
+    this.ctx.stroke();
+
+    // 7. Base Plinth
+    this.ctx.fillStyle = '#220b18';
+    this.ctx.fillRect(rx - 2, ry + h - 8, w + 4, 8);
+    this.ctx.strokeStyle = '#4a1520';
+    this.ctx.strokeRect(rx - 2, ry + h - 8, w + 4, 8);
+
+    // 8. Overhead label plate
+    this.ctx.font = 'bold 9px Cinzel, serif';
+    this.ctx.textAlign = 'center';
+    this.ctx.fillStyle = '#ffd166';
+    this.ctx.shadowColor = '#000';
+    this.ctx.shadowBlur = 4;
+    this.ctx.fillText('Ruleta de Armas', rx + w / 2, ry - 14);
+
+    this.ctx.restore();
+  }
+
   drawPortal(portal, camX, camY) {
     const rx = Math.round(portal.x - camX);
     const ry = Math.round(portal.y - camY);
@@ -2296,14 +2455,14 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
           btnText = 'Empuñar Arma';
         }
       } else if (b.isJoker) {
-        badgeHtml = `<span class="boon-rarity" style="background:rgba(181,23,158,0.25);border:1.5px solid #b5179e;color:#f72585;">🃏 COMODÍN BALATRO</span>`;
-        btnText = 'Equipar Comodín';
+        badgeHtml = `<span class="boon-rarity" style="background:rgba(181,23,158,0.25);border:1.5px solid #b5179e;color:#f72585;">🃏 ARCANO DEL AVERNO</span>`;
+        btnText = 'Equipar Arcano';
       } else if (b.isTome) {
         badgeHtml = `<span class="boon-rarity" style="background:rgba(0,180,216,0.25);border:1.5px solid #00b4d8;color:#90e0ef;">📖 TOMO PASIVO</span>`;
         btnText = 'Aprender Tomo';
       } else if (b.isScratchCard) {
-        badgeHtml = `<span class="boon-rarity" style="background:rgba(255,209,102,0.25);border:1.5px solid #ffd166;color:#ffd166;">🎟️ RASCADOR DE LA SUERTE</span>`;
-        btnText = '¡Raspar Tarjeta!';
+        badgeHtml = `<span class="boon-rarity" style="background:rgba(255,209,102,0.25);border:1.5px solid #ffd166;color:#ffd166;">🎟️ TABLILLA DEL DESTINO</span>`;
+        btnText = '¡Raspar Tablilla!';
       } else {
         const rarityClass = b.rarity.toLowerCase() === 'épica' ? 'rarity-epica' : (b.rarity.toLowerCase() === 'rara' ? 'rarity-rara' : 'rarity-comun');
         badgeHtml = `<span class="boon-rarity ${rarityClass}">${b.rarity}</span>`;
@@ -2391,14 +2550,14 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
           btnText = 'Empuñar';
         }
       } else if (b.isJoker) {
-        badgeHtml = `<span class="boon-rarity" style="background:rgba(181,23,158,0.25);border:1.5px solid #b5179e;color:#f72585;">🃏 COMODÍN BALATRO</span>`;
-        btnText = 'Equipar Comodín';
+        badgeHtml = `<span class="boon-rarity" style="background:rgba(181,23,158,0.25);border:1.5px solid #b5179e;color:#f72585;">🃏 ARCANO DEL AVERNO</span>`;
+        btnText = 'Equipar Arcano';
       } else if (b.isTome) {
         badgeHtml = `<span class="boon-rarity" style="background:rgba(0,180,216,0.25);border:1.5px solid #00b4d8;color:#90e0ef;">📖 TOMO PASIVO</span>`;
         btnText = 'Aprender Tomo';
       } else if (b.isScratchCard) {
-        badgeHtml = `<span class="boon-rarity" style="background:rgba(255,209,102,0.25);border:1.5px solid #ffd166;color:#ffd166;">🎟️ RASCADOR DE LA SUERTE</span>`;
-        btnText = '¡Raspar Tarjeta!';
+        badgeHtml = `<span class="boon-rarity" style="background:rgba(255,209,102,0.25);border:1.5px solid #ffd166;color:#ffd166;">🎟️ TABLILLA DEL DESTINO</span>`;
+        btnText = '¡Raspar Tablilla!';
       } else {
         const rarityClass = b.rarity.toLowerCase() === 'épica' ? 'rarity-epica' : (b.rarity.toLowerCase() === 'rara' ? 'rarity-rara' : 'rarity-comun');
         badgeHtml = `<span class="boon-rarity ${rarityClass}">${b.rarity}</span>`;
@@ -2601,31 +2760,35 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       const cost = window.progression.getUpgradeCost(key);
       const canBuy = window.progression.canBuyUpgrade(key);
       const currencyIcon = def.currency === 'humanityShards' ? '💠' : '🔮';
-      const currencyName = def.currency === 'humanityShards' ? 'Fragmentos' : 'Almas';
 
       const card = document.createElement('div');
-      card.className = 'upgrade-card';
+      card.className = `upgrade-card ${isMax ? 'is-maxed' : ''}`;
       card.innerHTML = `
-        <div class="upgrade-top">
-          <span class="upgrade-icon">${def.icon}</span>
-          <div class="upgrade-title-row">
+        <div class="upgrade-icon-box">${def.icon}</div>
+        <div class="upgrade-center">
+          <div class="upgrade-header">
             <span class="upgrade-name">${def.name}</span>
-            <span class="upgrade-lvl-badge">${isMax ? 'MÁX' : `Nv. ${currentLvl} / ${def.maxLvl}`}</span>
+            <span class="upgrade-level-tag">${isMax ? 'MÁXIMO' : `Nv. ${currentLvl}/${def.maxLvl}`}</span>
           </div>
+          <div class="upgrade-bar-wrap">
+            <div class="upgrade-bar-fill" style="width: ${Math.round((currentLvl / def.maxLvl) * 100)}%;"></div>
+          </div>
+          <div class="upgrade-desc">${def.desc}</div>
         </div>
-        <div class="upgrade-desc">${def.desc}</div>
-        <div class="upgrade-bottom">
-          <span class="upgrade-cost">${isMax ? 'COMPLETO' : `${currencyIcon} ${cost} ${currencyName}`}</span>
-          <button class="btn-buy-upgrade" ${isMax || !canBuy ? 'disabled' : ''}>
-            ${isMax ? 'Alcanzado' : 'Mejorar'}
+        <div class="upgrade-right">
+          <button class="btn-upgrade-action ${isMax ? 'maxed' : (canBuy ? 'affordable' : 'unaffordable')}" ${isMax || !canBuy ? 'disabled' : ''}>
+            ${isMax ? '<span class="btn-cost">✔ MÁX</span>' : `
+              <span class="btn-cost">${currencyIcon} ${cost}</span>
+              <span class="btn-action-text">${canBuy ? 'Mejorar' : 'Faltan'}</span>
+            `}
           </button>
         </div>
       `;
 
-      const buyBtn = card.querySelector('.btn-buy-upgrade');
+      const buyBtn = card.querySelector('.btn-upgrade-action');
       if (buyBtn && !isMax) {
         buyBtn.addEventListener('mouseenter', () => {
-          if (window.soundEngine) window.soundEngine.playUiHover();
+          if (window.soundEngine && window.soundEngine.playUiHover) window.soundEngine.playUiHover();
         });
         buyBtn.addEventListener('click', () => {
           if (window.progression.buyUpgrade(key)) {
@@ -2639,6 +2802,175 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
       this.ui.upgradesGrid.appendChild(card);
     }
+  }
+
+  // ─── RULETA DE ARMAS (SLOT MACHINE) SYSTEM ───
+  openSlotMachineModal() {
+    if (this.level && this.level.id !== 'prologue' && !this.nearSlotMachine) return;
+    this.prevStateBeforeSlot = this.state;
+    this.state = 'SLOT_MACHINE';
+    this.updateSlotMachineUI();
+    if (this.ui.slotMachineModal) {
+      this.ui.slotMachineModal.classList.remove('hidden');
+    }
+  }
+
+  closeSlotMachineModal() {
+    if (this.ui.slotMachineModal) {
+      this.ui.slotMachineModal.classList.add('hidden');
+    }
+    this.state = this.prevStateBeforeSlot || 'PLAYING';
+  }
+
+  updateSlotMachineUI() {
+    if (!window.progression) return;
+    if (this.ui.slotPlayerSouls) {
+      this.ui.slotPlayerSouls.textContent = Math.floor(window.progression.souls);
+    }
+    if (this.ui.slotCurrentWeapons && this.passiveWeaponsManager) {
+      const active = this.passiveWeaponsManager.getActiveVisuals();
+      if (active.totalEquipped === 0) {
+        this.ui.slotCurrentWeapons.textContent = 'Ninguna equipada';
+      } else {
+        const weaponNames = [];
+        if (active.hasHolyCross) weaponNames.push('Cruces ✝️');
+        if (active.hasHellfireOrb) weaponNames.push('Orbe ☄️');
+        if (active.hasLightning) weaponNames.push('Rayos ⚡');
+        if (active.hasScythe) weaponNames.push('Guadaña 🪓');
+        if (active.hasGarlic) weaponNames.push('Penitencia 📿');
+        this.ui.slotCurrentWeapons.textContent = weaponNames.join(', ');
+      }
+    }
+  }
+
+  spinSlotMachine() {
+    if (this.isSlotSpinning) return;
+    const cost = 80;
+
+    if (!window.progression || window.progression.souls < cost) {
+      if (this.ui.slotStatusBox) {
+        this.ui.slotStatusBox.innerHTML = '<span style="color:#ff4d6d;">⚠️ ¡No tienes suficientes almas! Se requieren 80 🔮 para forjar el destino.</span>';
+      }
+      if (window.soundEngine && window.soundEngine.playHit) {
+        window.soundEngine.playHit();
+      }
+      return;
+    }
+
+    // Deduct souls
+    window.progression.souls -= cost;
+    window.progression.save();
+    this.updateSlotMachineUI();
+    this.renderSanctuaryWallet();
+
+    this.isSlotSpinning = true;
+    if (this.ui.btnSpinSlot) this.ui.btnSpinSlot.disabled = true;
+
+    // Lever pull animation
+    const leverShaft = document.getElementById('slot-lever-shaft');
+    if (leverShaft) {
+      leverShaft.classList.add('pulling');
+      setTimeout(() => leverShaft.classList.remove('pulling'), 450);
+    }
+    if (window.soundEngine && window.soundEngine.playSlotLever) {
+      window.soundEngine.playSlotLever();
+    }
+
+    if (this.ui.slotStatusBox) {
+      this.ui.slotStatusBox.innerHTML = '⚡ <i>Girando los rodillos del Averno... ¿Qué bendición te aguarda?</i>';
+    }
+
+    // Pool of available starting weapons
+    const slotPool = [
+      { id: 'holy_cross', name: 'Cruces de Luz', icon: '✝️' },
+      { id: 'hellfire_orb', name: 'Orbe del Averno', icon: '☄️' },
+      { id: 'celestial_lightning', name: 'Ira del Cielo', icon: '⚡' },
+      { id: 'death_scythe', name: 'Guadaña Espectral', icon: '🪓' },
+      { id: 'blood_garlic', name: 'Aura de Penitencia', icon: '📿' },
+      { id: 'jackpot_crown', name: 'Corona del Averno', icon: '👑', isJackpot: true }
+    ];
+
+    const pick = slotPool[Math.floor(Math.random() * slotPool.length)];
+
+    const reel1 = document.getElementById('reel-strip-1');
+    const reel2 = document.getElementById('reel-strip-2');
+    const reel3 = document.getElementById('reel-strip-3');
+
+    if (reel1) reel1.classList.add('spinning');
+    if (reel2) reel2.classList.add('spinning');
+    if (reel3) reel3.classList.add('spinning');
+
+    // Continuous ratchet sound
+    const tickInterval = setInterval(() => {
+      if (window.soundEngine && window.soundEngine.playSlotReelTick) {
+        window.soundEngine.playSlotReelTick();
+      }
+    }, 90);
+
+    // Stop Reel 1 at 1.1s
+    setTimeout(() => {
+      if (reel1) {
+        reel1.classList.remove('spinning');
+        reel1.innerHTML = `<div class="slot-symbol">${pick.icon}</div>`;
+      }
+      if (window.soundEngine && window.soundEngine.playSlotReelStop) {
+        window.soundEngine.playSlotReelStop();
+      }
+    }, 1100);
+
+    // Stop Reel 2 at 1.7s
+    setTimeout(() => {
+      if (reel2) {
+        reel2.classList.remove('spinning');
+        reel2.innerHTML = `<div class="slot-symbol">${pick.icon}</div>`;
+      }
+      if (window.soundEngine && window.soundEngine.playSlotReelStop) {
+        window.soundEngine.playSlotReelStop();
+      }
+    }, 1700);
+
+    // Stop Reel 3 at 2.3s & Deliver Reward
+    setTimeout(() => {
+      clearInterval(tickInterval);
+      if (reel3) {
+        reel3.classList.remove('spinning');
+        reel3.innerHTML = `<div class="slot-symbol">${pick.icon}</div>`;
+      }
+      if (window.soundEngine && window.soundEngine.playSlotReelStop) {
+        window.soundEngine.playSlotReelStop();
+      }
+
+      // Grant weapon to player
+      if (this.passiveWeaponsManager) {
+        if (pick.isJackpot) {
+          // Jackpot: powerful random weapon + 100 bonus souls
+          const jackpotWeapons = ['holy_cross', 'hellfire_orb', 'celestial_lightning', 'death_scythe', 'blood_garlic'];
+          const chosen = jackpotWeapons[Math.floor(Math.random() * jackpotWeapons.length)];
+          this.passiveWeaponsManager.acquireOrUpgrade(chosen);
+          window.progression.addSouls(100);
+          if (this.ui.slotStatusBox) {
+            this.ui.slotStatusBox.innerHTML = `👑 <b style="color:#ffd700;">¡JACKPOT DEL DESTINO!</b> Has obtenido arma inicial + 100 🔮 de bonificación.`;
+          }
+        } else {
+          this.passiveWeaponsManager.acquireOrUpgrade(pick.id);
+          if (this.ui.slotStatusBox) {
+            this.ui.slotStatusBox.innerHTML = `✨ <b style="color:#00f5d4;">¡ENHORABUENA!</b> Has comenzado la run con: <b>${pick.name} ${pick.icon}</b>.`;
+          }
+        }
+      }
+
+      if (window.soundEngine && window.soundEngine.playSlotJackpot) {
+        window.soundEngine.playSlotJackpot();
+      }
+
+      if (window.particleSystem) {
+        window.particleSystem.spawnFloatingText(`✨ ¡ARMA OBTENIDA!`, this.player ? this.player.x + 12 : 1170, this.player ? this.player.y - 20 : 330, { isMegabonk: true });
+      }
+
+      this.updateSlotMachineUI();
+      this.isSlotSpinning = false;
+      if (this.ui.btnSpinSlot) this.ui.btnSpinSlot.disabled = false;
+    }, 2300);
   }
 
   renderSanctuaryPrestige() {

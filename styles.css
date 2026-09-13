@@ -702,108 +702,180 @@ html, body {
 
 .upgrades-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+  gap: 10px;
 }
 
 .upgrade-card {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  background: rgba(18, 10, 20, 0.9);
-  border: 1px solid #3e1824;
-  border-radius: 6px;
-  padding: 12px 14px;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  display: grid;
+  grid-template-columns: 42px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  background: rgba(20, 12, 22, 0.95);
+  border: 1px solid rgba(244, 208, 111, 0.16);
+  border-radius: 8px;
+  padding: 10px 14px;
+  transition: border-color 0.2s, transform 0.15s, background 0.2s;
 }
 
 .upgrade-card:hover {
-  border-color: var(--gold);
-  box-shadow: 0 0 15px rgba(244, 208, 111, 0.25);
+  border-color: rgba(244, 208, 111, 0.55);
+  background: rgba(28, 16, 30, 0.98);
+  transform: translateY(-1px);
 }
 
-.upgrade-top {
+.upgrade-card.is-maxed {
+  border-color: rgba(74, 53, 21, 0.5);
+  opacity: 0.85;
+}
+
+.upgrade-icon-box {
+  width: 42px;
+  height: 42px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 8px;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
 }
 
-.upgrade-icon {
-  font-size: 28px;
-  line-height: 1;
-  min-width: 32px;
+.upgrade-center {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
 }
 
-.upgrade-title-row {
+.upgrade-header {
   display: flex;
   justify-content: space-between;
-  width: 100%;
-  align-items: center;
+  align-items: baseline;
+  gap: 8px;
 }
 
 .upgrade-name {
   font-family: 'Cinzel', serif;
-  font-size: 15px;
-  font-weight: 800;
+  font-size: 13.5px;
+  font-weight: 700;
   color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.upgrade-lvl-badge {
-  font-family: 'VT323', monospace;
-  font-size: 18px;
+.upgrade-level-tag {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 700;
   color: var(--gold);
-  background: rgba(0,0,0,0.5);
-  padding: 2px 6px;
+  background: rgba(244, 208, 111, 0.1);
+  padding: 1px 6px;
   border-radius: 3px;
-  border: 1px solid #4a3515;
+  border: 1px solid rgba(244, 208, 111, 0.25);
+  white-space: nowrap;
+}
+
+.upgrade-bar-wrap {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.upgrade-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #b5179e, var(--gold));
+  border-radius: 2px;
+  transition: width 0.3s ease;
 }
 
 .upgrade-desc {
-  font-size: 13px;
-  color: #c8beb3;
-  margin-bottom: 10px;
-  line-height: 1.35;
+  font-size: 11.5px;
+  color: #b5adc0;
+  line-height: 1.3;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.upgrade-bottom {
+.upgrade-right {
   display: flex;
-  justify-content: space-between;
   align-items: center;
 }
 
-.upgrade-cost {
-  font-family: 'VT323', monospace;
-  font-size: 20px;
-  color: #e0aaff;
-}
-
-.btn-buy-upgrade {
-  background: rgba(36, 16, 26, 0.9);
-  border: 1.5px solid var(--gold);
-  border-radius: 4px;
-  color: var(--gold);
+.btn-upgrade-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 86px;
+  padding: 6px 10px;
+  border-radius: 5px;
   font-family: 'Cinzel', serif;
-  font-size: 13px;
-  font-weight: 800;
-  padding: 6px 14px;
   cursor: pointer;
   transition: all 0.2s;
+  text-align: center;
 }
 
-.btn-buy-upgrade:hover:not(:disabled) {
-  background: #ffe600 !important;
-  color: #000 !important;
-  border-color: #ffe600 !important;
-  box-shadow: 0 0 14px rgba(255, 230, 0, 0.8) !important;
-  transform: translateY(-1px);
+.btn-upgrade-action.affordable {
+  background: rgba(60, 24, 40, 0.9);
+  border: 1.5px solid var(--gold);
+  color: var(--gold);
 }
 
-.btn-buy-upgrade:disabled {
-  opacity: 0.35;
+.btn-upgrade-action.affordable:hover {
+  background: var(--gold);
+  color: #120914;
+  box-shadow: 0 0 12px rgba(244, 208, 111, 0.6);
+  transform: scale(1.03);
+}
+
+.btn-upgrade-action.affordable .btn-cost {
+  font-size: 14px;
+  font-weight: 800;
+  color: #fff;
+}
+.btn-upgrade-action.affordable:hover .btn-cost {
+  color: #120914;
+}
+
+.btn-upgrade-action.affordable .btn-action-text {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-upgrade-action.unaffordable {
+  background: rgba(20, 15, 20, 0.6);
+  border: 1px solid #443542;
+  color: #776a78;
   cursor: not-allowed;
-  border-color: #555;
-  color: #777;
+  opacity: 0.65;
+}
+
+.btn-upgrade-action.unaffordable .btn-cost {
+  font-size: 13px;
+  font-weight: bold;
+  color: #998a9c;
+}
+
+.btn-upgrade-action.unaffordable .btn-action-text {
+  font-size: 9.5px;
+}
+
+.btn-upgrade-action.maxed {
+  background: rgba(30, 45, 30, 0.5);
+  border: 1px solid #2d6a4f;
+  color: #52b788;
+  cursor: default;
+  font-size: 11px;
+  font-weight: bold;
 }
 
 .prestige-card {
@@ -966,7 +1038,7 @@ html, body {
   }
 }
 
-/* ─── VAMPIRE SURVIVORS PASSIVE WEAPONS STYLING ─── */
+/* ─── AUTONOMOUS WEAPONS STYLING ─── */
 .weapon-tag {
   color: #fbbf24 !important;
   background: rgba(245, 158, 11, 0.22) !important;
@@ -1138,7 +1210,7 @@ html, body {
   }
 }
 
-/* ─── VAMPIRE SURVIVORS LEVEL & XP HUD ─── */
+/* ─── RUN LEVEL & SOUL XP HUD ─── */
 .hud-xp-container {
   display: flex;
   align-items: center;
@@ -1176,7 +1248,7 @@ html, body {
   transition: width 0.25s ease-out;
 }
 
-/* ─── MEGABONK & BALATRO DYNAMIC SCORING HUD ─── */
+/* ─── FRENESÍ DE IMPACTOS & TRIBUTO DEL AVERNO HUD ─── */
 .hud-dynamic-scoring {
   display: flex;
   align-items: center;
@@ -1237,7 +1309,7 @@ html, body {
   text-shadow: 0 0 8px rgba(181, 23, 158, 0.8);
 }
 
-/* ─── BALATRO ACTIVE JOKERS ROW ─── */
+/* ─── ARCANOS DEL AVERNO ROW ─── */
 .hud-jokers-row {
   display: flex;
   align-items: center;
@@ -1374,7 +1446,7 @@ html, body {
   cursor: not-allowed;
 }
 
-/* ─── SCRITCHY SCRATCHY (RASCADOR DEL INFRAMUNDO) ─── */
+/* ─── TABLILLA RASCABLE DEL DESTINO ─── */
 .scratch-modal-container {
   background: rgba(15, 8, 20, 0.97);
   border: 2px solid #ffd166;
@@ -1496,6 +1568,257 @@ html, body {
   gap: 12px;
   flex-wrap: wrap;
 }
+
+/* ─── SLOT MACHINE (RULETA DE ARMAS) ─── */
+.slot-machine-container {
+  background: radial-gradient(circle at center, #231024 0%, #0c050e 100%);
+  border: 2px solid var(--gold);
+  border-radius: 12px;
+  padding: 22px 24px;
+  width: 92%;
+  max-width: 560px;
+  box-shadow: 0 0 45px rgba(244, 208, 111, 0.35), 0 0 80px rgba(0, 0, 0, 0.85);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.slot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid rgba(244, 208, 111, 0.2);
+  padding-bottom: 10px;
+}
+
+.slot-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.slot-subtitle {
+  font-size: 12.5px;
+  color: #b5adc0;
+  line-height: 1.3;
+}
+
+.slot-wallet-bar {
+  display: flex;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-family: 'Cinzel', serif;
+}
+
+.slot-wallet-item span {
+  color: #a095a8;
+}
+
+.slot-wallet-item b {
+  color: #fff;
+  margin-left: 4px;
+}
+
+.slot-cost-badge b {
+  color: var(--gold);
+}
+
+.slot-cabinet {
+  background: linear-gradient(180deg, #2b1122 0%, #170814 100%);
+  border: 2px solid #6b1d28;
+  border-radius: 10px;
+  padding: 14px;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.85), 0 4px 15px rgba(0, 0, 0, 0.6);
+  position: relative;
+}
+
+.slot-cabinet-top-lights {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 12px;
+}
+
+.slot-bulb {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #ffb703;
+  box-shadow: 0 0 8px #ffb703;
+  animation: bulbBlink 1.2s infinite alternate;
+}
+
+.slot-bulb:nth-child(2n) {
+  background: #ff0054;
+  box-shadow: 0 0 8px #ff0054;
+  animation-delay: 0.3s;
+}
+
+.slot-bulb:nth-child(3n) {
+  background: #00f5d4;
+  box-shadow: 0 0 8px #00f5d4;
+  animation-delay: 0.6s;
+}
+
+@keyframes bulbBlink {
+  0% { opacity: 0.35; transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1.18); }
+}
+
+.slot-display-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+
+.slot-reels-housing {
+  display: flex;
+  gap: 8px;
+  background: #080309;
+  border: 2.5px solid #ffb703;
+  border-radius: 8px;
+  padding: 8px;
+  box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.95);
+}
+
+.slot-reel-window {
+  width: 86px;
+  height: 96px;
+  background: linear-gradient(180deg, #100612 0%, #240d28 50%, #100612 100%);
+  border: 1.5px solid rgba(255, 215, 0, 0.35);
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: inset 0 10px 12px rgba(0,0,0,0.85), inset 0 -10px 12px rgba(0,0,0,0.85);
+}
+
+.slot-reel-strip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.15s cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+.slot-reel-strip.spinning {
+  animation: reelSpinBlur 0.1s linear infinite;
+}
+
+@keyframes reelSpinBlur {
+  0% { transform: translateY(-35px); filter: blur(3px); }
+  100% { transform: translateY(35px); filter: blur(3px); }
+}
+
+.slot-symbol {
+  font-size: 42px;
+  line-height: 1;
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.7);
+  user-select: none;
+}
+
+.slot-reel-separator {
+  width: 2px;
+  background: rgba(255, 215, 0, 0.25);
+  align-self: stretch;
+}
+
+/* Mechanical Lever */
+.slot-lever-container {
+  width: 40px;
+  height: 96px;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  user-select: none;
+  transition: filter 0.2s;
+}
+
+.slot-lever-container:hover {
+  filter: brightness(1.2);
+}
+
+.slot-lever-base {
+  width: 28px;
+  height: 20px;
+  background: #3a1622;
+  border: 2px solid #ffb703;
+  border-radius: 4px;
+  position: absolute;
+  bottom: 4px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.6);
+}
+
+.slot-lever-shaft {
+  width: 8px;
+  height: 64px;
+  background: linear-gradient(90deg, #d4af37, #ffffff, #996515);
+  border-radius: 4px;
+  position: absolute;
+  bottom: 16px;
+  transform-origin: bottom center;
+  transition: transform 0.25s ease-out;
+}
+
+.slot-lever-knob {
+  width: 22px;
+  height: 22px;
+  background: radial-gradient(circle at 35% 35%, #ff4d6d, #800f2f);
+  border: 2px solid #ffd166;
+  border-radius: 50%;
+  position: absolute;
+  top: -12px;
+  left: -7px;
+  box-shadow: 0 0 10px rgba(255, 77, 109, 0.85);
+}
+
+.slot-lever-shaft.pulling {
+  transform: rotate(62deg) scaleY(0.72);
+}
+
+.slot-status-box {
+  margin-top: 14px;
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  border-radius: 6px;
+  padding: 8px 12px;
+  text-align: center;
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  color: #ffd166;
+  min-height: 20px;
+  line-height: 1.4;
+}
+
+.slot-footer-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.slot-disclaimer-note {
+  font-size: 11.5px;
+  color: #8f859a;
+  text-align: center;
+  line-height: 1.35;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 4px;
+  padding: 6px 10px;
+}
+
 
 
 

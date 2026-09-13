@@ -967,7 +967,7 @@ class SkeletonEnemy {
               other.takeDamage(dominoDmg, this.x, soundEng, particleSys);
               this.currentVx *= 0.5;
               if (particleSys && particleSys.spawnFloatingText) {
-                particleSys.spawnFloatingText('💥 DOMINO!', other.x + other.w / 2, other.y - 12, { isMegabonk: true });
+                particleSys.spawnFloatingText('⚡ ¡CADENA INFERNAL!', other.x + other.w / 2, other.y - 12, { isMegabonk: true });
                 particleSys.triggerScreenShake(0.12, 4);
               }
               break;
@@ -983,7 +983,7 @@ class SkeletonEnemy {
             if (this.x + this.w > sp.x && this.x < sp.x + sp.w &&
                 this.y + this.h >= sp.y && this.y < sp.y + sp.h) {
               if (particleSys && particleSys.spawnFloatingText) {
-                particleSys.spawnFloatingText('💥 OVERKILL!', this.x + this.w / 2, this.y - 15, { isMegabonk: true });
+                particleSys.spawnFloatingText('🔥 ¡ANIQUILACIÓN!', this.x + this.w / 2, this.y - 15, { isMegabonk: true });
                 particleSys.spawnBloodExplosion(this.x + this.w / 2, this.y + this.h / 2, 40);
               }
               this.takeDamage(999, this.x, soundEng, particleSys);
@@ -993,7 +993,7 @@ class SkeletonEnemy {
         }
         if (level.lavaY !== undefined && (this.y + this.h >= level.lavaY)) {
           if (particleSys && particleSys.spawnFloatingText) {
-            particleSys.spawnFloatingText('💥 OVERKILL!', this.x + this.w / 2, this.y - 15, { isMegabonk: true });
+            particleSys.spawnFloatingText('🔥 ¡ANIQUILACIÓN!', this.x + this.w / 2, this.y - 15, { isMegabonk: true });
             particleSys.spawnBloodExplosion(this.x + this.w / 2, this.y + this.h / 2, 40);
           }
           this.takeDamage(999, this.x, soundEng, particleSys);
@@ -1505,7 +1505,7 @@ class SkeletonEnemy {
       // Comic-book Floating Text
       if (particleSys && particleSys.spawnFloatingText) {
         if (isMegabonk) {
-          particleSys.spawnFloatingText(`💥 MEGABONK! -${amount}`, this.x + this.w / 2, this.y - 12, { isMegabonk: true });
+          particleSys.spawnFloatingText(`💥 ¡IMPACTO TITÁNICO! -${amount}`, this.x + this.w / 2, this.y - 12, { isMegabonk: true });
           particleSys.triggerScreenShake(0.16, 5);
         } else {
           particleSys.spawnFloatingText(`-${amount}`, this.x + this.w / 2, this.y - 4);

@@ -1,6 +1,6 @@
 /**
- * Infernal Rise — Vampire Survivors style Passive Auto-Attacking Weapons System
- * Autonomous weapons acquired and upgraded from chests that periodically search
+ * Infernal Rise 2.0 — Sistema de Reliquias y Armas Autónomas del Inframundo
+ * Armas arcanas que Kael adquiere en cofres o en la Ruleta del Averno que atacan automáticamente.
  * for nearby enemies, fire projectiles, strike lightning, orbit holy blades, and pulse auras.
  */
 

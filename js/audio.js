@@ -753,7 +753,7 @@ class SoundEngine {
     noise.start();
   }
 
-  // ─── PASSIVE WEAPONS AUDIO (VAMPIRE SURVIVORS STYLE) ───
+  // ─── SFX: ARMAS AUTÓNOMAS Y RELIQUIAS DEL AVERNO ───
   playLightningStrike() {
     if (!this.enabled || !this.ctx) return;
     try {
@@ -808,6 +808,90 @@ class SoundEngine {
       gain.connect(this.sfxGain);
       osc.start();
       osc.stop(this.ctx.currentTime + 0.22);
+    } catch(e) {}
+  }
+
+  // ─── SLOT MACHINE SFX (RULETA DE ARMAS) ───
+  playSlotLever() {
+    if (!this.enabled || !this.ctx) return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(140, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(45, this.ctx.currentTime + 0.22);
+      gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.24);
+      osc.connect(gain);
+      gain.connect(this.sfxGain);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.25);
+    } catch(e) {}
+  }
+
+  playSlotReelTick() {
+    if (!this.enabled || !this.ctx) return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(440 + Math.random() * 80, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(180, this.ctx.currentTime + 0.04);
+      gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.045);
+      osc.connect(gain);
+      gain.connect(this.sfxGain);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.05);
+    } catch(e) {}
+  }
+
+  playSlotReelStop() {
+    if (!this.enabled || !this.ctx) return;
+    try {
+      const osc1 = this.ctx.createOscillator();
+      const gain1 = this.ctx.createGain();
+      osc1.type = 'square';
+      osc1.frequency.setValueAtTime(220, this.ctx.currentTime);
+      osc1.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.12);
+      gain1.gain.setValueAtTime(0.25, this.ctx.currentTime);
+      gain1.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.14);
+      osc1.connect(gain1);
+      gain1.connect(this.sfxGain);
+      osc1.start();
+      osc1.stop(this.ctx.currentTime + 0.15);
+
+      const osc2 = this.ctx.createOscillator();
+      const gain2 = this.ctx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(880, this.ctx.currentTime);
+      osc2.frequency.exponentialRampToValueAtTime(660, this.ctx.currentTime + 0.2);
+      gain2.gain.setValueAtTime(0.18, this.ctx.currentTime);
+      gain2.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.22);
+      osc2.connect(gain2);
+      gain2.connect(this.sfxGain);
+      osc2.start();
+      osc2.stop(this.ctx.currentTime + 0.23);
+    } catch(e) {}
+  }
+
+  playSlotJackpot() {
+    if (!this.enabled || !this.ctx) return;
+    try {
+      const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+      notes.forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.08);
+        gain.gain.setValueAtTime(0, this.ctx.currentTime + idx * 0.08);
+        gain.gain.linearRampToValueAtTime(0.25, this.ctx.currentTime + idx * 0.08 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.08 + 0.28);
+        osc.connect(gain);
+        gain.connect(this.sfxGain);
+        osc.start(this.ctx.currentTime + idx * 0.08);
+        osc.stop(this.ctx.currentTime + idx * 0.08 + 0.3);
+      });
     } catch(e) {}
   }
 }
