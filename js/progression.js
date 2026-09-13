@@ -48,6 +48,23 @@ class ProgressionManager {
     // ─── SCRITCHY SCRATCHY ───
     this.activeScratchCard = null;
 
+    // ─── IN-GAME ACHIEVEMENTS (LOGROS DEL AVERNO) ───
+    this.achievements = {};
+    this.achievementDefinitions = [
+      { id: 'first_blood', name: 'Primer Escarmiento', icon: '💀', desc: 'Derrota a tu primer esqueleto en la Torre.', reward: 25 },
+      { id: 'megabonk', name: 'Impacto Titánico', icon: '💥', desc: 'Ejecuta un Megabonk con un golpe devastador.', reward: 35 },
+      { id: 'bonk_chain', name: 'Cadena Infernal', icon: '⚡', desc: 'Provoca una colisión dominó entre enemigos.', reward: 45 },
+      { id: 'balatro_jackpot', name: 'Tributo Dorado', icon: '🎰', desc: 'Alcanza un multiplicador Balatro superior a 8x.', reward: 50 },
+      { id: 'weapon_master', name: 'Maestro del Arsenal', icon: '🗡️', desc: 'Adquiere tu primera arma pasiva automática.', reward: 30 },
+      { id: 'super_evolution', name: 'Evolución Legendaria', icon: '👑', desc: 'Super-evoluciona un arma al nivel 5.', reward: 65 },
+      { id: 'arsenal_complete', name: 'Ascensión Celestial', icon: '🌟', desc: 'Desbloquea las 7 armas y despierta la Skin Ascendida.', reward: 150, shards: 1 },
+      { id: 'boss_slayer', name: 'Verdugo de la Cripta', icon: '👹', desc: 'Derrota al Gran Guardián de la Cripta.', reward: 100, shards: 1 },
+      { id: 'lucky_spin', name: 'Suerte del Averno', icon: '🎲', desc: 'Gana un premio en la Ruleta / Tragaperras.', reward: 40 },
+      { id: 'scratch_winner', name: 'Raspe de la Fortuna', icon: '🎟️', desc: 'Reclama una tarjeta Scritchy Scratchy ganadora.', reward: 50 },
+      { id: 'penitence', name: 'Fénix del Averno', icon: '🔥', desc: 'Realiza tu primer Sacrificio de Cenizas (Prestigio).', reward: 120 },
+      { id: 'immortal_run', name: 'Inmortal del Abismo', icon: '🩸', desc: 'Alcanza el nivel 5 de personaje en una sola partida.', reward: 80 }
+    ];
+
     // Active rogue-lite boons for the current run
     this.activeBoons = [];
 
@@ -412,6 +429,10 @@ class ProgressionManager {
           }
         }
 
+        if (data.achievements && typeof data.achievements === 'object') {
+          this.achievements = data.achievements;
+        }
+
         if (neededSanitizing) {
           this.save();
         }
@@ -431,12 +452,157 @@ class ProgressionManager {
         penitenceAshes: this.penitenceAshes,
         totalSoulsEver: Math.floor(this.totalSoulsEver),
         maxHeightClimbed: Math.floor(this.maxHeightClimbed),
-        upgrades: this.upgrades
+        upgrades: this.upgrades,
+        achievements: this.achievements
       };
       storage.setItem(this.SAVE_KEY, JSON.stringify(data));
     } catch (e) {
       console.warn('Could not save data', e);
     }
+  }
+
+  unlockAchievement(id) {
+    if (!this.achievements) this.achievements = {};
+    if (this.achievements[id]) return false; // Already unlocked
+
+    const def = this.achievementDefinitions ? this.achievementDefinitions.find(a => a.id === id) : null;
+    if (!def) return false;
+
+    this.achievements[id] = { unlockedAt: Date.now() };
+    if (def.reward) this.souls += def.reward;
+    if (def.shards) this.humanityShards += def.shards;
+    this.save();
+    this.updateHUD();
+
+    if (window.soundEngine && window.soundEngine.playAchievementUnlock) {
+      window.soundEngine.playAchievementUnlock();
+    }
+
+    if (window.game && window.game.showAchievementToast) {
+      window.game.showAchievementToast(def);
+    }
+
+    return true;
+  }
+
+  isAchievementUnlocked(id) {
+    return !!(this.achievements && this.achievements[id]);
+  }
+
+  getAchievementsProgress() {
+    const total = this.achievementDefinitions ? this.achievementDefinitions.length : 12;
+    let unlocked = 0;
+    if (this.achievementDefinitions) {
+      for (const def of this.achievementDefinitions) {
+        if (this.isAchievementUnlocked(def.id)) unlocked++;
+      }
+    }
+    return {
+      unlocked,
+      total,
+      percent: Math.round((unlocked / total) * 100)
+    };
+  }
+
+  exportSaveJSON() {
+    let deaths = 0;
+    try {
+      deaths = Number.parseInt(localStorage.getItem('infernal_rise_deaths') || '0', 10);
+    } catch (e) {}
+
+    let unlockedWeapons = [];
+    try {
+      unlockedWeapons = JSON.parse(localStorage.getItem('infernal_rise_unlocked_weapons') || '[]');
+    } catch (e) {}
+
+    const data = {
+      game: 'Infernal Rise',
+      version: '2.0.0',
+      exportedAt: new Date().toISOString(),
+      souls: Math.floor(this.souls),
+      humanityShards: this.humanityShards,
+      penitenceAshes: this.penitenceAshes,
+      totalSoulsEver: Math.floor(this.totalSoulsEver),
+      maxHeightClimbed: Math.floor(this.maxHeightClimbed),
+      upgrades: this.upgrades,
+      achievements: this.achievements,
+      deaths: deaths,
+      unlockedWeapons: unlockedWeapons
+    };
+    return JSON.stringify(data, null, 2);
+  }
+
+  importSaveJSON(jsonStr) {
+    try {
+      const parsed = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr;
+      if (!parsed || typeof parsed !== 'object') throw new Error('Formato JSON inválido');
+
+      if (typeof parsed.souls === 'number') this.souls = Math.max(0, Math.floor(parsed.souls));
+      if (typeof parsed.humanityShards === 'number') this.humanityShards = Math.max(0, parsed.humanityShards);
+      if (typeof parsed.penitenceAshes === 'number') this.penitenceAshes = Math.max(0, parsed.penitenceAshes);
+      if (typeof parsed.totalSoulsEver === 'number') this.totalSoulsEver = Math.max(0, Math.floor(parsed.totalSoulsEver));
+      if (typeof parsed.maxHeightClimbed === 'number') this.maxHeightClimbed = Math.max(0, Math.floor(parsed.maxHeightClimbed));
+
+      if (parsed.upgrades && typeof parsed.upgrades === 'object') {
+        for (const [k, v] of Object.entries(parsed.upgrades)) {
+          if (this.upgrades[k] !== undefined && typeof v === 'number') {
+            this.upgrades[k] = Math.max(0, Math.floor(v));
+          }
+        }
+      }
+
+      if (parsed.achievements && typeof parsed.achievements === 'object') {
+        this.achievements = parsed.achievements;
+      }
+
+      if (typeof parsed.deaths === 'number') {
+        try {
+          localStorage.setItem('infernal_rise_deaths', String(parsed.deaths));
+          if (window.game) window.game.deathCount = parsed.deaths;
+        } catch (e) {}
+      }
+
+      if (Array.isArray(parsed.unlockedWeapons)) {
+        try {
+          localStorage.setItem('infernal_rise_unlocked_weapons', JSON.stringify(parsed.unlockedWeapons));
+        } catch (e) {}
+      }
+
+      this.save();
+      this.updateHUD();
+      if (window.game && window.game.updateDeathCounterUI) window.game.updateDeathCounterUI();
+      if (window.game && window.game.updateSanctuaryUI) window.game.updateSanctuaryUI();
+      return true;
+    } catch (e) {
+      console.error('Error importing save data:', e);
+      return false;
+    }
+  }
+
+  resetAllSaveData() {
+    this.souls = 0;
+    this.humanityShards = 0;
+    this.penitenceAshes = 0;
+    this.totalSoulsEver = 0;
+    this.maxHeightClimbed = 0;
+    for (const k of Object.keys(this.upgrades)) {
+      this.upgrades[k] = 0;
+    }
+    this.achievements = {};
+    try {
+      localStorage.removeItem(this.SAVE_KEY);
+      localStorage.removeItem('infernal_rise_deaths');
+      localStorage.removeItem('infernal_rise_unlocked_weapons');
+      if (window.game) window.game.deathCount = 0;
+    } catch (e) {}
+    this.save();
+    this.updateHUD();
+    if (window.game && window.game.updateDeathCounterUI) window.game.updateDeathCounterUI();
+    if (window.game && window.game.updateSanctuaryUI) window.game.updateSanctuaryUI();
+  }
+
+  resetAllProgress() {
+    return this.resetAllSaveData();
   }
 
   // ─── ECONOMY & GAINS ───
@@ -564,6 +730,9 @@ class ProgressionManager {
       this.runLevel++;
       this.runXpToNext = Math.round(this.runXpToNext * 1.25 + 15);
       levelsGained++;
+      if (this.runLevel >= 5) {
+        this.unlockAchievement('immortal_run');
+      }
     }
     this.updateHUD();
     return levelsGained;
@@ -625,6 +794,10 @@ class ProgressionManager {
     const finalMult = Math.max(1, 1 + addMult);
     const rawSouls = Math.round(finalChips * finalMult * xMult);
     const totalSouls = Math.min(20, Math.max(1, rawSouls));
+
+    if (finalChips * finalMult >= 8 || totalSouls >= 8) {
+      this.unlockAchievement('balatro_jackpot');
+    }
 
     this.addSouls(totalSouls);
     this.lastBalatroScore = { chips: finalChips, mult: finalMult, xMult: xMult, totalSouls: totalSouls };
@@ -845,6 +1018,7 @@ class ProgressionManager {
     this.resetRunBoons();
     this.save();
     this.updateHUD();
+    this.unlockAchievement('penitence');
     if (window.soundEngine) window.soundEngine.playPrestige();
     return true;
   }

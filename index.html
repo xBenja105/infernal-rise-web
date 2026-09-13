@@ -147,9 +147,13 @@
               <span class="btn-icon">📜</span>
               <span>Guía y Códice</span>
             </button>
-            <button id="btn-open-settings" class="btn-infernal btn-subnav" title="Ajustes de sonido y gestión de datos">
+            <button id="btn-open-achievements" class="btn-infernal btn-subnav" title="Ver tus logros y recompensas en almas">
+              <span class="btn-icon">🏆</span>
+              <span>Logros</span>
+            </button>
+            <button id="btn-open-settings" class="btn-infernal btn-subnav" title="Ajustes de sonido, pantalla y datos">
               <span class="btn-icon">⚙️</span>
-              <span>Ajustes y Datos</span>
+              <span>Ajustes</span>
             </button>
           </div>
         </div>
@@ -173,7 +177,7 @@
         <div class="codex-content-scroll">
           <!-- Sección 1: Controles -->
           <div class="codex-card">
-            <h3 class="codex-card-title">🎮 Controles del Jugador</h3>
+            <h3 class="codex-card-title">🎮 Controles del Jugador (Teclado y Mando)</h3>
             <div class="codex-controls-grid">
               <div class="control-key-item">
                 <span class="key-badge">[A] [D] / [◀] [▶]</span>
@@ -184,20 +188,40 @@
                 <span class="key-desc">Trepar / Bajar Escaleras</span>
               </div>
               <div class="control-key-item">
-                <span class="key-badge">[Espacio] / [🦘]</span>
-                <span class="key-desc">Saltar (¡Doble Salto si posees alas!)</span>
+                <span class="key-badge">[ESPACIO]</span>
+                <span class="key-desc">Saltar (Doble salto con mejora)</span>
               </div>
               <div class="control-key-item">
-                <span class="key-badge">[Z] [Click] / [⚔]</span>
-                <span class="key-desc">Atacar con Dagas y Armas</span>
+                <span class="key-badge">[Z] o [J] / Click</span>
+                <span class="key-desc">Ataque de Espada</span>
               </div>
               <div class="control-key-item">
-                <span class="key-badge">[E] / [✋]</span>
-                <span class="key-desc">Interactuar / Abrir Cofres / Altar / Ruleta</span>
+                <span class="key-badge">[E]</span>
+                <span class="key-desc">Interactuar (Cofres, Altar, Ruleta)</span>
               </div>
               <div class="control-key-item">
-                <span class="key-badge">[ESC] / [⏸]</span>
+                <span class="key-badge">[ESC]</span>
                 <span class="key-desc">Pausar Partida / Ajustes</span>
+              </div>
+              <div class="control-key-item">
+                <span class="key-badge">🎮 Mando: Stick / D-Pad</span>
+                <span class="key-desc">Moverse / Trepar Escaleras</span>
+              </div>
+              <div class="control-key-item">
+                <span class="key-badge">🎮 [A] (Xbox) / [✕] (PS)</span>
+                <span class="key-desc">Saltar / Avanzar Diálogos</span>
+              </div>
+              <div class="control-key-item">
+                <span class="key-badge">🎮 [X] (Xbox) / [◻] (PS)</span>
+                <span class="key-desc">Ataque de Espada</span>
+              </div>
+              <div class="control-key-item">
+                <span class="key-badge">🎮 [RB] / [B] / [◯]</span>
+                <span class="key-desc">Interactuar (Cofres, Altar, Ruleta)</span>
+              </div>
+              <div class="control-key-item">
+                <span class="key-badge">🎮 [Start] / [Options]</span>
+                <span class="key-desc">Pausar Partida</span>
               </div>
             </div>
           </div>
@@ -276,18 +300,81 @@
       <div id="menu-view-settings" class="menu-subview hidden">
         <div class="subview-header">
           <h2 class="subview-title">⚙️ Ajustes y Archivo del Alma</h2>
-          <div class="subview-subtitle">Configura el audio del juego y administra tus datos guardados</div>
+          <div class="subview-subtitle">Configura el audio, pantalla y gestiona tu archivo de guardado</div>
         </div>
 
         <div class="settings-content-card">
+          <!-- Audio y Volumen -->
           <div class="settings-group">
-            <h3 class="settings-group-title">🔊 Audio y Efectos</h3>
-            <div class="settings-row">
+            <h3 class="settings-group-title">🔊 Audio y Mezcla de Sonido</h3>
+            <div class="settings-slider-row">
+              <div class="slider-label-group">
+                <b>Volumen General (Master)</b>
+                <span id="label-vol-master">80%</span>
+              </div>
+              <input type="range" id="slider-vol-master" min="0" max="100" value="80" class="infernal-slider">
+            </div>
+            <div class="settings-slider-row">
+              <div class="slider-label-group">
+                <b>Efectos de Sonido (SFX)</b>
+                <span id="label-vol-sfx">65%</span>
+              </div>
+              <input type="range" id="slider-vol-sfx" min="0" max="100" value="65" class="infernal-slider">
+            </div>
+            <div class="settings-slider-row">
+              <div class="slider-label-group">
+                <b>Música de Fondo (BGM)</b>
+                <span id="label-vol-music">40%</span>
+              </div>
+              <input type="range" id="slider-vol-music" min="0" max="100" value="40" class="infernal-slider">
+            </div>
+            <div class="settings-row" style="margin-top: 10px;">
               <div class="settings-label">
-                <b>Sonido General y Música</b>
-                <span>Música ambiental, impactos demoníacos y efectos sonoros</span>
+                <b>Silenciar Audio</b>
+                <span>Activa o silencia rápidamente todo el sonido del juego</span>
               </div>
               <button id="btn-sound-toggle" class="btn-infernal btn-toggle-sound">Sonido: ON</button>
+            </div>
+          </div>
+
+          <!-- Pantalla y Mando -->
+          <div class="settings-group">
+            <h3 class="settings-group-title">🖥️ Pantalla y Mando</h3>
+            <div class="settings-row">
+              <div class="settings-label">
+                <b>Modo Pantalla Completa</b>
+                <span>Alterna entre ventana y pantalla completa (o pulsa F11 / Alt+Enter)</span>
+              </div>
+              <button id="btn-toggle-fullscreen" class="btn-infernal">Pantalla Completa</button>
+            </div>
+            <div class="settings-row">
+              <div class="settings-label">
+                <b>Vibración de Mando (Rumble)</b>
+                <span>Respuesta háptica ante impactos y Megabonk al usar gamepad</span>
+              </div>
+              <button id="btn-toggle-rumble" class="btn-infernal">Vibración: ON</button>
+            </div>
+          </div>
+
+          <!-- Respaldo y Gestión de Partida -->
+          <div class="settings-group">
+            <h3 class="settings-group-title">💾 Gestión de Partida y Copia de Seguridad</h3>
+            <div class="settings-row">
+              <div class="settings-label">
+                <b>Exportar Partida</b>
+                <span>Descarga un archivo .JSON con tus almas, mejoras y logros</span>
+              </div>
+              <button id="btn-export-save" class="btn-infernal">💾 Exportar JSON</button>
+            </div>
+            <div class="settings-row">
+              <div class="settings-label">
+                <b>Importar Partida</b>
+                <span>Restaura tu progreso desde un archivo .JSON previo</span>
+              </div>
+              <div class="file-import-wrap">
+                <input type="file" id="input-import-save" accept=".json" style="display:none;">
+                <button id="btn-import-save-trigger" class="btn-infernal">📥 Importar JSON</button>
+              </div>
             </div>
           </div>
 
@@ -318,7 +405,7 @@
             <div class="settings-row">
               <div class="settings-label">
                 <b style="color: #ff6b6b;">Restablecer Todo el Progreso</b>
-                <span>Borra todas las almas, cenizas, mejoras y regresa a cero de forma irreversible</span>
+                <span>Borra todas las almas, cenizas, mejoras y logros de forma irreversible</span>
               </div>
               <button id="btn-reset-save" class="btn-infernal btn-danger">Borrar Progreso</button>
             </div>
@@ -327,6 +414,29 @@
 
         <div class="subview-footer">
           <button id="btn-back-settings" class="btn-infernal btn-back">◀ Volver al Menú</button>
+        </div>
+      </div>
+
+      <!-- VISTA 4: LOGROS DEL AVERNO -->
+      <div id="menu-view-achievements" class="menu-subview hidden">
+        <div class="subview-header">
+          <h2 class="subview-title">🏆 Logros del Averno</h2>
+          <div class="subview-subtitle">Supera los desafíos infernales para desbloquear gloria y recompensas en almas</div>
+        </div>
+
+        <div class="achievements-summary-header">
+          <div class="achievements-progress-bar-wrap">
+            <div id="achievements-progress-bar" class="achievements-progress-bar" style="width: 0%;"></div>
+          </div>
+          <div id="achievements-progress-text" class="achievements-progress-text">0 / 12 Desbloqueados (0%)</div>
+        </div>
+
+        <div id="achievements-grid" class="achievements-grid">
+          <!-- Dynamically populated via renderAchievementsUI() -->
+        </div>
+
+        <div class="subview-footer">
+          <button id="btn-back-achievements" class="btn-infernal btn-back">◀ Volver al Menú</button>
         </div>
       </div>
     </div>
@@ -344,11 +454,49 @@
       <h2 class="game-title" style="font-size: 48px;">Pausa</h2>
       <div class="menu-buttons">
         <button id="btn-resume" class="btn-infernal">Reanudar</button>
+        <button id="btn-pause-settings" class="btn-infernal">⚙️ Ajustes Rápidos</button>
         <button id="btn-restart" class="btn-infernal">Reiniciar Nivel</button>
         <button id="btn-pause-reset-save" class="btn-infernal btn-danger" style="font-size: 14px;">⚠️ Borrar Progreso</button>
         <button id="btn-quit" class="btn-infernal btn-danger">Menú Principal</button>
       </div>
     </div>
+
+    <!-- In-Game Settings Modal (Accessible during run) -->
+    <div id="modal-ingame-settings" class="screen-overlay hidden" style="z-index: 1001;">
+      <div class="modal-box settings-modal-box">
+        <h3 class="modal-title">⚙️ Ajustes del Juego</h3>
+        <div class="settings-slider-row">
+          <div class="slider-label-group">
+            <b>Volumen Master</b>
+            <span id="pause-label-vol-master">80%</span>
+          </div>
+          <input type="range" id="pause-slider-vol-master" min="0" max="100" value="80" class="infernal-slider">
+        </div>
+        <div class="settings-slider-row">
+          <div class="slider-label-group">
+            <b>Efectos (SFX)</b>
+            <span id="pause-label-vol-sfx">65%</span>
+          </div>
+          <input type="range" id="pause-slider-vol-sfx" min="0" max="100" value="65" class="infernal-slider">
+        </div>
+        <div class="settings-slider-row">
+          <div class="slider-label-group">
+            <b>Música (BGM)</b>
+            <span id="pause-label-vol-music">40%</span>
+          </div>
+          <input type="range" id="pause-slider-vol-music" min="0" max="100" value="40" class="infernal-slider">
+        </div>
+        <div class="settings-row" style="margin-top: 10px;">
+          <button id="pause-btn-fullscreen" class="btn-infernal" style="width: 100%;">🖥️ Pantalla Completa</button>
+        </div>
+        <div class="modal-actions" style="margin-top: 18px;">
+          <button id="btn-close-ingame-settings" class="btn-infernal">◀ Volver a Pausa</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification Container for Achievements -->
+    <div id="achievement-toast-container" class="achievement-toast-container"></div>
 
     <!-- Death / Game Over Screen -->
     <div id="death-screen" class="screen-overlay hidden">

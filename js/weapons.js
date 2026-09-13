@@ -90,6 +90,14 @@ class PassiveWeaponsManager {
     this.applyLevelStats(newWeapon);
     this.weapons.set(type, newWeapon);
     this.updateHUD();
+
+    if (window.progression && window.progression.unlockAchievement) {
+      window.progression.unlockAchievement('weapon_master');
+      if (this.weapons.size >= 7 || this.getArsenalStatus().hasAllWeapons) {
+        window.progression.unlockAchievement('arsenal_complete');
+      }
+    }
+
     return newWeapon;
   }
 
@@ -290,6 +298,9 @@ class PassiveWeaponsManager {
     }
     if (window.soundEngine && window.soundEngine.playPrestige) {
       window.soundEngine.playPrestige();
+    }
+    if (window.progression && window.progression.unlockAchievement) {
+      window.progression.unlockAchievement('super_evolution');
     }
     this.updateHUD();
     return w;

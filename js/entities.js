@@ -529,6 +529,9 @@ class Player {
     this.vx = -this.facing * 3.4;
     if (soundEng) soundEng.playHit();
     if (particleSys) particleSys.spawnSlashSparks(this.x + this.w / 2, this.y + this.h / 2, -this.facing);
+    if (window.game && window.game.triggerGamepadRumble) {
+      window.game.triggerGamepadRumble(250, 0.6, 0.8);
+    }
   }
 
   updateAnimation(dt) {
@@ -1174,6 +1177,9 @@ class SkeletonEnemy {
               if (particleSys && particleSys.spawnFloatingText) {
                 particleSys.spawnFloatingText('⚡ ¡CADENA INFERNAL!', other.x + other.w / 2, other.y - 12, { isMegabonk: true });
                 particleSys.triggerScreenShake(0.12, 4);
+              }
+              if (window.progression && window.progression.unlockAchievement) {
+                window.progression.unlockAchievement('bonk_chain');
               }
               break;
             }
@@ -1878,6 +1884,9 @@ class SkeletonEnemy {
         if (isMegabonk) {
           particleSys.spawnFloatingText(`💥 ¡IMPACTO TITÁNICO! -${amount}`, this.x + this.w / 2, this.y - 12, { isMegabonk: true });
           particleSys.triggerScreenShake(0.16, 5);
+          if (window.progression && window.progression.unlockAchievement) {
+            window.progression.unlockAchievement('megabonk');
+          }
         } else {
           particleSys.spawnFloatingText(`-${amount}`, this.x + this.w / 2, this.y - 4);
         }
@@ -1897,6 +1906,9 @@ class SkeletonEnemy {
       this.state = 'dead';
       this.deathTimer = 0.9;
       this.animFrame = 0;
+      if (window.progression && window.progression.unlockAchievement) {
+        window.progression.unlockAchievement('first_blood');
+      }
       if (particleSys) particleSys.spawnBloodExplosion(this.x + this.w / 2, this.y + this.h / 2, this.isElite ? 45 : 25);
       if (window.game) {
         // Balanced Soul Orbs: 4 souls for normal, 14 souls for elite
@@ -2656,6 +2668,9 @@ class Boss {
       this.hp = 0;
       this.isDead = true;
       this.state = 'dead';
+      if (window.progression && window.progression.unlockAchievement) {
+        window.progression.unlockAchievement('boss_slayer');
+      }
       if (window.game && window.game.triggerBossDefeat) {
         window.game.triggerBossDefeat();
       }

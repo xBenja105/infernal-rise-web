@@ -14,6 +14,11 @@ class SoundEngine {
     this.rainGain = null;
     this.musicTimer = null;
     this.stepCount = 0;
+    this.masterGain = null;
+    this.masterVolume = 0.8;
+    this.musicVolume = 0.4;
+    this.sfxVolume = 0.65;
+    this.loadVolumeSettings();
   }
 
   init() {
@@ -22,13 +27,20 @@ class SoundEngine {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       this.ctx = new AudioCtx();
 
-      this.musicGain = this.ctx.createGain();
-      this.musicGain.gain.setValueAtTime(0.4, this.ctx.currentTime);
-      this.musicGain.connect(this.ctx.destination);
+      // Master output node
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.gain.setValueAtTime(this.enabled ? this.masterVolume : 0, this.ctx.currentTime);
+      this.masterGain.connect(this.ctx.destination);
 
+      // Music sub-bus
+      this.musicGain = this.ctx.createGain();
+      this.musicGain.gain.setValueAtTime(this.musicVolume, this.ctx.currentTime);
+      this.musicGain.connect(this.masterGain);
+
+      // SFX sub-bus
       this.sfxGain = this.ctx.createGain();
-      this.sfxGain.gain.setValueAtTime(0.65, this.ctx.currentTime);
-      this.sfxGain.connect(this.ctx.destination);
+      this.sfxGain.gain.setValueAtTime(this.sfxVolume, this.ctx.currentTime);
+      this.sfxGain.connect(this.masterGain);
 
       this.initRainGenerator();
     } catch (e) {
@@ -43,12 +55,79 @@ class SoundEngine {
     }
   }
 
+  setMasterVolume(val) {
+    this.masterVolume = Math.max(0, Math.min(1, val));
+    if (this.ctx && this.masterGain) {
+      this.masterGain.gain.setValueAtTime(this.enabled ? this.masterVolume : 0, this.ctx.currentTime);
+    }
+    this.saveVolumeSettings();
+  }
+
+  setMusicVolume(val) {
+    this.musicVolume = Math.max(0, Math.min(1, val));
+    if (this.ctx && this.musicGain) {
+      this.musicGain.gain.setValueAtTime(this.musicVolume, this.ctx.currentTime);
+    }
+    this.saveVolumeSettings();
+  }
+
+  setSfxVolume(val) {
+    this.sfxVolume = Math.max(0, Math.min(1, val));
+    if (this.ctx && this.sfxGain) {
+      this.sfxGain.gain.setValueAtTime(this.sfxVolume, this.ctx.currentTime);
+    }
+    this.saveVolumeSettings();
+  }
+
+  saveVolumeSettings() {
+    try {
+      localStorage.setItem('infernal_rise_volume', JSON.stringify({
+        master: this.masterVolume,
+        music: this.musicVolume,
+        sfx: this.sfxVolume,
+        enabled: this.enabled
+      }));
+    } catch (e) {}
+  }
+
+  loadVolumeSettings() {
+    try {
+      const saved = localStorage.getItem('infernal_rise_volume');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed.master === 'number') this.masterVolume = parsed.master;
+        if (typeof parsed.music === 'number') this.musicVolume = parsed.music;
+        if (typeof parsed.sfx === 'number') this.sfxVolume = parsed.sfx;
+        if (typeof parsed.enabled === 'boolean') this.enabled = parsed.enabled;
+      }
+    } catch (e) {}
+  }
+
   toggleSound() {
     this.enabled = !this.enabled;
-    if (this.musicGain) this.musicGain.gain.setValueAtTime(this.enabled ? 0.4 : 0, this.ctx.currentTime);
-    if (this.sfxGain) this.sfxGain.gain.setValueAtTime(this.enabled ? 0.65 : 0, this.ctx.currentTime);
-    if (this.rainGain) this.rainGain.gain.setValueAtTime(this.enabled ? 0.15 : 0, this.ctx.currentTime);
+    if (this.ctx && this.masterGain) {
+      this.masterGain.gain.setValueAtTime(this.enabled ? this.masterVolume : 0, this.ctx.currentTime);
+    }
+    this.saveVolumeSettings();
     return this.enabled;
+  }
+
+  playAchievementUnlock() {
+    if (!this.enabled || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6 (Triumphant chord)
+    notes.forEach((freq, i) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now + i * 0.08);
+      gain.gain.setValueAtTime(0.28, now + i * 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.65);
+      osc.connect(gain);
+      gain.connect(this.sfxGain || this.ctx.destination);
+      osc.start(now + i * 0.08);
+      osc.stop(now + i * 0.08 + 0.7);
+    });
   }
 
   // ─── AMBIENT CONTINUOUS RAIN ───

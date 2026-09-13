@@ -74,6 +74,12 @@ class Game {
     // Dialogue trigger flag
     this.hasTriggeredBossDialogue = false;
 
+    // Gamepad & Input Device State
+    this.gamepadIndex = null;
+    this.lastInputDevice = 'keyboard'; // 'keyboard' | 'gamepad'
+    this.gamepadPrevButtons = {};
+    this.vibrationEnabled = localStorage.getItem('infernal_rise_rumble') !== '0';
+
     // UI elements
     this.ui = {
       hud: document.getElementById('hud'),
@@ -81,10 +87,44 @@ class Game {
       menuViewHome: document.getElementById('menu-view-home'),
       menuViewCodex: document.getElementById('menu-view-codex'),
       menuViewSettings: document.getElementById('menu-view-settings'),
+      menuViewAchievements: document.getElementById('menu-view-achievements'),
       btnOpenCodex: document.getElementById('btn-open-codex'),
       btnOpenSettings: document.getElementById('btn-open-settings'),
+      btnOpenAchievements: document.getElementById('btn-open-achievements'),
       btnBackCodex: document.getElementById('btn-back-codex'),
       btnBackSettings: document.getElementById('btn-back-settings'),
+      btnBackAchievements: document.getElementById('btn-back-achievements'),
+      achievementsGrid: document.getElementById('achievements-grid'),
+      achievementsBarFill: document.getElementById('achievements-bar-fill'),
+      achievementsCountText: document.getElementById('achievements-count-text'),
+
+      // Settings Audio Sliders & Controls
+      sliderVolMaster: document.getElementById('slider-vol-master'),
+      sliderVolSfx: document.getElementById('slider-vol-sfx'),
+      sliderVolBgm: document.getElementById('slider-vol-bgm'),
+      valVolMaster: document.getElementById('val-vol-master'),
+      valVolSfx: document.getElementById('val-vol-sfx'),
+      valVolBgm: document.getElementById('val-vol-bgm'),
+      toggleFullscreen: document.getElementById('toggle-fullscreen'),
+      toggleRumble: document.getElementById('toggle-rumble'),
+      btnExportSave: document.getElementById('btn-export-save'),
+      btnImportSaveTrigger: document.getElementById('btn-import-save-trigger'),
+      inputImportSave: document.getElementById('input-import-save'),
+
+      // In-Game Pause Settings Modal
+      btnPauseSettings: document.getElementById('btn-pause-settings'),
+      modalIngameSettings: document.getElementById('modal-ingame-settings'),
+      btnCloseIngameSettings: document.getElementById('btn-close-ingame-settings'),
+      pauseSliderVolMaster: document.getElementById('pause-slider-vol-master'),
+      pauseSliderVolSfx: document.getElementById('pause-slider-vol-sfx'),
+      pauseSliderVolBgm: document.getElementById('pause-slider-vol-bgm'),
+      pauseValVolMaster: document.getElementById('pause-val-vol-master'),
+      pauseValVolSfx: document.getElementById('pause-val-vol-sfx'),
+      pauseValVolBgm: document.getElementById('pause-val-vol-bgm'),
+
+      // Achievements Toast Container
+      achievementToastContainer: document.getElementById('achievement-toast-container'),
+
       menuStatSouls: document.getElementById('menu-stat-souls'),
       menuStatShards: document.getElementById('menu-stat-shards'),
       menuStatAshes: document.getElementById('menu-stat-ashes'),
@@ -248,8 +288,31 @@ class Game {
 
   // ─── INPUT HANDLING ───
   bindInputs() {
+    // Gamepad Connection Listeners
+    window.addEventListener('gamepadconnected', (e) => {
+      this.gamepadIndex = e.gamepad.index;
+      this.lastInputDevice = 'gamepad';
+      this.updateInputPrompts('gamepad');
+      this.triggerGamepadRumble(150, 0.3, 0.5);
+      console.log(`[Gamepad Connected] ${e.gamepad.id} at index ${e.gamepad.index}`);
+    });
+
+    window.addEventListener('gamepaddisconnected', (e) => {
+      console.log(`[Gamepad Disconnected] index ${e.gamepad.index}`);
+      if (this.gamepadIndex === e.gamepad.index) {
+        this.gamepadIndex = null;
+        this.lastInputDevice = 'keyboard';
+        this.updateInputPrompts('keyboard');
+      }
+    });
+
     window.addEventListener('keydown', (e) => {
       if (window.soundEngine) window.soundEngine.resume();
+
+      if (this.lastInputDevice !== 'keyboard') {
+        this.lastInputDevice = 'keyboard';
+        this.updateInputPrompts('keyboard');
+      }
 
       if (e.code === 'KeyA' || e.code === 'ArrowLeft') this.input.left = true;
       if (e.code === 'KeyD' || e.code === 'ArrowRight') this.input.right = true;
@@ -466,7 +529,7 @@ class Game {
       });
     }
 
-    // Main Menu Subview Navigation (Códice & Ajustes)
+    // Main Menu Subview Navigation (Códice, Ajustes, Logros)
     if (this.ui.btnOpenCodex) {
       this.ui.btnOpenCodex.addEventListener('click', () => this.switchMenuSubView('codex'));
     }
@@ -478,6 +541,99 @@ class Game {
     }
     if (this.ui.btnBackSettings) {
       this.ui.btnBackSettings.addEventListener('click', () => this.switchMenuSubView('home'));
+    }
+    if (this.ui.btnOpenAchievements) {
+      this.ui.btnOpenAchievements.addEventListener('click', () => this.switchMenuSubView('achievements'));
+    }
+    if (this.ui.btnBackAchievements) {
+      this.ui.btnBackAchievements.addEventListener('click', () => this.switchMenuSubView('home'));
+    }
+
+    // Settings Sliders (Master, SFX, BGM)
+    const handleMasterSlider = (e) => {
+      const val = parseFloat(e.target.value) / 100;
+      if (window.soundEngine) window.soundEngine.setMasterVolume(val);
+      this.syncSettingsUI();
+    };
+    const handleSfxSlider = (e) => {
+      const val = parseFloat(e.target.value) / 100;
+      if (window.soundEngine) window.soundEngine.setSfxVolume(val);
+      this.syncSettingsUI();
+    };
+    const handleBgmSlider = (e) => {
+      const val = parseFloat(e.target.value) / 100;
+      if (window.soundEngine) window.soundEngine.setMusicVolume(val);
+      this.syncSettingsUI();
+    };
+
+    if (this.ui.sliderVolMaster) this.ui.sliderVolMaster.addEventListener('input', handleMasterSlider);
+    if (this.ui.sliderVolSfx) this.ui.sliderVolSfx.addEventListener('input', handleSfxSlider);
+    if (this.ui.sliderVolBgm) this.ui.sliderVolBgm.addEventListener('input', handleBgmSlider);
+
+    if (this.ui.pauseSliderVolMaster) this.ui.pauseSliderVolMaster.addEventListener('input', handleMasterSlider);
+    if (this.ui.pauseSliderVolSfx) this.ui.pauseSliderVolSfx.addEventListener('input', handleSfxSlider);
+    if (this.ui.pauseSliderVolBgm) this.ui.pauseSliderVolBgm.addEventListener('input', handleBgmSlider);
+
+    // Fullscreen Toggle
+    if (this.ui.toggleFullscreen) {
+      this.ui.toggleFullscreen.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {});
+          }
+        } else {
+          if (document.fullscreenElement) {
+            document.exitFullscreen().catch(() => {});
+          }
+        }
+      });
+      document.addEventListener('fullscreenchange', () => {
+        if (this.ui.toggleFullscreen) {
+          this.ui.toggleFullscreen.checked = !document.fullscreenElement;
+        }
+      });
+    }
+
+    // Rumble / Vibration Toggle
+    if (this.ui.toggleRumble) {
+      this.ui.toggleRumble.checked = this.vibrationEnabled;
+      this.ui.toggleRumble.addEventListener('change', (e) => {
+        this.vibrationEnabled = !!e.target.checked;
+        try {
+          localStorage.setItem('infernal_rise_rumble', this.vibrationEnabled ? '1' : '0');
+        } catch (_) {}
+        if (this.vibrationEnabled) {
+          this.triggerGamepadRumble(250, 0.4, 0.6);
+        }
+      });
+    }
+
+    // Export & Import Save Data
+    if (this.ui.btnExportSave) {
+      this.ui.btnExportSave.addEventListener('click', () => this.exportSaveFile());
+    }
+    if (this.ui.btnImportSaveTrigger && this.ui.inputImportSave) {
+      this.ui.btnImportSaveTrigger.addEventListener('click', () => {
+        this.ui.inputImportSave.value = '';
+        this.ui.inputImportSave.click();
+      });
+      this.ui.inputImportSave.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (file) this.importSaveFile(file);
+      });
+    }
+
+    // In-Game Pause Settings Modal
+    if (this.ui.btnPauseSettings && this.ui.modalIngameSettings) {
+      this.ui.btnPauseSettings.addEventListener('click', () => {
+        this.syncSettingsUI();
+        this.ui.modalIngameSettings.classList.remove('hidden');
+      });
+    }
+    if (this.ui.btnCloseIngameSettings && this.ui.modalIngameSettings) {
+      this.ui.btnCloseIngameSettings.addEventListener('click', () => {
+        this.ui.modalIngameSettings.classList.add('hidden');
+      });
     }
 
     // Sound Toggle
@@ -584,11 +740,17 @@ class Game {
     if (this.ui.menuViewHome) this.ui.menuViewHome.classList.add('hidden');
     if (this.ui.menuViewCodex) this.ui.menuViewCodex.classList.add('hidden');
     if (this.ui.menuViewSettings) this.ui.menuViewSettings.classList.add('hidden');
+    if (this.ui.menuViewAchievements) this.ui.menuViewAchievements.classList.add('hidden');
 
     if (viewName === 'codex' && this.ui.menuViewCodex) {
       this.ui.menuViewCodex.classList.remove('hidden');
     } else if (viewName === 'settings' && this.ui.menuViewSettings) {
       this.ui.menuViewSettings.classList.remove('hidden');
+      this.syncSettingsUI();
+      this.updateMainMenuStats();
+    } else if (viewName === 'achievements' && this.ui.menuViewAchievements) {
+      this.ui.menuViewAchievements.classList.remove('hidden');
+      this.renderAchievementsUI();
       this.updateMainMenuStats();
     } else if (this.ui.menuViewHome) {
       this.ui.menuViewHome.classList.remove('hidden');
@@ -1233,6 +1395,8 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     const dt = Math.min((timestamp - this.lastTime) / 1000, 0.1);
     this.lastTime = timestamp;
 
+    this.pollGamepad();
+
     if (this.state === 'PLAYING') {
       this.update(dt);
     }
@@ -1512,12 +1676,14 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
   updateHudPositions() {
     if (!this.player) return;
 
+    const btnKey = this.lastInputDevice === 'gamepad' ? '[RB/B]' : '[E]';
+
     // Interaction Badge (Chest, Slot Machine, Sanctuary, or NPC)
     this.nearSanctuary = false;
     this.nearSlotMachine = false;
     if (this.activeChest) {
       this.ui.interactionBadge.style.display = 'block';
-      this.ui.interactionBadge.textContent = '[E] Abrir Cofre';
+      this.ui.interactionBadge.textContent = `${btnKey} Abrir Cofre`;
       const screenX = ((this.activeChest.x + this.activeChest.w / 2 - this.camX) / this.vWidth) * 100;
       const screenY = ((this.activeChest.y - 14 - this.camY) / this.vHeight) * 100;
       this.ui.interactionBadge.style.left = `${screenX}%`;
@@ -1528,7 +1694,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       ) < 75 && this.state !== 'DIALOGUE') {
       this.nearSlotMachine = true;
       this.ui.interactionBadge.style.display = 'block';
-      this.ui.interactionBadge.textContent = '🎰 [E] Ruleta de Armas (80 🔮)';
+      this.ui.interactionBadge.textContent = `🎰 ${btnKey} Ruleta de Armas (80 🔮)`;
       const screenX = ((this.level.slotMachine.x + this.level.slotMachine.w / 2 - this.camX) / this.vWidth) * 100;
       const screenY = ((this.level.slotMachine.y - 18 - this.camY) / this.vHeight) * 100;
       this.ui.interactionBadge.style.left = `${screenX}%`;
@@ -1539,7 +1705,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       ) < 95 && this.state !== 'DIALOGUE') {
       this.nearSanctuary = true;
       this.ui.interactionBadge.style.display = 'block';
-      this.ui.interactionBadge.textContent = '[E] Santuario de Mejoras';
+      this.ui.interactionBadge.textContent = `${btnKey} Santuario de Mejoras`;
       const screenX = ((this.level.sanctuary.x + this.level.sanctuary.w / 2 - this.camX) / this.vWidth) * 100;
       const screenY = ((this.level.sanctuary.y - 18 - this.camY) / this.vHeight) * 100;
       this.ui.interactionBadge.style.left = `${screenX}%`;
@@ -1551,7 +1717,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       );
       if (dist < 75 && this.state !== 'DIALOGUE') {
         this.ui.interactionBadge.style.display = 'block';
-        this.ui.interactionBadge.textContent = '[E] Hablar';
+        this.ui.interactionBadge.textContent = `${btnKey} Hablar`;
         const screenX = ((this.level.npc.x + 16 - this.camX) / this.vWidth) * 100;
         const screenY = ((this.level.npc.y - 12 - this.camY) / this.vHeight) * 100;
         this.ui.interactionBadge.style.left = `${screenX}%`;
@@ -3001,6 +3167,9 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
     this.ui.btnClaimScratch.onclick = () => {
       const reward = window.progression.claimScratchReward(card);
+      if (reward && reward.souls > 0 && window.progression && window.progression.unlockAchievement) {
+        window.progression.unlockAchievement('scratch_winner');
+      }
       if (window.soundEngine && window.soundEngine.playSoulPickup) {
         window.soundEngine.playSoulPickup();
       }
@@ -3389,6 +3558,9 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
         if (this.ui.slotStatusBox) {
           this.ui.slotStatusBox.innerHTML = `👑 <b style="color:#ffd700;">¡TRIPLE CORONA! ¡GRAN JACKPOT!</b> Has obtenido <b>${chosen.name} ${chosen.icon}</b> + 100 🔮 de bonificación.`;
         }
+        if (window.progression && window.progression.unlockAchievement) {
+          window.progression.unlockAchievement('lucky_spin');
+        }
       } else if (outcomeType === 'weapon_win') {
         [reelWindow1, reelWindow2, reelWindow3].forEach(w => w && w.classList.add('winner'));
         if (this.passiveWeaponsManager) {
@@ -3403,6 +3575,9 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
         if (this.ui.slotStatusBox) {
           this.ui.slotStatusBox.innerHTML = `✨ <b style="color:#00f5d4;">¡TRIPLE COINCIDENCIA!</b> Has ganado: <b>${matchedSymbol.name} ${matchedSymbol.icon}</b> para iniciar tu run.`;
         }
+        if (window.progression && window.progression.unlockAchievement) {
+          window.progression.unlockAchievement('lucky_spin');
+        }
       } else if (outcomeType === 'souls_win') {
         [reelWindow1, reelWindow2, reelWindow3].forEach(w => w && w.classList.add('winner'));
         if (window.progression) {
@@ -3416,6 +3591,9 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
         }
         if (this.ui.slotStatusBox) {
           this.ui.slotStatusBox.innerHTML = `🔮 <b style="color:#a78bfa;">¡TRIPLE CÁLIZ DE ALMAS!</b> Has ganado <b>160 🔮</b> (¡el doble de tu ofrenda!).`;
+        }
+        if (window.progression && window.progression.unlockAchievement) {
+          window.progression.unlockAchievement('lucky_spin');
         }
       } else if (outcomeType === 'two_match') {
         // Highlight the 2 matching reels and dim the 3rd
@@ -3516,6 +3694,302 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     if (window.soundEngine && window.soundEngine.playMeteorExplosion) {
       window.soundEngine.playMeteorExplosion();
     }
+  }
+
+  // ─── GAMEPAD & HAPTIC RUMBLE ENGINE ───
+  pollGamepad() {
+    if (typeof navigator === 'undefined' || !navigator.getGamepads) return;
+    const gamepads = navigator.getGamepads();
+    let gp = null;
+    if (this.gamepadIndex !== null && gamepads[this.gamepadIndex]) {
+      gp = gamepads[this.gamepadIndex];
+    } else {
+      for (let i = 0; i < gamepads.length; i++) {
+        if (gamepads[i]) {
+          gp = gamepads[i];
+          this.gamepadIndex = i;
+          break;
+        }
+      }
+    }
+    if (!gp) return;
+
+    const prev = this.gamepadPrevButtons || {};
+    const curr = {};
+    if (gp.buttons) {
+      for (let i = 0; i < gp.buttons.length; i++) {
+        curr[i] = gp.buttons[i] ? (gp.buttons[i].pressed || gp.buttons[i].value > 0.5) : false;
+      }
+    }
+    const justPressed = (btn) => !!curr[btn] && !prev[btn];
+
+    // Detect activity to switch input device prompt
+    let hasActivity = false;
+    const stickX = gp.axes && gp.axes[0] !== undefined ? gp.axes[0] : 0;
+    const stickY = gp.axes && gp.axes[1] !== undefined ? gp.axes[1] : 0;
+    const DEADZONE = 0.25;
+
+    if (Math.abs(stickX) > DEADZONE || Math.abs(stickY) > DEADZONE) hasActivity = true;
+    for (let i = 0; i < 17; i++) {
+      if (curr[i]) { hasActivity = true; break; }
+    }
+
+    if (hasActivity && this.lastInputDevice !== 'gamepad') {
+      this.lastInputDevice = 'gamepad';
+      this.updateInputPrompts('gamepad');
+    }
+
+    // In-game controls mapping
+    if (this.state === 'PLAYING') {
+      const leftActive = stickX < -DEADZONE || !!curr[14];
+      const rightActive = stickX > DEADZONE || !!curr[15];
+      const upActive = stickY < -DEADZONE || !!curr[12];
+      const downActive = stickY > DEADZONE || !!curr[13];
+
+      if (leftActive) this.input.left = true;
+      else if (this.lastInputDevice === 'gamepad' && !curr[14]) this.input.left = false;
+
+      if (rightActive) this.input.right = true;
+      else if (this.lastInputDevice === 'gamepad' && !curr[15]) this.input.right = false;
+
+      if (upActive) this.input.up = true;
+      else if (this.lastInputDevice === 'gamepad' && !curr[12]) this.input.up = false;
+
+      if (downActive) this.input.down = true;
+      else if (this.lastInputDevice === 'gamepad' && !curr[13]) this.input.down = false;
+
+      if (curr[0]) this.input.jump = true;
+      else if (this.lastInputDevice === 'gamepad') this.input.jump = false;
+
+      if (curr[2]) this.input.attack = true;
+      else if (this.lastInputDevice === 'gamepad') this.input.attack = false;
+
+      if (curr[1] || curr[5]) this.input.interact = true;
+      else if (this.lastInputDevice === 'gamepad') this.input.interact = false;
+
+      if (justPressed(0) && this.player) {
+        this.player.jumpBufferTimer = this.player.jumpBufferMax;
+      }
+    }
+
+    // One-shot Controller Buttons
+    if (justPressed(9)) { // Start / Options -> Pause toggle
+      if (this.state === 'SANCTUARY') {
+        this.closeSanctuaryModal();
+      } else if (this.state === 'SLOT_MACHINE') {
+        this.closeSlotMachineModal();
+      } else if (this.state === 'SCRATCH_CARD') {
+        this.closeScratchCardModal();
+      } else if (this.state === 'BOON_SELECT' || this.state === 'LEVEL_UP') {
+        // Selection is required
+      } else {
+        this.togglePause();
+      }
+    }
+
+    if (justPressed(0) || justPressed(1) || justPressed(2)) {
+      if (this.state === 'DIALOGUE') {
+        window.dialogueManager.advance();
+      } else if (this.state === 'INTRO') {
+        this.advanceIntroScreen();
+      } else if (this.state === 'VICTORY') {
+        const btn = document.getElementById('btn-victory-next');
+        if (btn) btn.click();
+      }
+    }
+
+    if (justPressed(1) || justPressed(5)) { // B or RB -> Interact
+      if (this.state === 'PLAYING') {
+        if (this.activeChest) {
+          this.openBoonChest(this.activeChest);
+        } else if (this.nearSlotMachine) {
+          this.openSlotMachineModal();
+        } else if (this.nearSanctuary) {
+          this.openSanctuaryModal();
+        } else {
+          this.checkNpcInteraction();
+        }
+      }
+    }
+
+    if (justPressed(3)) { // Y / Triangle -> Toggle Sanctuary if near or in prologue
+      if (this.level && (this.level.id === 'prologue' || this.nearSanctuary)) {
+        this.toggleSanctuaryModal();
+      }
+    }
+
+    this.gamepadPrevButtons = curr;
+  }
+
+  triggerGamepadRumble(duration = 200, weak = 0.5, strong = 0.5) {
+    if (!this.vibrationEnabled) return;
+    if (typeof navigator === 'undefined' || !navigator.getGamepads) return;
+    const gamepads = navigator.getGamepads();
+    const gp = (this.gamepadIndex !== null && gamepads[this.gamepadIndex]) ? gamepads[this.gamepadIndex] : null;
+    if (gp && gp.vibrationActuator && typeof gp.vibrationActuator.playEffect === 'function') {
+      try {
+        gp.vibrationActuator.playEffect('dual-rumble', {
+          startDelay: 0,
+          duration: duration,
+          weakMagnitude: weak,
+          strongMagnitude: strong
+        }).catch(() => {});
+      } catch (_) {}
+    }
+  }
+
+  updateInputPrompts(device) {
+    if (this.state === 'PLAYING') {
+      this.updateHudPositions();
+    }
+  }
+
+  // ─── SETTINGS & VOLUME ENGINE ───
+  syncSettingsUI() {
+    if (!window.soundEngine) return;
+    const master = Math.round((window.soundEngine.masterVolume ?? 0.8) * 100);
+    const sfx = Math.round((window.soundEngine.sfxVolume ?? 0.85) * 100);
+    const bgm = Math.round((window.soundEngine.musicVolume ?? 0.45) * 100);
+
+    if (this.ui.sliderVolMaster) this.ui.sliderVolMaster.value = master;
+    if (this.ui.valVolMaster) this.ui.valVolMaster.textContent = `${master}%`;
+    if (this.ui.sliderVolSfx) this.ui.sliderVolSfx.value = sfx;
+    if (this.ui.valVolSfx) this.ui.valVolSfx.textContent = `${sfx}%`;
+    if (this.ui.sliderVolBgm) this.ui.sliderVolBgm.value = bgm;
+    if (this.ui.valVolBgm) this.ui.valVolBgm.textContent = `${bgm}%`;
+
+    if (this.ui.pauseSliderVolMaster) this.ui.pauseSliderVolMaster.value = master;
+    if (this.ui.pauseValVolMaster) this.ui.pauseValVolMaster.textContent = `${master}%`;
+    if (this.ui.pauseSliderVolSfx) this.ui.pauseSliderVolSfx.value = sfx;
+    if (this.ui.pauseValVolSfx) this.ui.pauseValVolSfx.textContent = `${sfx}%`;
+    if (this.ui.pauseSliderVolBgm) this.ui.pauseSliderVolBgm.value = bgm;
+    if (this.ui.pauseValVolBgm) this.ui.pauseValVolBgm.textContent = `${bgm}%`;
+
+    if (this.ui.toggleFullscreen) {
+      this.ui.toggleFullscreen.checked = !!document.fullscreenElement;
+    }
+    if (this.ui.toggleRumble) {
+      this.ui.toggleRumble.checked = this.vibrationEnabled;
+    }
+  }
+
+  exportSaveFile() {
+    if (!window.progression) return;
+    const jsonStr = window.progression.exportSaveJSON();
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `infernal_rise_save_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    if (window.soundEngine) window.soundEngine.playUiClick();
+  }
+
+  importSaveFile(file) {
+    if (!file || !window.progression) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target.result;
+      const res = window.progression.importSaveJSON(content);
+      if (res) {
+        this.deathCount = Number.parseInt(localStorage.getItem('infernal_rise_deaths') || '0', 10);
+        this.updateDeathCounterUI();
+        this.updateMainMenuStats();
+        this.renderAchievementsUI();
+        if (this.passiveWeaponsManager) {
+          this.passiveWeaponsManager.initFromProgression();
+        }
+        if (window.soundEngine) window.soundEngine.playAchievementUnlock();
+        alert('¡Partida importada con éxito!');
+      } else {
+        alert('Error: Archivo de guardado inválido o corrupto.');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // ─── ACHIEVEMENTS UI & TOAST ENGINE ───
+  renderAchievementsUI() {
+    if (!window.progression) return;
+    const progress = window.progression.getAchievementsProgress();
+    if (this.ui.achievementsBarFill) {
+      this.ui.achievementsBarFill.style.width = `${progress.percent}%`;
+    }
+    if (this.ui.achievementsCountText) {
+      this.ui.achievementsCountText.textContent = `${progress.unlocked} / ${progress.total} (${progress.percent}%)`;
+    }
+    if (!this.ui.achievementsGrid) return;
+    this.ui.achievementsGrid.innerHTML = '';
+
+    const list = window.progression.achievementDefinitions || [];
+    for (const ach of list) {
+      const isUnlocked = window.progression.isAchievementUnlocked(ach.id);
+      const card = document.createElement('div');
+      card.className = `achievement-card ${isUnlocked ? 'unlocked' : 'locked'}`;
+
+      const iconDiv = document.createElement('div');
+      iconDiv.className = 'ach-card-icon';
+      iconDiv.textContent = isUnlocked ? ach.icon : '🔒';
+
+      const infoDiv = document.createElement('div');
+      infoDiv.className = 'ach-card-info';
+
+      const title = document.createElement('div');
+      title.className = 'ach-card-title';
+      title.textContent = ach.name;
+
+      const desc = document.createElement('div');
+      desc.className = 'ach-card-desc';
+      desc.textContent = ach.desc;
+
+      const reward = document.createElement('div');
+      reward.className = 'ach-card-reward';
+      const rewardDetail = ach.shards ? `+${ach.reward} 🔮  +${ach.shards} 💠` : `+${ach.reward} 🔮`;
+      reward.innerHTML = isUnlocked
+        ? `Recompensa reclamada: <span>${rewardDetail}</span>`
+        : `Recompensa: <span>${rewardDetail}</span>`;
+
+      infoDiv.appendChild(title);
+      infoDiv.appendChild(desc);
+      infoDiv.appendChild(reward);
+
+      card.appendChild(iconDiv);
+      card.appendChild(infoDiv);
+      this.ui.achievementsGrid.appendChild(card);
+    }
+  }
+
+  showAchievementToast(def) {
+    if (!def) return;
+    this.triggerGamepadRumble(350, 0.4, 0.7);
+
+    const container = this.ui.achievementToastContainer || document.getElementById('achievement-toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = 'achievement-toast';
+    const rewardText = def.shards ? `+${def.reward} 🔮  +${def.shards} 💠` : `+${def.reward} 🔮`;
+    toast.innerHTML = `
+      <div class="toast-icon">${def.icon || '🏆'}</div>
+      <div class="toast-body">
+        <div class="toast-header">¡LOGRO DESBLOQUEADO!</div>
+        <div class="toast-title">${def.name}</div>
+        <div class="toast-desc">${def.desc}</div>
+        <div class="toast-reward">${rewardText} Obtenido</div>
+      </div>
+    `;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+      toast.classList.add('removing');
+      setTimeout(() => {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+      }, 400);
+    }, 4500);
   }
 }
 
