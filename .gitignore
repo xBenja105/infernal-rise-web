@@ -1,4 +1,4 @@
-﻿# Dependencies
+# Dependencies
 node_modules/
 
 # SonarQube analysis workdir
@@ -15,3 +15,9 @@ Thumbs.db
 # Temp scratch scripts
 scratch/
 .vercel
+
+# Electron builds & distributions
+dist/
+dist-electron/
+*.exe
+*.zip

@@ -1,0 +1,62 @@
+{
+  "name": "infernal-rise",
+  "productName": "Infernal Rise",
+  "version": "2.0.0",
+  "description": "Infernal Rise 2.0 - Roguelike de Acción y Plataformas Vertical",
+  "main": "electron-main.js",
+  "author": "Benja",
+  "license": "MIT",
+  "scripts": {
+    "build": "echo Static web files ready",
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:portable": "electron-builder --win portable"
+  },
+  "devDependencies": {
+    "electron": "^34.5.8",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.infernalrise.game",
+    "productName": "Infernal Rise",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "index.html",
+      "styles.css",
+      "electron-main.js",
+      "js/**/*",
+      "assets/**/*",
+      "build/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Infernal Rise",
+      "uninstallDisplayName": "Infernal Rise 2.0"
+    }
+  }
+}
