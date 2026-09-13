@@ -80,6 +80,31 @@ class Game {
     this.gamepadPrevButtons = {};
     this.vibrationEnabled = localStorage.getItem('infernal_rise_rumble') !== '0';
 
+    // Hit-stop, Screen Shake & Cinematic Polish
+    this.hitStopTimer = 0;
+    this.shakeX = 0;
+    this.shakeY = 0;
+    this.shakeDuration = 0;
+    this.shakeMaxDuration = 0;
+    this.shakeIntensity = 0;
+    this.shakeSetting = Number.parseFloat(localStorage.getItem('infernal_rise_shake') || '1.0');
+    this.slowMoTimer = 0;
+    this.timeScale = 1.0;
+    this.whiteFlashAlpha = 0;
+
+    // Customizable Keybindings
+    const savedBinds = localStorage.getItem('infernal_rise_keybindings');
+    this.keybindings = savedBinds ? JSON.parse(savedBinds) : {
+      left: ['KeyA', 'ArrowLeft'],
+      right: ['KeyD', 'ArrowRight'],
+      up: ['KeyW', 'ArrowUp'],
+      down: ['KeyS', 'ArrowDown'],
+      jump: ['Space'],
+      attack: ['KeyZ', 'KeyJ'],
+      interact: ['KeyE']
+    };
+    this.rebindingAction = null;
+
     // UI elements
     this.ui = {
       hud: document.getElementById('hud'),
@@ -88,12 +113,32 @@ class Game {
       menuViewCodex: document.getElementById('menu-view-codex'),
       menuViewSettings: document.getElementById('menu-view-settings'),
       menuViewAchievements: document.getElementById('menu-view-achievements'),
+      menuViewWardrobe: document.getElementById('menu-view-wardrobe'),
       btnOpenCodex: document.getElementById('btn-open-codex'),
       btnOpenSettings: document.getElementById('btn-open-settings'),
       btnOpenAchievements: document.getElementById('btn-open-achievements'),
+      btnOpenWardrobe: document.getElementById('btn-open-wardrobe'),
       btnBackCodex: document.getElementById('btn-back-codex'),
       btnBackSettings: document.getElementById('btn-back-settings'),
       btnBackAchievements: document.getElementById('btn-back-achievements'),
+      btnBackWardrobe: document.getElementById('btn-back-wardrobe'),
+      wardrobeGrid: document.getElementById('wardrobe-grid'),
+      tabCodexGuide: document.getElementById('tab-codex-guide'),
+      tabCodexBestiary: document.getElementById('tab-codex-bestiary'),
+      codexGuideContent: document.getElementById('codex-guide-content'),
+      codexBestiaryContent: document.getElementById('codex-bestiary-content'),
+      bestiaryGrid: document.getElementById('bestiary-grid'),
+      btnToggleLanguage: document.getElementById('btn-toggle-language'),
+      sliderScreenShake: document.getElementById('slider-screen-shake'),
+      labelScreenShake: document.getElementById('label-screen-shake'),
+      pauseSliderScreenShake: document.getElementById('pause-slider-screen-shake'),
+      pauseLabelScreenShake: document.getElementById('pause-label-screen-shake'),
+      keybindingsList: document.getElementById('keybindings-list'),
+      btnResetKeybindings: document.getElementById('btn-reset-keybindings'),
+      deathRunSummary: document.getElementById('death-run-summary'),
+      victoryRunSummary: document.getElementById('victory-run-summary'),
+      btnCopyDeathRecord: document.getElementById('btn-copy-death-record'),
+      btnCopyVictoryRecord: document.getElementById('btn-copy-victory-record'),
       achievementsGrid: document.getElementById('achievements-grid'),
       achievementsBarFill: document.getElementById('achievements-bar-fill'),
       achievementsCountText: document.getElementById('achievements-count-text'),
@@ -314,26 +359,37 @@ class Game {
         this.updateInputPrompts('keyboard');
       }
 
-      if (e.code === 'KeyA' || e.code === 'ArrowLeft') this.input.left = true;
-      if (e.code === 'KeyD' || e.code === 'ArrowRight') this.input.right = true;
-      if (e.code === 'KeyW' || e.code === 'ArrowUp') this.input.up = true;
-      if (e.code === 'KeyS' || e.code === 'ArrowDown') this.input.down = true;
-      if (e.code === 'Space' || e.code === 'Enter') {
+      // Key rebinding interception
+      if (this.rebindingAction) {
+        e.preventDefault();
+        this.rebindActionKey(this.rebindingAction, e.code);
+        return;
+      }
+
+      if (this.isActionKey('left', e.code)) this.input.left = true;
+      if (this.isActionKey('right', e.code)) this.input.right = true;
+      if (this.isActionKey('up', e.code)) this.input.up = true;
+      if (this.isActionKey('down', e.code)) this.input.down = true;
+
+      if (e.code === 'Enter') {
         if (this.state === 'VICTORY') {
           const btn = document.getElementById('btn-victory-next');
           if (btn) btn.click();
           return;
         }
       }
-      if (e.code === 'Space') {
+
+      if (this.isActionKey('jump', e.code)) {
         this.input.jump = true;
         if (this.player) this.player.jumpBufferTimer = this.player.jumpBufferMax;
-        // Space advances dialogues or intro screens
+        // Jump key advances dialogues or intro screens
         if (this.state === 'INTRO') this.advanceIntroScreen();
         if (this.state === 'DIALOGUE') window.dialogueManager.advance();
       }
-      if (e.code === 'KeyZ' || e.code === 'KeyJ') this.input.attack = true;
-      if (e.code === 'KeyE') {
+
+      if (this.isActionKey('attack', e.code)) this.input.attack = true;
+
+      if (this.isActionKey('interact', e.code)) {
         this.input.interact = true;
         if (this.state === 'DIALOGUE') {
           window.dialogueManager.advance();
@@ -347,12 +403,19 @@ class Game {
           this.checkNpcInteraction();
         }
       }
+
       if (e.code === 'KeyP') {
         if (this.level && (this.level.id === 'prologue' || this.nearSanctuary)) {
           this.toggleSanctuaryModal();
         }
       }
+
       if (e.code === 'Escape') {
+        if (this.rebindingAction) {
+          this.rebindingAction = null;
+          this.renderKeyRemapUI();
+          return;
+        }
         if (this.state === 'SANCTUARY') {
           this.closeSanctuaryModal();
         } else if (this.state === 'SLOT_MACHINE') {
@@ -368,13 +431,13 @@ class Game {
     });
 
     window.addEventListener('keyup', (e) => {
-      if (e.code === 'KeyA' || e.code === 'ArrowLeft') this.input.left = false;
-      if (e.code === 'KeyD' || e.code === 'ArrowRight') this.input.right = false;
-      if (e.code === 'KeyW' || e.code === 'ArrowUp') this.input.up = false;
-      if (e.code === 'KeyS' || e.code === 'ArrowDown') this.input.down = false;
-      if (e.code === 'Space') this.input.jump = false;
-      if (e.code === 'KeyZ' || e.code === 'KeyJ') this.input.attack = false;
-      if (e.code === 'KeyE') this.input.interact = false;
+      if (this.isActionKey('left', e.code)) this.input.left = false;
+      if (this.isActionKey('right', e.code)) this.input.right = false;
+      if (this.isActionKey('up', e.code)) this.input.up = false;
+      if (this.isActionKey('down', e.code)) this.input.down = false;
+      if (this.isActionKey('jump', e.code)) this.input.jump = false;
+      if (this.isActionKey('attack', e.code)) this.input.attack = false;
+      if (this.isActionKey('interact', e.code)) this.input.interact = false;
     });
 
     // Canvas click attacks in combat mode
@@ -529,7 +592,7 @@ class Game {
       });
     }
 
-    // Main Menu Subview Navigation (Códice, Ajustes, Logros)
+    // Main Menu Subview Navigation (Códice, Ajustes, Logros, Aspectos)
     if (this.ui.btnOpenCodex) {
       this.ui.btnOpenCodex.addEventListener('click', () => this.switchMenuSubView('codex'));
     }
@@ -547,6 +610,77 @@ class Game {
     }
     if (this.ui.btnBackAchievements) {
       this.ui.btnBackAchievements.addEventListener('click', () => this.switchMenuSubView('home'));
+    }
+    if (this.ui.btnOpenWardrobe) {
+      this.ui.btnOpenWardrobe.addEventListener('click', () => this.switchMenuSubView('wardrobe'));
+    }
+    if (this.ui.btnBackWardrobe) {
+      this.ui.btnBackWardrobe.addEventListener('click', () => this.switchMenuSubView('home'));
+    }
+
+    // Codex Tabs (Guía vs Bestiario)
+    if (this.ui.tabCodexGuide && this.ui.tabCodexBestiary) {
+      this.ui.tabCodexGuide.addEventListener('click', () => {
+        this.ui.tabCodexGuide.classList.add('active');
+        this.ui.tabCodexBestiary.classList.remove('active');
+        if (this.ui.codexGuideContent) this.ui.codexGuideContent.classList.remove('hidden');
+        if (this.ui.codexBestiaryContent) this.ui.codexBestiaryContent.classList.add('hidden');
+      });
+      this.ui.tabCodexBestiary.addEventListener('click', () => {
+        this.ui.tabCodexBestiary.classList.add('active');
+        this.ui.tabCodexGuide.classList.remove('active');
+        if (this.ui.codexBestiaryContent) this.ui.codexBestiaryContent.classList.remove('hidden');
+        if (this.ui.codexGuideContent) this.ui.codexGuideContent.classList.add('hidden');
+        this.renderBestiaryCodex();
+      });
+    }
+
+    // Screen Shake Sliders
+    const handleShakeSlider = (e) => {
+      const val = parseInt(e.target.value, 10);
+      this.shakeSetting = val / 100;
+      localStorage.setItem('infernal_rise_shake', this.shakeSetting.toString());
+      if (this.ui.labelScreenShake) this.ui.labelScreenShake.textContent = `${val}%`;
+      if (this.ui.pauseLabelScreenShake) this.ui.pauseLabelScreenShake.textContent = `${val}%`;
+      if (this.ui.sliderScreenShake && this.ui.sliderScreenShake !== e.target) this.ui.sliderScreenShake.value = val;
+      if (this.ui.pauseSliderScreenShake && this.ui.pauseSliderScreenShake !== e.target) this.ui.pauseSliderScreenShake.value = val;
+      this.triggerScreenShake(8, 0.25);
+    };
+    if (this.ui.sliderScreenShake) {
+      this.ui.sliderScreenShake.value = Math.round(this.shakeSetting * 100);
+      if (this.ui.labelScreenShake) this.ui.labelScreenShake.textContent = `${this.ui.sliderScreenShake.value}%`;
+      this.ui.sliderScreenShake.addEventListener('input', handleShakeSlider);
+    }
+    if (this.ui.pauseSliderScreenShake) {
+      this.ui.pauseSliderScreenShake.value = Math.round(this.shakeSetting * 100);
+      if (this.ui.pauseLabelScreenShake) this.ui.pauseLabelScreenShake.textContent = `${this.ui.pauseSliderScreenShake.value}%`;
+      this.ui.pauseSliderScreenShake.addEventListener('input', handleShakeSlider);
+    }
+
+    // Language Toggle
+    if (this.ui.btnToggleLanguage) {
+      this.updateLanguageUI();
+      this.ui.btnToggleLanguage.addEventListener('click', () => {
+        if (window.localization) {
+          window.localization.toggleLanguage();
+          this.updateLanguageUI();
+        }
+      });
+    }
+
+    // Reset Keybindings Button
+    if (this.ui.btnResetKeybindings) {
+      this.ui.btnResetKeybindings.addEventListener('click', () => {
+        this.resetKeybindings();
+      });
+    }
+
+    // Copy Run Record Buttons (Death & Victory)
+    if (this.ui.btnCopyDeathRecord) {
+      this.ui.btnCopyDeathRecord.addEventListener('click', () => this.copyRunRecordToClipboard(false));
+    }
+    if (this.ui.btnCopyVictoryRecord) {
+      this.ui.btnCopyVictoryRecord.addEventListener('click', () => this.copyRunRecordToClipboard(true));
     }
 
     // Settings Sliders (Master, SFX, BGM)
@@ -741,16 +875,23 @@ class Game {
     if (this.ui.menuViewCodex) this.ui.menuViewCodex.classList.add('hidden');
     if (this.ui.menuViewSettings) this.ui.menuViewSettings.classList.add('hidden');
     if (this.ui.menuViewAchievements) this.ui.menuViewAchievements.classList.add('hidden');
+    if (this.ui.menuViewWardrobe) this.ui.menuViewWardrobe.classList.add('hidden');
 
     if (viewName === 'codex' && this.ui.menuViewCodex) {
       this.ui.menuViewCodex.classList.remove('hidden');
+      this.renderBestiaryCodex();
     } else if (viewName === 'settings' && this.ui.menuViewSettings) {
       this.ui.menuViewSettings.classList.remove('hidden');
       this.syncSettingsUI();
+      this.renderKeyRemapUI();
       this.updateMainMenuStats();
     } else if (viewName === 'achievements' && this.ui.menuViewAchievements) {
       this.ui.menuViewAchievements.classList.remove('hidden');
       this.renderAchievementsUI();
+      this.updateMainMenuStats();
+    } else if (viewName === 'wardrobe' && this.ui.menuViewWardrobe) {
+      this.ui.menuViewWardrobe.classList.remove('hidden');
+      this.renderWardrobeUI();
       this.updateMainMenuStats();
     } else if (this.ui.menuViewHome) {
       this.ui.menuViewHome.classList.remove('hidden');
@@ -792,17 +933,33 @@ class Game {
     }
     if (window.progression) {
       window.progression.resetRunBoons();
+      if (window.progression.resetRunStats) window.progression.resetRunStats();
     }
-    if (window.soundEngine) window.soundEngine.playMusic('menu');
+    if (window.soundEngine) {
+      if (window.soundEngine.setPauseFilter) window.soundEngine.setPauseFilter(false);
+      window.soundEngine.playMusic('menu');
+    }
   }
 
   startStoryMode() {
     this.gameMode = 'STORY';
+    if (window.progression && window.progression.resetRunStats) {
+      window.progression.resetRunStats();
+    }
+    if (window.soundEngine && window.soundEngine.setPauseFilter) {
+      window.soundEngine.setPauseFilter(false);
+    }
     this.showIntroLoreScreen();
   }
 
   startInfernalMode() {
     this.gameMode = 'INFERNAL';
+    if (window.progression && window.progression.resetRunStats) {
+      window.progression.resetRunStats();
+    }
+    if (window.soundEngine && window.soundEngine.setPauseFilter) {
+      window.soundEngine.setPauseFilter(false);
+    }
     this.loadLevel('infernal');
     this.hideAllScreens();
     this.state = 'PLAYING';
@@ -1025,14 +1182,23 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     if (this.state === 'PLAYING') {
       this.state = 'PAUSED';
       this.ui.pauseScreen.classList.remove('hidden');
+      if (window.soundEngine && window.soundEngine.setPauseFilter) {
+        window.soundEngine.setPauseFilter(true);
+      }
     } else if (this.state === 'PAUSED') {
       this.state = 'PLAYING';
       this.ui.pauseScreen.classList.add('hidden');
+      if (window.soundEngine && window.soundEngine.setPauseFilter) {
+        window.soundEngine.setPauseFilter(false);
+      }
     }
   }
 
   restartLevel() {
     this.ui.pauseScreen.classList.add('hidden');
+    if (window.soundEngine && window.soundEngine.setPauseFilter) {
+      window.soundEngine.setPauseFilter(false);
+    }
     this.loadLevel(this.level.id);
     this.state = 'PLAYING';
   }
@@ -1042,7 +1208,10 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     localStorage.setItem('infernal_rise_deaths', this.deathCount.toString());
     this.updateDeathCounterUI();
 
-    if (window.soundEngine) window.soundEngine.playDeath();
+    if (window.soundEngine) {
+      if (window.soundEngine.setPauseFilter) window.soundEngine.setPauseFilter(false);
+      window.soundEngine.playDeath();
+    }
     if (window.particleSystem) {
       window.particleSystem.spawnBloodExplosion(
         this.player.x + this.player.w / 2,
@@ -1068,6 +1237,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     } else {
       this.ui.deathMessage.textContent = '¡Has perecido en las profundidades del Infierno! Tu alma ha sido desterrada de vuelta al Refugio del Reino.';
     }
+    this.renderEndRunSummary(false);
     this.ui.deathScreen.classList.remove('hidden');
   }
 
@@ -1392,13 +1562,48 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
   // ─── MAIN LOOP ───
   loop(timestamp) {
     if (!this.lastTime) this.lastTime = timestamp;
-    const dt = Math.min((timestamp - this.lastTime) / 1000, 0.1);
+    const realDt = Math.min((timestamp - this.lastTime) / 1000, 0.1);
     this.lastTime = timestamp;
 
     this.pollGamepad();
 
+    // Hit-stop processing: freezes game world simulation for high impact
+    if (this.hitStopTimer > 0) {
+      this.hitStopTimer -= realDt;
+      this.render();
+      requestAnimationFrame((ts) => this.loop(ts));
+      return;
+    }
+
+    // Slow-motion processing (e.g. boss defeat cinematic)
+    let simDt = realDt;
+    if (this.slowMoTimer > 0) {
+      this.slowMoTimer -= realDt;
+      this.timeScale = 0.25;
+      simDt = realDt * this.timeScale;
+    } else {
+      this.timeScale = 1.0;
+    }
+
+    // Screen shake decay
+    if (this.shakeDuration > 0) {
+      this.shakeDuration -= realDt;
+      const progress = Math.max(0, this.shakeDuration / (this.shakeMaxDuration || 0.3));
+      const effectiveIntensity = this.shakeIntensity * progress * (this.shakeSetting !== undefined ? this.shakeSetting : 1.0);
+      this.shakeX = (Math.random() * 2 - 1) * effectiveIntensity;
+      this.shakeY = (Math.random() * 2 - 1) * effectiveIntensity;
+    } else {
+      this.shakeX = 0;
+      this.shakeY = 0;
+    }
+
+    // White flash decay
+    if (this.whiteFlashAlpha > 0) {
+      this.whiteFlashAlpha = Math.max(0, this.whiteFlashAlpha - realDt * 1.5);
+    }
+
     if (this.state === 'PLAYING') {
-      this.update(dt);
+      this.update(simDt);
     }
 
     this.render();
@@ -1476,6 +1681,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
           if (this.ui.victoryMessage) {
             this.ui.victoryMessage.textContent = `¡Has derrotado a Glacior y conquistado los 9 Círculos del Infierno de Dante! Tu alma ha alcanzado la redención eterna y la salida al Alba.`;
           }
+          this.renderEndRunSummary(true);
           if (this.ui.victoryScreen) this.ui.victoryScreen.classList.remove('hidden');
         } else {
           this.loadLevel(p.targetLevel);
@@ -1745,8 +1951,8 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
   render() {
     this.ctx.clearRect(0, 0, this.vWidth, this.vHeight);
 
-    const shakeX = window.particleSystem ? window.particleSystem.shakeX : 0;
-    const shakeY = window.particleSystem ? window.particleSystem.shakeY : 0;
+    const shakeX = (window.particleSystem ? window.particleSystem.shakeX : 0) + this.shakeX;
+    const shakeY = (window.particleSystem ? window.particleSystem.shakeY : 0) + this.shakeY;
     const finalCamX = this.camX + shakeX;
     const finalCamY = this.camY + shakeY;
 
@@ -1872,6 +2078,14 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     // 15. Draw Dante Circle HUD Banner / Badge
     if (this.level.danteCircle && this.state === 'PLAYING') {
       this.drawDanteCircleBadge();
+    }
+
+    // 16. Draw Cinematic White Flash (Boss defeat / Ascended blast)
+    if (this.whiteFlashAlpha > 0) {
+      this.ctx.save();
+      this.ctx.fillStyle = `rgba(255, 255, 255, ${this.whiteFlashAlpha})`;
+      this.ctx.fillRect(0, 0, this.vWidth, this.vHeight);
+      this.ctx.restore();
     }
   }
 
@@ -3991,7 +4205,272 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       }, 400);
     }, 4500);
   }
+
+  // ─── GAME FEEL & CINEMATICS (HIT-STOP, SHAKE, SLOW-MO) ───
+  triggerHitStop(duration = 0.05) {
+    this.hitStopTimer = Math.max(this.hitStopTimer, duration);
+  }
+
+  triggerScreenShake(intensity = 6, duration = 0.25) {
+    this.shakeIntensity = Math.max(this.shakeIntensity, intensity);
+    this.shakeDuration = Math.max(this.shakeDuration, duration);
+    this.shakeMaxDuration = Math.max(this.shakeMaxDuration, duration);
+  }
+
+  triggerBossDefeatCinematic() {
+    this.slowMoTimer = 1.6;
+    this.whiteFlashAlpha = 0.92;
+    this.triggerScreenShake(14, 0.7);
+    this.triggerBossDefeat();
+  }
+
+  // ─── CUSTOMIZABLE KEYBINDINGS ENGINE ───
+  isActionKey(action, code) {
+    if (!this.keybindings || !this.keybindings[action]) return false;
+    return this.keybindings[action].includes(code);
+  }
+
+  rebindActionKey(action, newCode) {
+    if (!this.keybindings[action]) return;
+    if (!this.keybindings[action].includes(newCode)) {
+      this.keybindings[action] = [newCode];
+      try {
+        localStorage.setItem('infernal_rise_keybindings', JSON.stringify(this.keybindings));
+      } catch (_) {}
+    }
+    this.rebindingAction = null;
+    if (window.soundEngine && window.soundEngine.playCoinPickup) {
+      window.soundEngine.playCoinPickup();
+    }
+    this.renderKeyRemapUI();
+  }
+
+  resetKeybindings() {
+    this.keybindings = {
+      left: ['KeyA', 'ArrowLeft'],
+      right: ['KeyD', 'ArrowRight'],
+      up: ['KeyW', 'ArrowUp'],
+      down: ['KeyS', 'ArrowDown'],
+      jump: ['Space'],
+      attack: ['KeyZ', 'KeyJ'],
+      interact: ['KeyE']
+    };
+    this.rebindingAction = null;
+    try {
+      localStorage.removeItem('infernal_rise_keybindings');
+    } catch (_) {}
+    if (window.soundEngine && window.soundEngine.playCoinPickup) {
+      window.soundEngine.playCoinPickup();
+    }
+    this.renderKeyRemapUI();
+  }
+
+  renderKeyRemapUI() {
+    if (!this.ui.keybindingsList) return;
+    this.ui.keybindingsList.innerHTML = '';
+
+    const actions = [
+      { id: 'left', labelKey: 'action.left', fallback: 'Mover Izquierda' },
+      { id: 'right', labelKey: 'action.right', fallback: 'Mover Derecha' },
+      { id: 'up', labelKey: 'action.up', fallback: 'Subir Escalera' },
+      { id: 'down', labelKey: 'action.down', fallback: 'Bajar Escalera' },
+      { id: 'jump', labelKey: 'action.jump', fallback: 'Saltar' },
+      { id: 'attack', labelKey: 'action.attack', fallback: 'Atacar (Espada)' },
+      { id: 'interact', labelKey: 'action.interact', fallback: 'Interactuar' }
+    ];
+
+    actions.forEach(({ id, labelKey, fallback }) => {
+      const row = document.createElement('div');
+      row.className = 'keybind-row';
+
+      const label = document.createElement('span');
+      label.className = 'keybind-label';
+      label.textContent = window.localization ? window.localization.t(labelKey, fallback) : fallback;
+
+      const badges = document.createElement('div');
+      badges.className = 'keybind-badges';
+
+      const keys = this.keybindings[id] || [];
+      keys.forEach((k) => {
+        const btn = document.createElement('button');
+        btn.className = `keybind-key-btn ${this.rebindingAction === id ? 'rebinding' : ''}`;
+        let displayKey = k.replace('Key', '').replace('Arrow', 'Flecha ');
+        if (k === 'Space') displayKey = 'Espacio';
+        btn.textContent = this.rebindingAction === id ? 'Presiona tecla...' : displayKey;
+        btn.title = 'Haz clic para reasignar';
+
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.rebindingAction = id;
+          this.renderKeyRemapUI();
+        });
+
+        badges.appendChild(btn);
+      });
+
+      row.appendChild(label);
+      row.appendChild(badges);
+      this.ui.keybindingsList.appendChild(row);
+    });
+  }
+
+  // ─── BESTIARY CODEX VIEWER ───
+  renderBestiaryCodex() {
+    if (!this.ui.bestiaryGrid || !window.progression) return;
+    const list = window.progression.getBestiaryList();
+    this.ui.bestiaryGrid.innerHTML = '';
+
+    const killLabel = window.localization ? window.localization.t('bestiary.kills', 'Abatidos') : 'Abatidos';
+    const weaknessLabel = window.localization ? window.localization.t('bestiary.weakness', 'Debilidad') : 'Debilidad';
+
+    list.forEach((entry) => {
+      const card = document.createElement('div');
+      card.className = 'bestiary-card';
+      card.innerHTML = `
+        <div class="bestiary-header">
+          <div class="bestiary-icon">${entry.icon}</div>
+          <div class="bestiary-title-wrap">
+            <div class="bestiary-name">${entry.name}</div>
+            <div class="bestiary-subtitle">${entry.title}</div>
+          </div>
+        </div>
+        <div class="bestiary-lore">${entry.description}</div>
+        <div class="bestiary-stats-row">
+          <span class="bestiary-weakness-tag">${weaknessLabel}: ${entry.weakness}</span>
+          <span class="bestiary-kills-badge">💀 ${killLabel}: ${entry.kills || 0}</span>
+        </div>
+      `;
+      this.ui.bestiaryGrid.appendChild(card);
+    });
+  }
+
+  // ─── WARDROBE / SKINS SELECTOR ───
+  renderWardrobeUI() {
+    if (!this.ui.wardrobeGrid || !window.progression) return;
+    const skins = window.progression.getSkinsList();
+    const currentSkin = window.progression.selectedSkin || 'soldier';
+    this.ui.wardrobeGrid.innerHTML = '';
+
+    const equipText = window.localization ? window.localization.t('wardrobe.equip', 'Equipar') : 'Equipar';
+    const equippedText = window.localization ? window.localization.t('wardrobe.equipped', '✓ Equipado') : '✓ Equipado';
+    const lockedText = window.localization ? window.localization.t('wardrobe.locked', '🔒 Bloqueado') : '🔒 Bloqueado';
+
+    skins.forEach((skin) => {
+      const isEquipped = currentSkin === skin.id;
+      const isUnlocked = !!skin.unlocked;
+
+      const card = document.createElement('div');
+      card.className = `wardrobe-card ${isEquipped ? 'equipped' : ''} ${!isUnlocked ? 'locked' : ''}`;
+      card.innerHTML = `
+        <div class="wardrobe-avatar-wrap">${skin.icon}</div>
+        <div class="wardrobe-skin-title">${skin.name}</div>
+        <div class="wardrobe-skin-desc">${skin.description}</div>
+        <div class="wardrobe-skin-perk">✨ ${skin.perk}</div>
+        <button class="btn-infernal wardrobe-btn-equip" ${!isUnlocked || isEquipped ? 'disabled' : ''}>
+          ${isEquipped ? equippedText : (isUnlocked ? equipText : lockedText)}
+        </button>
+      `;
+
+      const btn = card.querySelector('.wardrobe-btn-equip');
+      if (btn && isUnlocked && !isEquipped) {
+        btn.addEventListener('click', () => {
+          window.progression.selectSkin(skin.id);
+          if (window.soundEngine && window.soundEngine.playCoinPickup) {
+            window.soundEngine.playCoinPickup();
+          }
+          this.renderWardrobeUI();
+        });
+      }
+
+      this.ui.wardrobeGrid.appendChild(card);
+    });
+  }
+
+  // ─── END-RUN STATS SUMMARY & CLIPBOARD RECORDER ───
+  renderEndRunSummary(isVictory = false) {
+    const targetEl = isVictory ? this.ui.victoryRunSummary : this.ui.deathRunSummary;
+    if (!targetEl || !window.progression) return;
+
+    const summary = window.progression.getRunSummary();
+    const loc = window.localization;
+    const t = (k, fb) => loc ? loc.t(k, fb) : fb;
+
+    targetEl.innerHTML = `
+      <div class="run-summary-grid">
+        <div class="summary-stat-box">
+          <div class="summary-stat-label">⏱️ ${t('summary.run_duration', 'Tiempo de Run')}</div>
+          <div class="summary-stat-val">${summary.duration}</div>
+        </div>
+        <div class="summary-stat-box">
+          <div class="summary-stat-label">🏔️ ${t('summary.max_altitude', 'Altitud')}</div>
+          <div class="summary-stat-val">${summary.maxAltitude}m</div>
+        </div>
+        <div class="summary-stat-box">
+          <div class="summary-stat-label">💀 ${t('summary.enemies_slain', 'Enemigos')}</div>
+          <div class="summary-stat-val">${summary.enemiesDefeated}</div>
+        </div>
+        <div class="summary-stat-box">
+          <div class="summary-stat-label">💥 ${t('summary.megabonks', 'Megabonks')}</div>
+          <div class="summary-stat-val">${summary.megabonks}</div>
+        </div>
+        <div class="summary-stat-box">
+          <div class="summary-stat-label">🔮 ${t('summary.souls_harvested', 'Almas')}</div>
+          <div class="summary-stat-val" style="color: #e0aaff;">+${summary.soulsCollected}</div>
+        </div>
+        <div class="summary-stat-box">
+          <div class="summary-stat-label">💠 ${t('summary.shards_found', 'Fragmentos')}</div>
+          <div class="summary-stat-val" style="color: #caf0f8;">+${summary.shardsCollected}</div>
+        </div>
+      </div>
+      <div class="summary-weapon-highlight">
+        <div class="summary-weapon-info">
+          <div class="summary-weapon-icon">${summary.mostLethal.icon}</div>
+          <div>
+            <div class="summary-weapon-name">${t('summary.most_lethal', 'Arma Más Letal')}: ${summary.mostLethal.name}</div>
+            <div class="summary-weapon-sub">${summary.mostLethal.damage} dmg (${summary.mostLethal.percent}% del total infligido)</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  copyRunRecordToClipboard(isVictory = false) {
+    if (!window.progression) return;
+    const summary = window.progression.getRunSummary();
+    const title = isVictory ? '👑 ¡VICTORIA Y ASCENSIÓN! 👑' : '💀 REGISTRO DE MUERTE EN EL AVERNO 💀';
+    const text = [
+      `⚔️ INFERNAL RISE 2.0 — ${title} ⚔️`,
+      `⏱️ Duración: ${summary.duration} | 🏔️ Altitud: ${summary.maxAltitude}m`,
+      `💀 Enemigos Abatidos: ${summary.enemiesDefeated} | 💥 Megabonks: ${summary.megabonks}`,
+      `🔱 Arma Más Letal: ${summary.mostLethal.name} (${summary.mostLethal.damage} dmg - ${summary.mostLethal.percent}%)`,
+      `🔮 Almas Cosechadas: ${summary.soulsCollected} | 💠 Fragmentos: ${summary.shardsCollected}`,
+      `🔥 ¡Conquista los 9 Círculos en Infernal Rise!`
+    ].join('\n');
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        const msg = window.localization ? window.localization.t('summary.copied', '¡Récord copiado al portapapeles!') : '¡Récord copiado al portapapeles!';
+        if (window.progression && window.progression.showToast) {
+          window.progression.showToast(msg, 'success');
+        }
+      }).catch(() => {});
+    }
+  }
+
+  updateLanguageUI() {
+    if (!window.localization) return;
+    const lang = window.localization.currentLang;
+    if (this.ui.btnToggleLanguage) {
+      this.ui.btnToggleLanguage.textContent = lang === 'es' ? 'Idioma: Español (ES)' : 'Language: English (EN)';
+    }
+    window.localization.applyToDOM();
+    this.renderKeyRemapUI();
+    this.renderBestiaryCodex();
+    this.renderWardrobeUI();
+  }
 }
+
+window.Game = Game;
 
 window.addEventListener('DOMContentLoaded', () => {
   window.game = new Game();

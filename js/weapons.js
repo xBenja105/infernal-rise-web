@@ -101,6 +101,14 @@ class PassiveWeaponsManager {
     return newWeapon;
   }
 
+  dealDamage(target, weaponId, damage, sourceX, soundEng, particleSys) {
+    if (!target || !target.takeDamage || target.isDead || (target.hp !== undefined && target.hp <= 0)) return;
+    target.takeDamage(damage, sourceX, soundEng, particleSys);
+    if (window.progression && window.progression.recordWeaponDamage) {
+      window.progression.recordWeaponDamage(weaponId, damage);
+    }
+  }
+
   isEvolved(type) {
     const w = this.weapons.get(type);
     return !!(w && w.isEvolved);
@@ -428,7 +436,7 @@ class PassiveWeaponsManager {
           const dist = Math.hypot(tx - cx, ty - cy);
           if (dist < (crossWeapon.isEvolved ? 34 : 26)) {
             if (!t._holyCrossCooldown || t._holyCrossCooldown <= 0) {
-              if (t.takeDamage) t.takeDamage(effectiveDmg, px, soundEng, particleSys);
+              this.dealDamage(t, 'holyCross', effectiveDmg, px, soundEng, particleSys);
               t._holyCrossCooldown = crossWeapon.isEvolved ? 0.22 : 0.32;
               if (particleSys) particleSys.spawnSlashSparks(cx, cy, Math.sign(Math.cos(angle)));
             }
@@ -544,7 +552,7 @@ class PassiveWeaponsManager {
               const ex = t.x + (t.w ? t.w / 2 : 12);
               const ey = t.y + (t.h ? t.h / 2 : 16);
               if (Math.hypot(ex - tx, ey - ty) <= effectiveRadius) {
-                if (t.takeDamage) t.takeDamage(effectiveDmg, tx, soundEng, particleSys);
+                this.dealDamage(t, 'lightning', effectiveDmg, tx, soundEng, particleSys);
               }
             }
 
@@ -628,7 +636,7 @@ class PassiveWeaponsManager {
           const ty = t.y + (t.h ? t.h / 2 : 16);
           const dist = Math.hypot(tx - px, ty - py);
           if (dist <= effectiveRadius) {
-            if (t.takeDamage) t.takeDamage(effectiveDmg, px, soundEng, particleSys);
+            this.dealDamage(t, 'garlic', effectiveDmg, px, soundEng, particleSys);
             if (particleSys) particleSys.spawnSlashSparks(tx, ty, Math.sign(tx - px));
             hitAnyEnemy = true;
           }
@@ -804,7 +812,7 @@ class PassiveWeaponsManager {
           const tx = t.x + (t.w ? t.w / 2 : 12);
           const ty = t.y + (t.h ? t.h / 2 : 16);
           if (Math.hypot(tx - p.x, ty - p.y) < 26) {
-            if (t.takeDamage) t.takeDamage(p.damage, p.x - p.vx, soundEng, particleSys);
+            this.dealDamage(t, 'hellfireOrb', p.damage, p.x - p.vx, soundEng, particleSys);
             hit = true;
             break;
           }
@@ -830,7 +838,7 @@ class PassiveWeaponsManager {
             const ty = t.y + (t.h ? t.h / 2 : 16);
             if (Math.hypot(tx - p.x, ty - p.y) < 32 * p.scale) {
               p.pierced.add(t);
-              if (t.takeDamage) t.takeDamage(p.damage, p.x, soundEng, particleSys);
+              this.dealDamage(t, 'scythe', p.damage, p.x, soundEng, particleSys);
               if (particleSys) particleSys.spawnSlashSparks(tx, ty, Math.sign(p.vx));
             }
           }
@@ -852,7 +860,7 @@ class PassiveWeaponsManager {
             const ty = t.y + (t.h ? t.h / 2 : 16);
             if (Math.hypot(tx - p.x, ty - p.y) < 28 * p.scale) {
               p.pierced.add(t);
-              if (t.takeDamage) t.takeDamage(p.damage, p.x, soundEng, particleSys);
+              this.dealDamage(t, 'javelin', p.damage, p.x, soundEng, particleSys);
               if (particleSys) {
                 particleSys.spawnSlashSparks(tx, ty, Math.sign(p.vx || 1));
                 if (p.isEvolved) {
@@ -905,7 +913,7 @@ class PassiveWeaponsManager {
             const ty = t.y + (t.h ? t.h / 2 : 16);
             if (Math.hypot(tx - p.x, ty - p.y) < 28 * p.scale) {
               p.hitCooldowns.set(t, 0.28);
-              if (t.takeDamage) t.takeDamage(p.damage, p.x, soundEng, particleSys);
+              this.dealDamage(t, 'chakram', p.damage, p.x, soundEng, particleSys);
               if (particleSys) {
                 particleSys.spawnSlashSparks(tx, ty, Math.sign(p.vx || 1));
                 if (p.isEvolved) {

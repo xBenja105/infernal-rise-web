@@ -143,17 +143,21 @@
           </button>
 
           <div class="menu-secondary-row">
-            <button id="btn-open-codex" class="btn-infernal btn-subnav" title="Ver controles y guía del inframundo">
+            <button id="btn-open-codex" class="btn-infernal btn-subnav" title="Ver controles, guía y bestiario">
               <span class="btn-icon">📜</span>
-              <span>Guía y Códice</span>
+              <span data-i18n="menu.codex">Guía y Códice</span>
+            </button>
+            <button id="btn-open-wardrobe" class="btn-infernal btn-subnav" title="Personaliza el aspecto y la armadura de Kael">
+              <span class="btn-icon">👑</span>
+              <span data-i18n="menu.wardrobe">Aspectos</span>
             </button>
             <button id="btn-open-achievements" class="btn-infernal btn-subnav" title="Ver tus logros y recompensas en almas">
               <span class="btn-icon">🏆</span>
-              <span>Logros</span>
+              <span data-i18n="menu.achievements">Logros</span>
             </button>
             <button id="btn-open-settings" class="btn-infernal btn-subnav" title="Ajustes de sonido, pantalla y datos">
               <span class="btn-icon">⚙️</span>
-              <span>Ajustes</span>
+              <span data-i18n="menu.settings">Ajustes</span>
             </button>
           </div>
         </div>
@@ -170,11 +174,15 @@
       <!-- VISTA 2: CÓDICE Y GUÍA DEL AVERNO -->
       <div id="menu-view-codex" class="menu-subview hidden">
         <div class="subview-header">
-          <h2 class="subview-title">📜 Códice y Guía del Averno</h2>
-          <div class="subview-subtitle">Conoce los secretos y domina los controles para escapar de la condenación</div>
+          <h2 class="subview-title" data-i18n="codex.title">📜 Códice y Guía del Averno</h2>
+          <div class="subview-subtitle">Conoce los secretos, domina los controles y estudia el bestiario para escapar de la condenación</div>
+          <div class="codex-tab-bar" style="display: flex; justify-content: center; gap: 12px; margin-top: 14px;">
+            <button id="tab-codex-guide" class="btn-infernal codex-tab-btn active" style="min-width: 170px;" data-i18n="codex.tab_guide">📖 Guía y Controles</button>
+            <button id="tab-codex-bestiary" class="btn-infernal codex-tab-btn" style="min-width: 170px;" data-i18n="codex.tab_bestiary">👹 Bestiario del Averno</button>
+          </div>
         </div>
 
-        <div class="codex-content-scroll">
+        <div id="codex-guide-content" class="codex-content-scroll">
           <!-- Sección 1: Controles -->
           <div class="codex-card">
             <h3 class="codex-card-title">🎮 Controles del Jugador (Teclado y Mando)</h3>
@@ -291,8 +299,33 @@
           </div>
         </div>
 
+        <!-- Bestiario del Averno -->
+        <div id="codex-bestiary-content" class="codex-content-scroll hidden">
+          <div id="bestiary-grid" class="bestiary-grid">
+            <!-- Populated dynamically by Game.renderBestiaryCodex() -->
+          </div>
+        </div>
+
         <div class="subview-footer">
-          <button id="btn-back-codex" class="btn-infernal btn-back">◀ Volver al Menú</button>
+          <button id="btn-back-codex" class="btn-infernal btn-back" data-i18n="menu.back">◀ Volver al Menú</button>
+        </div>
+      </div>
+
+      <!-- VISTA: ARMARIO / ASPECTOS DE KAEL -->
+      <div id="menu-view-wardrobe" class="menu-subview hidden">
+        <div class="subview-header">
+          <h2 class="subview-title" data-i18n="wardrobe.title">👑 Armario de Kael: Aspectos de Poder</h2>
+          <div class="subview-subtitle" data-i18n="wardrobe.subtitle">Forja tu identidad en el infierno vistiendo los hábitos de los héroes y mártires caídos</div>
+        </div>
+
+        <div class="wardrobe-scroll-container">
+          <div id="wardrobe-grid" class="wardrobe-grid">
+            <!-- Injected by Game.renderWardrobeUI() -->
+          </div>
+        </div>
+
+        <div class="subview-footer">
+          <button id="btn-back-wardrobe" class="btn-infernal btn-back" data-i18n="menu.back">◀ Volver al Menú</button>
         </div>
       </div>
 
@@ -337,23 +370,47 @@
             </div>
           </div>
 
-          <!-- Pantalla y Mando -->
+          <!-- Pantalla, Mando y Jugabilidad -->
           <div class="settings-group">
-            <h3 class="settings-group-title">🖥️ Pantalla y Mando</h3>
+            <h3 class="settings-group-title" data-i18n="settings.display_title">🖥️ Pantalla, Mando y Jugabilidad</h3>
             <div class="settings-row">
               <div class="settings-label">
-                <b>Modo Pantalla Completa</b>
-                <span>Alterna entre ventana y pantalla completa (o pulsa F11 / Alt+Enter)</span>
+                <b data-i18n="settings.fullscreen">Modo Pantalla Completa</b>
+                <span data-i18n="settings.fullscreen_desc">Alterna entre ventana y pantalla completa (o pulsa F11 / Alt+Enter)</span>
               </div>
-              <button id="btn-toggle-fullscreen" class="btn-infernal">Pantalla Completa</button>
+              <button id="btn-toggle-fullscreen" class="btn-infernal" data-i18n="settings.fullscreen">Pantalla Completa</button>
             </div>
             <div class="settings-row">
               <div class="settings-label">
-                <b>Vibración de Mando (Rumble)</b>
-                <span>Respuesta háptica ante impactos y Megabonk al usar gamepad</span>
+                <b data-i18n="settings.rumble">Vibración de Mando (Rumble)</b>
+                <span data-i18n="settings.rumble_desc">Respuesta háptica ante impactos y Megabonk al usar gamepad</span>
               </div>
               <button id="btn-toggle-rumble" class="btn-infernal">Vibración: ON</button>
             </div>
+            <div class="settings-slider-row">
+              <div class="slider-label-group">
+                <b data-i18n="settings.shake">Sacudida de Pantalla (Screen Shake)</b>
+                <span id="label-screen-shake">100%</span>
+              </div>
+              <input type="range" id="slider-screen-shake" min="0" max="150" value="100" class="infernal-slider">
+            </div>
+            <div class="settings-row">
+              <div class="settings-label">
+                <b data-i18n="settings.lang">Idioma del Juego (Language)</b>
+                <span data-i18n="settings.lang_desc">Alternar entre Español e Inglés</span>
+              </div>
+              <button id="btn-toggle-language" class="btn-infernal" style="min-width: 170px;">Idioma: Español (ES)</button>
+            </div>
+          </div>
+
+          <!-- Reasignación de Teclas -->
+          <div class="settings-group">
+            <h3 class="settings-group-title" data-i18n="settings.controls_title">🎮 Reasignación de Teclas</h3>
+            <p class="settings-subtext" style="font-size: 13px; color: #94a3b8; margin: 0 0 12px 0;" data-i18n="settings.controls_desc">Haz clic en una tecla para reasignarla a cualquier tecla de tu teclado</p>
+            <div id="keybindings-list" class="keybindings-table">
+              <!-- Injected dynamically by Game.renderKeyRemapUI() -->
+            </div>
+            <button id="btn-reset-keybindings" class="btn-infernal" style="margin-top: 10px; font-size: 13px; width: auto;">Restablecer Teclas por Defecto</button>
           </div>
 
           <!-- Respaldo y Gestión de Partida -->
@@ -486,6 +543,13 @@
           </div>
           <input type="range" id="pause-slider-vol-music" min="0" max="100" value="40" class="infernal-slider">
         </div>
+        <div class="settings-slider-row">
+          <div class="slider-label-group">
+            <b>Sacudida de Pantalla</b>
+            <span id="pause-label-screen-shake">100%</span>
+          </div>
+          <input type="range" id="pause-slider-screen-shake" min="0" max="150" value="100" class="infernal-slider">
+        </div>
         <div class="settings-row" style="margin-top: 10px;">
           <button id="pause-btn-fullscreen" class="btn-infernal" style="width: 100%;">🖥️ Pantalla Completa</button>
         </div>
@@ -500,20 +564,30 @@
 
     <!-- Death / Game Over Screen -->
     <div id="death-screen" class="screen-overlay hidden">
-      <h2>Has Perecido</h2>
+      <h2 data-i18n="death.title">Has Perecido</h2>
       <p id="death-message">¡El jugador ha muerto!</p>
-      <div class="menu-buttons">
-        <button id="btn-respawn" class="btn-infernal">Reintentar</button>
-        <button id="btn-death-menu" class="btn-infernal btn-danger">Menú Principal</button>
+
+      <!-- Run Summary Card -->
+      <div id="death-run-summary" class="run-summary-container"></div>
+
+      <div class="menu-buttons" style="margin-top: 14px;">
+        <button id="btn-copy-death-record" class="btn-infernal btn-copy-record" style="background: rgba(30, 41, 59, 0.9); border-color: #38bdf8;" data-i18n="summary.copy">📋 Copiar Récord</button>
+        <button id="btn-respawn" class="btn-infernal" data-i18n="death.retry">Reintentar</button>
+        <button id="btn-death-menu" class="btn-infernal btn-danger" data-i18n="death.menu">Menú Principal</button>
       </div>
     </div>
 
     <!-- Victory Screen -->
     <div id="victory-screen" class="screen-overlay hidden">
-      <h2 class="game-title" style="font-size: 48px; color: var(--gold); text-shadow: 0 0 30px rgba(244, 208, 111, 0.9);">¡Guardián Derrotado!</h2>
-      <p id="victory-message" style="font-size: 20px; margin-bottom: 30px; text-align: center; max-width: 600px;"></p>
-      <div class="menu-buttons">
-        <button id="btn-victory-next" class="btn-infernal">Continuar Ascenso</button>
+      <h2 class="game-title" style="font-size: 44px; color: var(--gold); text-shadow: 0 0 30px rgba(244, 208, 111, 0.9);" data-i18n="victory.title">¡Victoria y Ascensión!</h2>
+      <p id="victory-message" style="font-size: 18px; margin-bottom: 18px; text-align: center; max-width: 650px;"></p>
+
+      <!-- Run Summary Card -->
+      <div id="victory-run-summary" class="run-summary-container"></div>
+
+      <div class="menu-buttons" style="margin-top: 14px;">
+        <button id="btn-copy-victory-record" class="btn-infernal btn-copy-record" style="background: rgba(30, 41, 59, 0.9); border-color: #ffd700;" data-i18n="summary.copy">📋 Copiar Récord</button>
+        <button id="btn-victory-next" class="btn-infernal" data-i18n="victory.continue">Continuar Ascenso</button>
       </div>
     </div>
 
@@ -739,6 +813,7 @@
   <script src="js/levels.js"></script>
   <script src="js/entities.js"></script>
   <script src="js/weapons.js"></script>
+  <script src="js/localization.js"></script>
   <script src="js/game.js"></script>
 </body>
 </html>

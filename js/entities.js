@@ -529,8 +529,10 @@ class Player {
     this.vx = -this.facing * 3.4;
     if (soundEng) soundEng.playHit();
     if (particleSys) particleSys.spawnSlashSparks(this.x + this.w / 2, this.y + this.h / 2, -this.facing);
-    if (window.game && window.game.triggerGamepadRumble) {
-      window.game.triggerGamepadRumble(250, 0.6, 0.8);
+    if (window.game) {
+      if (window.game.triggerHitStop) window.game.triggerHitStop(0.045);
+      if (window.game.triggerScreenShake) window.game.triggerScreenShake(8, 0.3);
+      if (window.game.triggerGamepadRumble) window.game.triggerGamepadRumble(250, 0.6, 0.8);
     }
   }
 
@@ -613,9 +615,48 @@ class Player {
 
     const pwm = window.game ? window.game.passiveWeaponsManager : null;
     const visuals = pwm ? pwm.getActiveVisuals() : null;
+    const activeSkin = (window.progression && window.progression.selectedSkin) ? window.progression.selectedSkin : 'soldier';
+
+    // ── WARDROBE SKIN BACK EFFECTS ──
+    if (activeSkin === 'crimson') {
+      ctx.save();
+      const capeWave = Math.sin(Date.now() * 0.006) * 3;
+      ctx.fillStyle = '#991b1b';
+      ctx.beginPath();
+      ctx.moveTo(3, 10);
+      ctx.lineTo(-9 + capeWave, 32);
+      ctx.lineTo(2 + capeWave, 34);
+      ctx.lineTo(10, 14);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#7f1d1d';
+      ctx.fillRect(-2 + capeWave * 0.5, 14, 5, 16);
+      ctx.restore();
+    } else if (activeSkin === 'abyss') {
+      ctx.save();
+      const abyssPulse = 0.25 + Math.sin(Date.now() * 0.007) * 0.12;
+      ctx.fillStyle = `rgba(147, 51, 234, ${abyssPulse})`;
+      ctx.beginPath();
+      ctx.arc(8, 16, 20, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    } else if (activeSkin === 'paladin') {
+      ctx.save();
+      const haloPulse = 0.22 + Math.sin(Date.now() * 0.005) * 0.08;
+      ctx.fillStyle = `rgba(250, 204, 21, ${haloPulse})`;
+      ctx.beginPath();
+      ctx.arc(8, 10, 18, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(8, 10, 13, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
 
     // ── ASCENDED ARCHON SKIN: SERAPH WINGS & CELESTIAL BACK GLOW ──
-    if (visuals && visuals.hasAllWeapons) {
+    if ((visuals && visuals.hasAllWeapons) || activeSkin === 'ascended') {
       ctx.save();
       const wingTime = Date.now() * 0.005;
       const flapAngle = Math.sin(wingTime) * 0.18 + (this.animState === 'jump' || this.animState === 'fall' ? 0.35 : 0);
@@ -856,8 +897,8 @@ class Player {
         ctx.restore();
       }
 
-      // 6. ASCENDED ARCHON CROWN & PAULDRONS (Skin Definitiva al tener todas las armas)
-      if (visuals.hasAllWeapons) {
+      // 6. ASCENDED ARCHON CROWN & PAULDRONS (Skin Definitiva al tener todas las armas o Skin Ascendida)
+      if ((visuals && visuals.hasAllWeapons) || activeSkin === 'ascended') {
         ctx.save();
         // A. Golden Crown of Radiant Flame
         const crownBob = Math.sin(Date.now() * 0.006) * 1.5;
@@ -911,6 +952,40 @@ class Player {
         }
         ctx.restore();
       }
+    }
+
+    // ── WARDROBE SKIN FRONT DETAILS ──
+    if (activeSkin === 'crimson') {
+      ctx.save();
+      ctx.fillStyle = '#ef4444';
+      ctx.strokeStyle = '#fee2e2';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(1, 9, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#ff1e38';
+      ctx.fillRect(8, 3, 2, 2);
+      ctx.restore();
+    } else if (activeSkin === 'abyss') {
+      ctx.save();
+      ctx.fillStyle = '#00f5d4';
+      ctx.shadowColor = '#00f5d4';
+      ctx.shadowBlur = 6;
+      ctx.fillRect(8, 3, 2, 2);
+      ctx.restore();
+    } else if (activeSkin === 'paladin') {
+      ctx.save();
+      ctx.fillStyle = '#ffd700';
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(1, 9, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#ffd700';
+      ctx.fillRect(4, -1, 8, 2);
+      ctx.restore();
     }
 
     ctx.restore();
@@ -1884,6 +1959,10 @@ class SkeletonEnemy {
         if (isMegabonk) {
           particleSys.spawnFloatingText(`💥 ¡IMPACTO TITÁNICO! -${amount}`, this.x + this.w / 2, this.y - 12, { isMegabonk: true });
           particleSys.triggerScreenShake(0.16, 5);
+          if (window.game) {
+            if (window.game.triggerHitStop) window.game.triggerHitStop(0.055);
+            if (window.game.triggerScreenShake) window.game.triggerScreenShake(6, 0.22);
+          }
           if (window.progression && window.progression.unlockAchievement) {
             window.progression.unlockAchievement('megabonk');
           }
@@ -1906,8 +1985,12 @@ class SkeletonEnemy {
       this.state = 'dead';
       this.deathTimer = 0.9;
       this.animFrame = 0;
-      if (window.progression && window.progression.unlockAchievement) {
-        window.progression.unlockAchievement('first_blood');
+      if (window.progression) {
+        if (window.progression.unlockAchievement) window.progression.unlockAchievement('first_blood');
+        if (window.progression.recordEnemyKill) window.progression.recordEnemyKill(this.isElite ? 'elite' : 'skeleton');
+      }
+      if (window.game && window.game.triggerHitStop) {
+        window.game.triggerHitStop(0.04);
       }
       if (particleSys) particleSys.spawnBloodExplosion(this.x + this.w / 2, this.y + this.h / 2, this.isElite ? 45 : 25);
       if (window.game) {
@@ -2655,6 +2738,10 @@ class Boss {
       particleSys.spawnSlashSparks(this.x + this.w / 2, this.y + this.h / 2, hitDir);
     }
     if (soundEng && soundEng.playHit) soundEng.playHit();
+    if (window.game) {
+      if (window.game.triggerHitStop) window.game.triggerHitStop(0.045);
+      if (window.game.triggerScreenShake) window.game.triggerScreenShake(5, 0.2);
+    }
     if (window.progression && window.progression.hasBoon('vampirism') && window.game && window.game.player) {
       window.game.player.hp = Math.min(window.game.player.maxHp, window.game.player.hp + 5);
     }
@@ -2668,11 +2755,16 @@ class Boss {
       this.hp = 0;
       this.isDead = true;
       this.state = 'dead';
-      if (window.progression && window.progression.unlockAchievement) {
-        window.progression.unlockAchievement('boss_slayer');
+      if (window.progression) {
+        if (window.progression.unlockAchievement) window.progression.unlockAchievement('boss_slayer');
+        if (window.progression.recordEnemyKill) window.progression.recordEnemyKill('boss');
       }
-      if (window.game && window.game.triggerBossDefeat) {
-        window.game.triggerBossDefeat();
+      if (window.game) {
+        if (window.game.triggerBossDefeatCinematic) {
+          window.game.triggerBossDefeatCinematic();
+        } else if (window.game.triggerBossDefeat) {
+          window.game.triggerBossDefeat();
+        }
       }
     }
   }
@@ -3866,6 +3958,12 @@ class AbyssalBat {
     if (this.hp <= 0 && !this.hasDropped) {
       this.hasDropped = true;
       this.isDead = true;
+      if (window.progression && window.progression.recordEnemyKill) {
+        window.progression.recordEnemyKill('bat');
+      }
+      if (window.game && window.game.triggerHitStop) {
+        window.game.triggerHitStop(0.035);
+      }
       if (particleSys) particleSys.spawnBloodExplosion(this.x + this.w / 2, this.y + this.h / 2, 20);
       if (window.game) {
         window.game.spawnSoulOrbs(this.x + this.w / 2, this.y + this.h / 2, 1, 2);

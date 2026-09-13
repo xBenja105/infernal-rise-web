@@ -65,6 +65,20 @@ class ProgressionManager {
       { id: 'immortal_run', name: 'Inmortal del Abismo', icon: '🩸', desc: 'Alcanza el nivel 5 de personaje en una sola partida.', reward: 80 }
     ];
 
+    // ─── RUN STATS & END-RUN SUMMARY TRACKING ───
+    this.runStartTime = Date.now();
+    this.runEnemiesDefeated = 0;
+    this.runMegabonks = 0;
+    this.runTotalDamageDealt = 0;
+    this.runDamageByWeapon = {};
+    this.runMaxAltitude = 0;
+    this.runSoulsCollected = 0;
+    this.runShardsCollected = 0;
+
+    // ─── BESTIARY & SKINS PERSISTENCE ───
+    this.bestiaryKills = { skeleton: 0, elite: 0, bat: 0, boss: 0 };
+    this.selectedSkin = 'soldier';
+
     // Active rogue-lite boons for the current run
     this.activeBoons = [];
 
@@ -433,6 +447,14 @@ class ProgressionManager {
           this.achievements = data.achievements;
         }
 
+        if (data.bestiaryKills && typeof data.bestiaryKills === 'object') {
+          this.bestiaryKills = Object.assign({ skeleton: 0, elite: 0, bat: 0, boss: 0 }, data.bestiaryKills);
+        }
+
+        if (data.selectedSkin && typeof data.selectedSkin === 'string') {
+          this.selectedSkin = data.selectedSkin;
+        }
+
         if (neededSanitizing) {
           this.save();
         }
@@ -453,7 +475,9 @@ class ProgressionManager {
         totalSoulsEver: Math.floor(this.totalSoulsEver),
         maxHeightClimbed: Math.floor(this.maxHeightClimbed),
         upgrades: this.upgrades,
-        achievements: this.achievements
+        achievements: this.achievements,
+        bestiaryKills: this.bestiaryKills,
+        selectedSkin: this.selectedSkin
       };
       storage.setItem(this.SAVE_KEY, JSON.stringify(data));
     } catch (e) {
@@ -526,6 +550,8 @@ class ProgressionManager {
       maxHeightClimbed: Math.floor(this.maxHeightClimbed),
       upgrades: this.upgrades,
       achievements: this.achievements,
+      bestiaryKills: this.bestiaryKills || {},
+      selectedSkin: this.selectedSkin || 'soldier',
       deaths: deaths,
       unlockedWeapons: unlockedWeapons
     };
@@ -553,6 +579,14 @@ class ProgressionManager {
 
       if (parsed.achievements && typeof parsed.achievements === 'object') {
         this.achievements = parsed.achievements;
+      }
+
+      if (parsed.bestiaryKills && typeof parsed.bestiaryKills === 'object') {
+        this.bestiaryKills = Object.assign({ skeleton: 0, elite: 0, bat: 0, boss: 0 }, parsed.bestiaryKills);
+      }
+
+      if (parsed.selectedSkin && typeof parsed.selectedSkin === 'string') {
+        this.selectedSkin = parsed.selectedSkin;
       }
 
       if (typeof parsed.deaths === 'number') {
@@ -589,16 +623,224 @@ class ProgressionManager {
       this.upgrades[k] = 0;
     }
     this.achievements = {};
+    this.bestiaryKills = { skeleton: 0, elite: 0, bat: 0, boss: 0 };
+    this.selectedSkin = 'soldier';
+    this.resetRunStats();
     try {
       localStorage.removeItem(this.SAVE_KEY);
       localStorage.removeItem('infernal_rise_deaths');
       localStorage.removeItem('infernal_rise_unlocked_weapons');
+      localStorage.removeItem('infernal_rise_skin');
       if (window.game) window.game.deathCount = 0;
     } catch (e) {}
     this.save();
     this.updateHUD();
     if (window.game && window.game.updateDeathCounterUI) window.game.updateDeathCounterUI();
     if (window.game && window.game.updateSanctuaryUI) window.game.updateSanctuaryUI();
+  }
+
+  // ─── RUN STATS & END-RUN SUMMARY ───
+  resetRunStats() {
+    this.runStartTime = Date.now();
+    this.runEnemiesDefeated = 0;
+    this.runMegabonks = 0;
+    this.runTotalDamageDealt = 0;
+    this.runDamageByWeapon = {};
+    this.runMaxAltitude = 0;
+    this.runSoulsCollected = 0;
+    this.runShardsCollected = 0;
+  }
+
+  recordWeaponDamage(weaponId, amount) {
+    if (!weaponId || amount <= 0) return;
+    if (!this.runDamageByWeapon) this.runDamageByWeapon = {};
+    this.runDamageByWeapon[weaponId] = (this.runDamageByWeapon[weaponId] || 0) + amount;
+    this.runTotalDamageDealt = (this.runTotalDamageDealt || 0) + amount;
+  }
+
+  recordEnemyKill(enemyType = 'skeleton') {
+    this.runEnemiesDefeated = (this.runEnemiesDefeated || 0) + 1;
+    if (!this.bestiaryKills) this.bestiaryKills = { skeleton: 0, elite: 0, bat: 0, boss: 0 };
+    this.bestiaryKills[enemyType] = (this.bestiaryKills[enemyType] || 0) + 1;
+    this.save();
+  }
+
+  recordMegabonk() {
+    this.runMegabonks = (this.runMegabonks || 0) + 1;
+  }
+
+  getMostLethalWeapon() {
+    if (!this.runDamageByWeapon || Object.keys(this.runDamageByWeapon).length === 0) {
+      return { id: 'dagger', name: 'Daga Sombría', icon: '🗡️', damage: 0, percent: 100 };
+    }
+    let maxId = null;
+    let maxDmg = -1;
+    for (const [id, dmg] of Object.entries(this.runDamageByWeapon)) {
+      if (dmg > maxDmg) {
+        maxDmg = dmg;
+        maxId = id;
+      }
+    }
+    const weaponNames = {
+      dagger: { name: 'Daga Sombría', icon: '🗡️' },
+      holyCross: { name: 'Cruces Celestiales', icon: '✝️' },
+      hellfireOrb: { name: 'Orbe de Fuego', icon: '☄️' },
+      lightning: { name: 'Ira del Trueno', icon: '⚡' },
+      scythe: { name: 'Guadaña Espectral', icon: '🪓' },
+      garlic: { name: 'Rosario de Penitencia', icon: '📿' },
+      javelin: { name: 'Jabalina Espectral', icon: '🔱' },
+      chakram: { name: 'Chakram Infernal', icon: '🪃' }
+    };
+    const def = weaponNames[maxId] || { name: maxId, icon: '⚔️' };
+    const pct = this.runTotalDamageDealt > 0 ? Math.round((maxDmg / this.runTotalDamageDealt) * 100) : 100;
+    return { id: maxId, name: def.name, icon: def.icon, damage: Math.round(maxDmg), percent: pct };
+  }
+
+  getRunSummary() {
+    const elapsedSec = Math.max(1, Math.floor((Date.now() - (this.runStartTime || Date.now())) / 1000));
+    const mins = Math.floor(elapsedSec / 60);
+    const secs = elapsedSec % 60;
+    const timeStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    const lethal = this.getMostLethalWeapon();
+
+    return {
+      timeStr,
+      duration: timeStr,
+      elapsedSec,
+      maxAltitude: Math.round(this.runMaxAltitude || 0),
+      enemiesDefeated: this.runEnemiesDefeated || 0,
+      megabonks: this.runMegabonks || 0,
+      totalDamage: Math.round(this.runTotalDamageDealt || 0),
+      lethalWeapon: lethal,
+      mostLethal: lethal,
+      soulsCollected: Math.round(this.runSoulsCollected || 0),
+      shardsCollected: this.runShardsCollected || 0
+    };
+  }
+
+  // ─── BESTIARY DEFINITIONS ───
+  getBestiaryList() {
+    if (!this.bestiaryKills) this.bestiaryKills = { skeleton: 0, elite: 0, bat: 0, boss: 0 };
+    return [
+      {
+        id: 'skeleton',
+        name: 'Esqueleto Guerrero',
+        title: 'Soldado Caído del Rey',
+        icon: '💀',
+        badge: 'Común',
+        hp: '30 - 45 HP',
+        damage: '18 Daño',
+        behavior: 'Patrulla las plataformas de la torre y persigue implacablemente a Kael al detectarlo.',
+        weakness: 'Vulnerable a ataques de empuje y colisiones dominó (Cadena Infernal).',
+        kills: this.bestiaryKills.skeleton || 0
+      },
+      {
+        id: 'elite',
+        name: 'Esqueleto Bruto de Élite',
+        title: 'Comandante del Averno',
+        icon: '👹',
+        badge: 'Élite',
+        hp: '85 - 120 HP',
+        damage: '26 Daño',
+        behavior: 'Posee un aura dorada, mayor masa corporal y resistencia al empuje. Suelta cofres de reliquias.',
+        weakness: 'Megabonks cargados y ataques a distancia con Chakram o Jabalina.',
+        kills: this.bestiaryKills.elite || 0
+      },
+      {
+        id: 'bat',
+        name: 'Murciélago Abisal',
+        title: 'Vampiro de las Cavernas',
+        icon: '🦇',
+        badge: 'Volador',
+        hp: '24 - 30 HP',
+        damage: '15 Daño',
+        behavior: 'Se lanza en picada rasante a gran velocidad aprovechando la verticalidad de la torre.',
+        weakness: 'El Rosario de Penitencia y las Cruces Celestiales lo aniquilan al instante.',
+        kills: this.bestiaryKills.bat || 0
+      },
+      {
+        id: 'boss',
+        name: 'Gran Guardián de la Cripta',
+        title: 'El Juez de Huesos',
+        icon: '👑',
+        badge: 'Jefe',
+        hp: '280 - 450 HP',
+        damage: '30 - 40 Daño',
+        behavior: 'Lanza orbes de magma, invoca pilares de fuego y entra en furia al perder el 50% de su vida.',
+        weakness: 'Aprovechar las plataformas superiores y desviar sus proyectiles con la espada.',
+        kills: this.bestiaryKills.boss || 0
+      }
+    ];
+  }
+
+  // ─── SKINS & WARDROBE DEFINITIONS ───
+  getSkinsList() {
+    return [
+      {
+        id: 'soldier',
+        name: 'Soldado Real',
+        title: 'Aspecto Clásico',
+        desc: 'La armadura de acero y capa carmesí con la que Kael sirvió a la corona.',
+        icon: '🛡️',
+        unlocked: true,
+        colors: { cape: '#c0392b', trim: '#bdc3c7', glow: '#ffffff' }
+      },
+      {
+        id: 'crimson',
+        name: 'Caballero Carmesí',
+        title: 'Bautismo de Cenizas',
+        desc: 'Forjada en el fuego de la Penitencia. Imbuida del ardor de los sacrificios.',
+        icon: '🔥',
+        unlocked: (this.penitenceAshes || 0) > 0 || this.isAchievementUnlocked('penitence'),
+        unlockHint: 'Realiza tu primer Sacrificio de Cenizas (Prestigio).',
+        colors: { cape: '#780000', trim: '#ff4d6d', glow: '#ff758f' }
+      },
+      {
+        id: 'specter',
+        name: 'Espectro del Abismo',
+        title: 'Sombra de la Torre',
+        desc: 'Una silueta etérea alimentada por las almas errantes de los condenados.',
+        icon: '🌌',
+        unlocked: (this.totalSoulsEver || 0) >= 300 || (this.bestiaryKills && (this.bestiaryKills.skeleton || 0) >= 20),
+        unlockHint: 'Cosecha 300 almas o derrota a 20 esqueletos.',
+        colors: { cape: '#1e1b4b', trim: '#818cf8', glow: '#c7d2fe' }
+      },
+      {
+        id: 'paladin',
+        name: 'Paladín Dorado',
+        title: 'Favor de la Fortuna',
+        desc: 'Engalanado con oro bendito forjado por la suerte del gran multiplicador Balatro.',
+        icon: '✨',
+        unlocked: this.isAchievementUnlocked('balatro_jackpot') || this.isAchievementUnlocked('lucky_spin'),
+        unlockHint: 'Alcanza un multiplicador 8x en Balatro o gana en la Ruleta.',
+        colors: { cape: '#b45309', trim: '#fbbf24', glow: '#fef08a' }
+      },
+      {
+        id: 'ascended',
+        name: 'Kael Ascendido',
+        title: 'Rey Celestial del Averno',
+        desc: 'El despertar supremo con alas doradas celestiales y la corona del Averno.',
+        icon: '👑',
+        unlocked: this.isAchievementUnlocked('arsenal_complete'),
+        unlockHint: 'Reúne las 7 armas simultáneamente.',
+        colors: { cape: '#0284c7', trim: '#38bdf8', glow: '#ffd700', hasWings: true, hasCrown: true }
+      }
+    ];
+  }
+
+  isSkinUnlocked(skinId) {
+    if (skinId === 'soldier') return true;
+    const skin = this.getSkinsList().find(s => s.id === skinId);
+    return skin ? !!skin.unlocked : false;
+  }
+
+  selectSkin(skinId) {
+    if (!this.isSkinUnlocked(skinId)) return false;
+    this.selectedSkin = skinId;
+    try {
+      localStorage.setItem('infernal_rise_skin', skinId);
+    } catch (_) {}
+    return true;
   }
 
   resetAllProgress() {

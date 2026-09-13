@@ -32,10 +32,16 @@ class SoundEngine {
       this.masterGain.gain.setValueAtTime(this.enabled ? this.masterVolume : 0, this.ctx.currentTime);
       this.masterGain.connect(this.ctx.destination);
 
-      // Music sub-bus
+      // Music sub-bus with dynamic lowpass filter (console style pause effect)
+      this.pauseFilter = this.ctx.createBiquadFilter();
+      this.pauseFilter.type = 'lowpass';
+      this.pauseFilter.frequency.setValueAtTime(20000, this.ctx.currentTime);
+      this.pauseFilter.Q.setValueAtTime(1.0, this.ctx.currentTime);
+
       this.musicGain = this.ctx.createGain();
       this.musicGain.gain.setValueAtTime(this.musicVolume, this.ctx.currentTime);
-      this.musicGain.connect(this.masterGain);
+      this.musicGain.connect(this.pauseFilter);
+      this.pauseFilter.connect(this.masterGain);
 
       // SFX sub-bus
       this.sfxGain = this.ctx.createGain();
@@ -46,6 +52,21 @@ class SoundEngine {
     } catch (e) {
       console.warn("Web Audio API not supported", e);
     }
+  }
+
+  setPauseFilter(isPaused) {
+    if (!this.ctx || !this.pauseFilter) return;
+    const now = this.ctx.currentTime;
+    try {
+      this.pauseFilter.frequency.cancelScheduledValues(now);
+      if (isPaused) {
+        this.pauseFilter.frequency.setValueAtTime(this.pauseFilter.frequency.value, now);
+        this.pauseFilter.frequency.exponentialRampToValueAtTime(580, now + 0.18);
+      } else {
+        this.pauseFilter.frequency.setValueAtTime(Math.max(50, this.pauseFilter.frequency.value), now);
+        this.pauseFilter.frequency.exponentialRampToValueAtTime(20000, now + 0.22);
+      }
+    } catch (e) {}
   }
 
   resume() {
