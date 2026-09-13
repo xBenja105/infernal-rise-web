@@ -1125,9 +1125,40 @@ class SkeletonEnemy {
       this.hitTimer -= dt;
       this.animFrame = Math.min(7, Math.floor((0.35 - this.hitTimer) / 0.044));
       this.currentVx *= 0.88;
-      this.x += this.currentVx;
-      this.vy += this.gravity;
-      this.y += this.vy;
+      if (this.onPlatform) {
+        this.y = this.onPlatform.y - this.h;
+        this.vy = 0;
+        this.isGrounded = true;
+        const minX = this.onPlatform.x + 4;
+        const maxX = this.onPlatform.x + this.onPlatform.w - this.w - 4;
+        if (minX <= maxX) {
+          this.x = Math.max(minX, Math.min(maxX, this.x + this.currentVx));
+        } else {
+          this.x += this.currentVx;
+        }
+      } else {
+        this.x += this.currentVx;
+        this.vy += this.gravity;
+        if (this.vy > 10.5) this.vy = 10.5;
+        const prevY = this.y;
+        this.y += this.vy;
+
+        if (level && level.platforms && this.vy >= 0) {
+          for (const p of level.platforms) {
+            const enemyLeft = this.x + 4;
+            const enemyRight = this.x + this.w - 4;
+            if (enemyRight > p.x && enemyLeft < p.x + p.w) {
+              if (prevY + this.h <= p.y + 8 && this.y + this.h >= p.y) {
+                this.y = p.y - this.h;
+                this.vy = 0;
+                this.isGrounded = true;
+                this.onPlatform = p;
+                break;
+              }
+            }
+          }
+        }
+      }
 
       // Megabonk Domino Collision: Flying enemy crashes into other enemies
       if (Math.abs(this.currentVx) > 2.6) {
@@ -1269,11 +1300,12 @@ class SkeletonEnemy {
       }
     } else if (this.onPlatform) {
       this.y = this.onPlatform.y - this.h;
-      const enemyLeft = this.x + 4;
-      const enemyRight = this.x + this.w - 4;
-      if (enemyRight < this.onPlatform.x || enemyLeft > this.onPlatform.x + this.onPlatform.w) {
-        this.isGrounded = false;
-        this.onPlatform = null;
+      this.vy = 0;
+      this.isGrounded = true;
+      const minX = this.onPlatform.x + 4;
+      const maxX = this.onPlatform.x + this.onPlatform.w - this.w - 4;
+      if (minX <= maxX) {
+        this.x = Math.max(minX, Math.min(maxX, this.x));
       }
     }
 
@@ -1410,47 +1442,15 @@ class SkeletonEnemy {
         return;
       }
 
-      // Ledge crossing: Leap, Drop Down, or Climb Up towards player
+      // Ledge boundary handling: Stay firmly anchored on platform during combat
       if (atRightEdge || atLeftEdge) {
-        if (this.jumpCooldown <= 0 && this.isGrounded && dy < 40) {
-          // Leap across gap or up towards player!
-          this.vy = -7.6;
-          this.currentVx = this.dir * 3.2;
-          this.isGrounded = false;
-          this.onPlatform = null;
-          this.jumpCooldown = 0.85;
-          if (particleSys) particleSys.spawnDust(this.x + this.w / 2, this.y + this.h, 6);
-        } else if (dy > 20) {
-          // Player is below, step off ledge immediately to pursue down!
-          this.x += this.dir * 2.2;
-          this.isGrounded = false;
-          this.onPlatform = null;
-        } else {
-          if (this.jumpCooldown <= 0 && this.isGrounded) {
-            this.vy = -6.4;
-            this.currentVx = this.dir * 2.6;
-            this.isGrounded = false;
-            this.onPlatform = null;
-            this.jumpCooldown = 0.95;
-          } else {
-            if (atRightEdge) this.x = effectiveMaxX;
-            if (atLeftEdge) this.x = effectiveMinX;
-          }
-        }
+        if (atRightEdge) this.x = effectiveMaxX;
+        if (atLeftEdge) this.x = effectiveMinX;
+        this.currentVx = 0;
       } else {
-        // If player is well above (dy < -45) and nearby, leap up to climb platforms towards player!
-        if (this.isGrounded && this.jumpCooldown <= 0 && dy < -45 && Math.abs(dx) < 160) {
-          this.vy = -7.8;
-          this.currentVx = this.dir * 2.4;
-          this.isGrounded = false;
-          this.onPlatform = null;
-          this.jumpCooldown = 1.2;
-          if (particleSys) particleSys.spawnDust(this.x + this.w / 2, this.y + this.h, 6);
-        } else {
-          const targetVx = this.dir * this.chaseSpeed;
-          this.currentVx += (targetVx - this.currentVx) * Math.min(1.0, dt * 8.0);
-          this.x += this.currentVx;
-        }
+        const targetVx = this.dir * this.chaseSpeed;
+        this.currentVx += (targetVx - this.currentVx) * Math.min(1.0, dt * 8.0);
+        this.x += this.currentVx;
       }
 
       // Shambling run sway
@@ -1852,9 +1852,22 @@ class SkeletonEnemy {
     const baseForce = this.isElite ? 4.8 : 6.8;
     const finalForce = baseForce * knockbackMult * (isMegabonk ? 1.75 : 1.0);
     this.currentVx = hitDir * finalForce;
-    this.vy = isMegabonk ? -5.2 : -3.2;
-    this.isGrounded = false;
-    this.x += hitDir * 4;
+    if (this.onPlatform) {
+      this.vy = 0;
+      this.isGrounded = true;
+      this.y = this.onPlatform.y - this.h;
+      const minX = this.onPlatform.x + 4;
+      const maxX = this.onPlatform.x + this.onPlatform.w - this.w - 4;
+      if (minX <= maxX) {
+        this.x = Math.max(minX, Math.min(maxX, this.x + hitDir * 4));
+      } else {
+        this.x += hitDir * 4;
+      }
+    } else {
+      this.vy = isMegabonk ? -5.2 : -3.2;
+      this.isGrounded = false;
+      this.x += hitDir * 4;
+    }
 
     // Megabonk Combo & Comic-book Floating Text
     if (window.progression) {
