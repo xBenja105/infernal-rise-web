@@ -756,8 +756,8 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       type = 'leaf';
       count = 45;
     } else if (biome === 'prologue') {
-      type = 'rain';
-      count = 55;
+      type = 'sanctuary';
+      count = 45;
     }
 
     const palettes = {
@@ -765,7 +765,8 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       spore: ['#34d399', '#10b981', '#6ee7b7', '#fbbf24', '#2dd4bf'],
       snow: ['#e0f2fe', '#bae6fd', '#ffffff', '#7dd3fc'],
       leaf: ['#f59e0b', '#ea580c', '#fef08a', '#84cc16', '#fbbf24'],
-      rain: ['#64748b', '#94a3b8', '#38bdf8']
+      rain: ['#64748b', '#94a3b8', '#38bdf8'],
+      sanctuary: ['#ffd700', '#c77dff', '#90e0ef', '#ffffff', '#e0aaff', '#f472b6']
     };
 
     const colors = palettes[type] || palettes.ember;
@@ -775,8 +776,8 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
         type: type,
         x: Math.random() * this.vWidth,
         y: Math.random() * this.vHeight,
-        speed: (type === 'snow' ? 50 : (type === 'rain' ? 140 : (type === 'spore' ? 18 : 30))) + Math.random() * 35,
-        size: (type === 'leaf' ? 2.5 : (type === 'spore' ? 1.8 : 1.5)) + Math.random() * 1.5,
+        speed: (type === 'snow' ? 50 : (type === 'rain' ? 140 : (type === 'sanctuary' ? 14 : (type === 'spore' ? 18 : 30)))) + Math.random() * 25,
+        size: (type === 'sanctuary' ? 2.2 : (type === 'leaf' ? 2.5 : (type === 'spore' ? 1.8 : 1.5))) + Math.random() * 1.5,
         phase: Math.random() * Math.PI * 2,
         color: colors[Math.floor(Math.random() * colors.length)]
       });
@@ -1724,8 +1725,8 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
         peak: [[24, 28, 58], [75, 52, 92], [210, 115, 60], [255, 220, 120]]
       },
       prologue: {
-        base: [[6, 9, 20], [12, 18, 34], [20, 30, 48], [32, 45, 68]],
-        peak: [[6, 9, 20], [12, 18, 34], [20, 30, 48], [32, 45, 68]]
+        base: [[8, 10, 24], [18, 16, 42], [32, 22, 60], [48, 28, 68]],
+        peak: [[8, 10, 24], [18, 16, 42], [32, 22, 60], [48, 28, 68]]
       }
     };
 
@@ -1877,6 +1878,22 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
           }
           this.ctx.fillStyle = p.color;
           this.ctx.fillRect(p.x, p.y, p.size, p.size * 0.7);
+        } else if (p.type === 'sanctuary') {
+          p.y -= (p.speed * 0.45) * dt;
+          p.phase += dt * 1.6;
+          if (p.y < -10) {
+            p.y = this.vHeight + 10;
+            p.x = Math.random() * this.vWidth;
+          }
+          const swayX = p.x + Math.sin(p.phase) * 10;
+          const pulse = 0.4 + Math.sin(p.phase * 2) * 0.4;
+          this.ctx.save();
+          this.ctx.globalAlpha = Math.max(0.15, Math.min(1, pulse));
+          this.ctx.fillStyle = p.color;
+          this.ctx.beginPath();
+          this.ctx.arc(swayX, p.y, p.size, 0, Math.PI * 2);
+          this.ctx.fill();
+          this.ctx.restore();
         } else if (p.type === 'rain') {
           p.y += p.speed * dt;
           p.x -= (p.speed * 0.25) * dt;

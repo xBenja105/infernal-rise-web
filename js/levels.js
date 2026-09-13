@@ -38,81 +38,96 @@ class LevelManager {
     return this.currentLevel;
   }
 
-  // ─── 0. PROLOGUE: CASTLE RUINS & REFUGE LOBBY ───
+  // ─── 0. PROLOGUE: CASTLE RUINS & REFUGE LOBBY (COMPACT GOTHIC SANCTUARY) ───
   createPrologueLevel() {
     return {
       id: 'prologue',
       name: 'Refugio del Reino — El Santuario de los Caídos',
       danteCircle: 'El Velo Crepuscular — Refugio y Forja de Almas',
       biome: 'prologue',
-      width: 1800,
+      width: 960,
       height: 540,
-      spawn: { x: 120, y: 442 },
+      spawn: { x: 75, y: 442 },
       isCombatScene: false,
       musicTrack: 'menu',
-      ambientRain: true,
+      ambientRain: false,
       hasLava: false,
       platforms: [
-        { x: 0, y: 480, w: 1800, h: 60, type: 'stone' },
-        { x: 200, y: 400, w: 180, h: 22, type: 'stone' },
-        // Grand Sacred Dais for the Sanctuary Altar
-        { x: 550, y: 460, w: 70, h: 20, type: 'stone' },
-        { x: 620, y: 440, w: 300, h: 25, type: 'runic' },
-        { x: 670, y: 400, w: 200, h: 25, type: 'runic' },
-        { x: 920, y: 460, w: 70, h: 20, type: 'stone' },
-        // Ascension Battlements to the Portal
-        { x: 1080, y: 410, w: 180, h: 22, type: 'stone' },
-        { x: 1300, y: 350, w: 200, h: 22, type: 'stone' },
-        { x: 1540, y: 410, w: 220, h: 22, type: 'stone' }
+        // Grand Cathedral Stone Foundation
+        { x: 0, y: 480, w: 960, h: 60, type: 'stone' },
+        // Sanctuary Boundary Enclosure Columns
+        { x: 0, y: 0, w: 24, h: 480, type: 'stone' },
+        { x: 936, y: 0, w: 24, h: 480, type: 'stone' },
+        // Ceiling Cornice Beam
+        { x: 0, y: 0, w: 960, h: 22, type: 'stone' },
+
+        // 1. Ruleta de las Armas — Left Dais
+        { x: 170, y: 460, w: 120, h: 20, type: 'stone' },
+
+        // 2. Santuario de Almas — Grand Center 3-Tier Sacred Dais
+        { x: 340, y: 460, w: 280, h: 20, type: 'stone' },
+        { x: 375, y: 440, w: 210, h: 20, type: 'runic' },
+        { x: 410, y: 420, w: 140, h: 20, type: 'runic' },
+
+        // 3. Portal a la Torre — Right Dais
+        { x: 745, y: 460, w: 120, h: 20, type: 'stone' },
+
+        // 4. Upper Gothic Mezzanines & High Catwalk Gallery
+        { x: 50, y: 320, w: 130, h: 18, type: 'stone' },
+        { x: 780, y: 320, w: 130, h: 18, type: 'stone' },
+        { x: 360, y: 220, w: 240, h: 18, type: 'runic' }
       ],
-      // In-World Sanctuary Altar (Upgrade Shop)
+      // In-World Sanctuary Altar (Upgrade Shop) — Center Stage
       sanctuary: {
-        x: 725,
-        y: 310,
+        x: 435,
+        y: 330,
         w: 90,
         h: 90,
         label: 'Santuario de Mejoras'
       },
-      // In-World Slot Machine / Ruleta de Armas (80 Almas)
+      // In-World Slot Machine / Ruleta de Armas (80 Almas) — Left Wing
       slotMachine: {
-        x: 1140,
-        y: 340,
+        x: 200,
+        y: 390,
         w: 60,
         h: 70,
         cost: 80,
         label: 'Ruleta de las Armas'
       },
-      ladders: [],
+      ladders: [
+        { x: 50, y: 320, h: 160 },
+        { x: 880, y: 320, h: 160 }
+      ],
       movingPlatforms: [],
       crumblingPlatforms: [],
       spikes: [],
       torches: [
-        { x: 180, y: 440, blue: false },
-        { x: 340, y: 370, blue: false },
-        { x: 645, y: 365, blue: true },
-        { x: 895, y: 365, blue: true },
-        { x: 1100, y: 440, blue: false },
-        { x: 1400, y: 320, blue: false },
-        { x: 1610, y: 380, blue: true }
+        // Ground & Dais Torches
+        { x: 40, y: 420, blue: false },
+        { x: 155, y: 425, blue: false },
+        { x: 305, y: 425, blue: false },
+        { x: 355, y: 420, blue: true },
+        { x: 590, y: 420, blue: true },
+        { x: 730, y: 420, blue: true },
+        { x: 880, y: 420, blue: true },
+        // Upper Balconies & Catwalk Torches
+        { x: 160, y: 280, blue: false },
+        { x: 795, y: 280, blue: false },
+        { x: 380, y: 180, blue: true },
+        { x: 565, y: 180, blue: true }
       ],
-      npc: {
-        x: 260,
-        y: 362,
-        name: 'Soldado Guía',
-        dialogueKey: 'prologue',
-        sprite: 'soldier'
-      },
       enemies: [],
       urns: [
-        { x: 340, y: 374, value: 20 },
-        { x: 640, y: 414, value: 25 },
-        { x: 900, y: 414, value: 25 },
-        { x: 1340, y: 324, value: 30 }
+        { x: 100, y: 288, value: 25 },
+        { x: 350, y: 428, value: 20 },
+        { x: 585, y: 428, value: 20 },
+        { x: 830, y: 288, value: 25 },
+        { x: 480, y: 188, value: 40 }
       ],
       chests: [],
       portal: {
-        x: 1640,
-        y: 390,
+        x: 770,
+        y: 365,
         w: 70,
         h: 95,
         targetLevel: 'tower1',
