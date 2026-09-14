@@ -107,6 +107,161 @@ body.cursor-hidden *,
   pointer-events: none;
 }
 
+/* ─── RADAR VERTICAL DE TORRE (MINIMAPA) ─── */
+.tower-radar {
+  position: absolute;
+  right: 16px;
+  top: 130px;
+  width: 36px;
+  height: 250px;
+  background: rgba(12, 10, 20, 0.76);
+  border: 1.5px solid rgba(139, 92, 246, 0.4);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.7), 0 0 12px rgba(139, 92, 246, 0.2);
+  border-radius: 18px;
+  padding: 8px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  backdrop-filter: blur(6px);
+  pointer-events: none;
+  z-index: 15;
+  user-select: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.tower-radar.hidden {
+  display: none !important;
+  opacity: 0;
+  transform: translateX(25px);
+}
+
+.radar-header, .radar-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+
+.radar-goal-icon {
+  font-size: 15px;
+  filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.8));
+  animation: pulseGoal 2s infinite ease-in-out;
+}
+
+@keyframes pulseGoal {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.18); }
+}
+
+.radar-base-icon {
+  font-size: 13px;
+  filter: drop-shadow(0 0 4px rgba(255, 69, 0, 0.6));
+}
+
+.radar-track {
+  position: relative;
+  width: 16px;
+  flex: 1;
+  margin: 6px 0;
+  display: flex;
+  justify-content: center;
+}
+
+.radar-track-line {
+  position: absolute;
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(to top, rgba(255, 68, 68, 0.6), rgba(139, 92, 246, 0.6), rgba(0, 245, 212, 0.85));
+  border-radius: 2px;
+  box-shadow: 0 0 6px rgba(0, 245, 212, 0.35);
+}
+
+.radar-markers {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.radar-marker {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 11px;
+  line-height: 1;
+  filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.9));
+  transition: top 0.15s ease-out;
+}
+
+.radar-marker-chest {
+  color: #ffd700;
+  font-size: 11px;
+  animation: pulseChest 2.5s infinite ease-in-out;
+}
+
+@keyframes pulseChest {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.2); }
+}
+
+.radar-marker-elite {
+  color: #ff3366;
+  font-size: 11px;
+  animation: pulseElite 1.5s infinite ease-in-out;
+}
+
+@keyframes pulseElite {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.3); }
+}
+
+.radar-player-marker {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 5;
+  transition: top 0.08s ease-out;
+}
+
+.radar-player-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #00f5d4;
+  border: 1.5px solid #ffffff;
+  box-shadow: 0 0 8px #00f5d4, 0 0 14px rgba(0, 245, 212, 0.7);
+  animation: playerGlow 1.2s infinite alternate ease-in-out;
+}
+
+.radar-player-arrow {
+  position: absolute;
+  right: 12px;
+  font-size: 9px;
+  color: #00f5d4;
+  text-shadow: 0 0 5px #00f5d4;
+}
+
+@keyframes playerGlow {
+  from { transform: scale(0.9); box-shadow: 0 0 4px #00f5d4; }
+  to { transform: scale(1.25); box-shadow: 0 0 10px #00f5d4, 0 0 16px #00f5d4; }
+}
+
+.radar-altitude-text {
+  font-family: 'Cinzel', 'Segoe UI', monospace, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: #00f5d4;
+  margin-top: 3px;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 5px rgba(0, 245, 212, 0.6);
+}
+
 .hud-top {
   display: flex;
   justify-content: space-between;

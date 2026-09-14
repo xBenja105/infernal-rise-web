@@ -225,7 +225,14 @@ class Game {
       // Mobile Touch Elements
       btnTouchPause: document.getElementById('btn-touch-pause'),
       virtualControls: document.getElementById('virtual-controls'),
-      btnTouchInteract: document.getElementById('btn-touch-interact')
+      btnTouchInteract: document.getElementById('btn-touch-interact'),
+
+      // Radar Vertical de Torre (Minimapa)
+      towerRadar: document.getElementById('tower-radar'),
+      radarMarkers: document.getElementById('radar-markers'),
+      radarPlayerMarker: document.getElementById('radar-player-marker'),
+      radarAltitudeText: document.getElementById('radar-altitude-text'),
+      radarGoalIcon: document.getElementById('radar-goal-icon')
     };
 
     this.modalInputCooldownUntil = 0;
@@ -241,6 +248,7 @@ class Game {
     this._state = val;
     this.updateVirtualControlsVisibility();
     this.updateMouseCursor();
+    this.updateTowerRadar();
   }
 
   updateMouseCursor() {
@@ -1149,18 +1157,18 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
   initAmbientParticles(biome) {
     this.ambientParticles = [];
-    let count = 45;
+    let count = 50;
     let type = 'ember';
 
     if (biome === 'sunken_necropolis') {
       type = 'spore';
-      count = 50;
+      count = 55;
     } else if (biome === 'frozen_peaks') {
       type = 'snow';
       count = 60;
     } else if (biome === 'surface_threshold') {
-      type = 'leaf';
-      count = 45;
+      type = 'celestial';
+      count = 50;
     } else if (biome === 'prologue') {
       type = 'sanctuary';
       count = 45;
@@ -1168,9 +1176,11 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
     const palettes = {
       ember: ['#ff3311', '#ff7700', '#ffbb22', '#ff4466'],
-      spore: ['#34d399', '#10b981', '#6ee7b7', '#fbbf24', '#2dd4bf'],
+      ash: ['#3a3340', '#4a4052', '#2c2533', '#5c5266'],
+      spore: ['#34d399', '#10b981', '#6ee7b7', '#a78bfa', '#2dd4bf', '#818cf8'],
       snow: ['#e0f2fe', '#bae6fd', '#ffffff', '#7dd3fc'],
       leaf: ['#f59e0b', '#ea580c', '#fef08a', '#84cc16', '#fbbf24'],
+      celestial: ['#ffd700', '#ffffff', '#fef08a', '#38bdf8', '#e0e7ff'],
       rain: ['#64748b', '#94a3b8', '#38bdf8'],
       sanctuary: ['#ffd700', '#c77dff', '#90e0ef', '#ffffff', '#e0aaff', '#f472b6']
     };
@@ -1178,14 +1188,24 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     const colors = palettes[type] || palettes.ember;
 
     for (let i = 0; i < count; i++) {
+      let pType = type;
+      // In abyss/inferno, mix falling ash flakes with rising fiery embers
+      if (type === 'ember' && Math.random() < 0.38) {
+        pType = 'ash';
+      }
+
+      const pColorList = palettes[pType] || colors;
+      const isAsh = (pType === 'ash');
+      const isCelestial = (pType === 'celestial');
+
       this.ambientParticles.push({
-        type: type,
+        type: pType,
         x: Math.random() * this.vWidth,
         y: Math.random() * this.vHeight,
-        speed: (type === 'snow' ? 50 : (type === 'rain' ? 140 : (type === 'sanctuary' ? 14 : (type === 'spore' ? 18 : 30)))) + Math.random() * 25,
-        size: (type === 'sanctuary' ? 2.2 : (type === 'leaf' ? 2.5 : (type === 'spore' ? 1.8 : 1.5))) + Math.random() * 1.5,
+        speed: (pType === 'snow' ? 50 : (pType === 'rain' ? 140 : (isAsh ? 45 : (isCelestial ? 24 : (pType === 'sanctuary' ? 14 : (pType === 'spore' ? 20 : 32)))))) + Math.random() * 25,
+        size: (isCelestial ? 2.5 : (pType === 'sanctuary' ? 2.2 : (isAsh ? 2.2 : (pType === 'leaf' ? 2.5 : (pType === 'spore' ? 1.8 : 1.5))))) + Math.random() * 1.5,
         phase: Math.random() * Math.PI * 2,
-        color: colors[Math.floor(Math.random() * colors.length)]
+        color: pColorList[Math.floor(Math.random() * pColorList.length)]
       });
     }
     this.ambientEmbers = this.ambientParticles;
@@ -1961,6 +1981,77 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
         touchInteractBtn.classList.remove('can-interact');
       }
     }
+
+    // Update Vertical Tower Ascension Radar (Minimap)
+    this.updateTowerRadar();
+  }
+
+  updateTowerRadar() {
+    if (!this.ui || !this.ui.towerRadar) return;
+    const isTowerLevel = (this._state === 'PLAYING') && this.level &&
+      (this.level.id.startsWith('tower') || this.level.id === 'infernal' || this.level.isCombatScene);
+
+    if (!isTowerLevel || !this.player || !this.level.height) {
+      this.ui.towerRadar.classList.add('hidden');
+      return;
+    }
+
+    this.ui.towerRadar.classList.remove('hidden');
+
+    const topY = 120;
+    const bottomY = Math.max(topY + 200, this.level.height - 80);
+    const totalSpan = bottomY - topY;
+
+    const climb = Math.max(0, Math.min(1.0, (bottomY - this.player.y) / totalSpan));
+    const playerPercent = Math.max(2, Math.min(98, (1.0 - climb) * 100));
+
+    if (this.ui.radarPlayerMarker) {
+      this.ui.radarPlayerMarker.style.top = `${playerPercent.toFixed(1)}%`;
+    }
+
+    if (this.ui.radarAltitudeText) {
+      const meters = Math.max(0, Math.round(climb * (this.level.height / 10)));
+      this.ui.radarAltitudeText.textContent = `${meters}m`;
+    }
+
+    if (this.ui.radarGoalIcon) {
+      if (this.level.isCombatScene || this.boss) {
+        this.ui.radarGoalIcon.textContent = '👹';
+        this.ui.radarGoalIcon.title = 'Guardián del Averno';
+      } else {
+        this.ui.radarGoalIcon.textContent = '👑';
+        this.ui.radarGoalIcon.title = 'Portal de Ascensión';
+      }
+    }
+
+    // Refresh markers periodically (throttled)
+    if (!this._radarMarkerTimer) this._radarMarkerTimer = 0;
+    this._radarMarkerTimer++;
+    if (this._radarMarkerTimer % 8 === 0 && this.ui.radarMarkers) {
+      let markersHtml = '';
+
+      if (this.chests && this.chests.length > 0) {
+        for (const c of this.chests) {
+          if (c && !c.opened) {
+            const chestClimb = Math.max(0, Math.min(1.0, (bottomY - c.y) / totalSpan));
+            const chestTop = Math.max(3, Math.min(97, (1.0 - chestClimb) * 100));
+            markersHtml += `<div class="radar-marker radar-marker-chest" style="top: ${chestTop.toFixed(1)}%;" title="Cofre de Reliquia">🧰</div>`;
+          }
+        }
+      }
+
+      if (this.enemies && this.enemies.length > 0) {
+        for (const e of this.enemies) {
+          if (e && !e.isDead && (e.isElite || e.isBoss)) {
+            const enemyClimb = Math.max(0, Math.min(1.0, (bottomY - e.y) / totalSpan));
+            const enemyTop = Math.max(3, Math.min(97, (1.0 - enemyClimb) * 100));
+            markersHtml += `<div class="radar-marker radar-marker-elite" style="top: ${enemyTop.toFixed(1)}%;" title="${e.isBoss ? 'Jefe' : 'Élite'}">${e.isBoss ? '💀' : '🔸'}</div>`;
+          }
+        }
+      }
+
+      this.ui.radarMarkers.innerHTML = markersHtml;
+    }
   }
 
   // ─── RENDERING ───
@@ -2367,8 +2458,67 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
   drawAtmosphericParticles() {
     const particles = this.ambientParticles || this.ambientEmbers;
-    if (!particles) return;
     const dt = 0.016;
+
+    const biomeKey = (this.level && this.level.biome) ? this.level.biome : 'abyss';
+    const levelId = this.level ? this.level.id : '';
+    const isSpectral = (biomeKey === 'sunken_necropolis' || levelId === 'tower2' || levelId === 'boss_flegias');
+    const isCelestial = (biomeKey === 'surface_threshold' || levelId === 'tower3' || levelId === 'boss_glacior');
+
+    // 1. Dynamic Spectral Fog Waves in Level 2 / Abismo
+    if (isSpectral) {
+      this.weatherFogPhase = (this.weatherFogPhase || 0) + dt * 0.35;
+      this.ctx.save();
+      for (let l = 0; l < 2; l++) {
+        const fogY = this.vHeight * (0.62 + l * 0.22);
+        const fogGrad = this.ctx.createLinearGradient(0, fogY - 45, 0, fogY + 45);
+        const alpha = l === 0 ? 0.05 : 0.07;
+        const color = l === 0 ? '45, 212, 191' : '167, 139, 250';
+        fogGrad.addColorStop(0, `rgba(${color}, 0)`);
+        fogGrad.addColorStop(0.5, `rgba(${color}, ${alpha})`);
+        fogGrad.addColorStop(1, `rgba(${color}, 0)`);
+        this.ctx.fillStyle = fogGrad;
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, fogY);
+        for (let x = 0; x <= this.vWidth; x += 48) {
+          const wave = Math.sin(this.weatherFogPhase * 1.4 + x * 0.007 + l * 2.2) * 14;
+          this.ctx.lineTo(x, fogY + wave);
+        }
+        this.ctx.lineTo(this.vWidth, this.vHeight);
+        this.ctx.lineTo(0, this.vHeight);
+        this.ctx.closePath();
+        this.ctx.fill();
+      }
+      this.ctx.restore();
+    }
+
+    // 2. Dynamic God Rays (Luminous Celestial Light Shafts) in Level 3 / Summit
+    if (isCelestial) {
+      this.godRaysPhase = (this.godRaysPhase || 0) + dt * 0.45;
+      this.ctx.save();
+      const rayCount = 4;
+      for (let i = 0; i < rayCount; i++) {
+        const rayOffset = (i * 240 + Math.sin(this.godRaysPhase + i * 1.3) * 28);
+        const alpha = 0.06 + Math.sin(this.godRaysPhase * 1.6 + i * 1.1) * 0.035;
+        const grad = this.ctx.createLinearGradient(rayOffset, 0, rayOffset - 110, this.vHeight);
+        grad.addColorStop(0, `rgba(255, 240, 160, ${alpha * 1.3})`);
+        grad.addColorStop(0.6, `rgba(255, 215, 120, ${alpha * 0.8})`);
+        grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        this.ctx.fillStyle = grad;
+        this.ctx.beginPath();
+        this.ctx.moveTo(rayOffset - 25, 0);
+        this.ctx.lineTo(rayOffset + 65, 0);
+        this.ctx.lineTo(rayOffset - 60, this.vHeight);
+        this.ctx.lineTo(rayOffset - 150, this.vHeight);
+        this.ctx.closePath();
+        this.ctx.fill();
+      }
+      this.ctx.restore();
+    }
+
+    if (!particles) return;
+
     for (const p of particles) {
       if (p.type === 'snow') {
         p.y += p.speed * dt;
@@ -2381,6 +2531,34 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
         const swayX = p.x + Math.sin(p.phase) * 6;
         this.ctx.fillStyle = p.color;
         this.ctx.fillRect(swayX, p.y, p.size, p.size);
+      } else if (p.type === 'ash') {
+        // Volcanic falling ash
+        p.y += p.speed * dt;
+        p.x += Math.sin(p.phase * 1.8) * 12 * dt - (p.speed * 0.25) * dt;
+        p.phase += dt * 1.6;
+        if (p.y > this.vHeight + 10) {
+          p.y = -10;
+          p.x = Math.random() * this.vWidth;
+        }
+        this.ctx.fillStyle = p.color;
+        this.ctx.fillRect(p.x, p.y, p.size, p.size * 0.8);
+      } else if (p.type === 'celestial') {
+        // Sacred stardust motes rising with halo
+        p.y -= (p.speed * 0.5) * dt;
+        p.phase += dt * 2.2;
+        if (p.y < -10) {
+          p.y = this.vHeight + 10;
+          p.x = Math.random() * this.vWidth;
+        }
+        const swayX = p.x + Math.sin(p.phase) * 8;
+        const pulse = 0.5 + Math.sin(p.phase * 2.4) * 0.45;
+        this.ctx.save();
+        this.ctx.globalAlpha = Math.max(0.2, Math.min(1, pulse));
+        this.ctx.fillStyle = p.color;
+        this.ctx.beginPath();
+        this.ctx.arc(swayX, p.y, p.size, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.restore();
       } else if (p.type === 'leaf') {
         p.y += p.speed * dt;
         p.x += Math.sin(p.phase * 2.5) * 18 * dt + (p.speed * 0.3) * dt;
