@@ -228,7 +228,9 @@ class Game {
       btnTouchInteract: document.getElementById('btn-touch-interact')
     };
 
+    this.modalInputCooldownUntil = 0;
     this.lastTime = 0;
+    this.updateMouseCursor();
   }
 
   get state() {
@@ -238,6 +240,23 @@ class Game {
   set state(val) {
     this._state = val;
     this.updateVirtualControlsVisibility();
+    this.updateMouseCursor();
+  }
+
+  updateMouseCursor() {
+    if (typeof document === 'undefined') return;
+    const isPlaying = (this._state === 'PLAYING');
+    if (isPlaying) {
+      document.body.classList.add('cursor-hidden');
+      const gameContainer = document.getElementById('game-container');
+      if (gameContainer) gameContainer.classList.add('cursor-hidden');
+      if (this.canvas) this.canvas.classList.add('cursor-hidden');
+    } else {
+      document.body.classList.remove('cursor-hidden');
+      const gameContainer = document.getElementById('game-container');
+      if (gameContainer) gameContainer.classList.remove('cursor-hidden');
+      if (this.canvas) this.canvas.classList.remove('cursor-hidden');
+    }
   }
 
   updateVirtualControlsVisibility() {
@@ -427,6 +446,16 @@ class Game {
       if (this.isActionKey('jump', e.code)) this.input.jump = false;
       if (this.isActionKey('attack', e.code)) this.input.attack = false;
       if (this.isActionKey('interact', e.code)) this.input.interact = false;
+    });
+
+    window.addEventListener('blur', () => {
+      this.input.left = false;
+      this.input.right = false;
+      this.input.up = false;
+      this.input.down = false;
+      this.input.jump = false;
+      this.input.attack = false;
+      this.input.interact = false;
     });
 
     // Canvas click attacks in combat mode
@@ -817,6 +846,7 @@ class Game {
     // Vampire Survivors Level-Up Reroll Button
     if (this.ui.btnLevelupReroll) {
       this.ui.btnLevelupReroll.addEventListener('click', () => {
+        if (Date.now() < this.modalInputCooldownUntil) return;
         if (window.progression && window.progression.performReroll()) {
           const fresh = window.progression.getRandomBoons(3, false);
           this.renderLevelUpCards(fresh);
@@ -828,6 +858,7 @@ class Game {
     // Boon Modal Reroll Button
     if (this.ui.btnBoonReroll) {
       this.ui.btnBoonReroll.addEventListener('click', () => {
+        if (Date.now() < this.modalInputCooldownUntil) return;
         if (window.progression && window.progression.performReroll()) {
           const fresh = window.progression.getRandomBoons(3, !!this._isCurrentBoonRelic);
           this.renderBoonCards(fresh);
@@ -3079,12 +3110,25 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
     this.prevStateBeforeModal = this.state;
     this.state = 'BOON_SELECT';
-    this.ui.interactionBadge.style.display = 'none';
+    this.input.attack = false;
+    this.modalInputCooldownUntil = Date.now() + 450;
+    if (this.ui && this.ui.interactionBadge) {
+      this.ui.interactionBadge.style.display = 'none';
+    }
 
     // Update modal title for relic chest
-    const modalTitle = this.ui.boonModal.querySelector('h2') || this.ui.boonModal.querySelector('.modal-title');
+    const modalTitle = this.ui.boonModal ? (this.ui.boonModal.querySelector('h2') || this.ui.boonModal.querySelector('.modal-title')) : null;
     if (modalTitle) {
       modalTitle.innerHTML = isRelic ? '👑 RELIQUIA DE JEFE DERROTADO' : 'GRACIAS Y ARMAS DEL ABISMO';
+    }
+
+    if (this.ui && this.ui.boonCardsContainer) {
+      this.ui.boonCardsContainer.classList.add('modal-input-locked');
+      setTimeout(() => {
+        if (this.ui && this.ui.boonCardsContainer) {
+          this.ui.boonCardsContainer.classList.remove('modal-input-locked');
+        }
+      }, 450);
     }
 
     this.renderBoonCards(boons);
@@ -3146,6 +3190,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       });
 
       card.addEventListener('click', () => {
+        if (Date.now() < this.modalInputCooldownUntil) return;
         window.progression.chooseBoon(b);
         this.closeBoonSelectionModal();
       });
@@ -3155,6 +3200,8 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
   }
 
   closeBoonSelectionModal() {
+    this.input.attack = false;
+    this.modalInputCooldownUntil = 0;
     this.ui.boonModal.classList.add('hidden');
     this.state = this.prevStateBeforeModal || 'PLAYING';
   }
@@ -3184,12 +3231,23 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       this.prevStateBeforeModal = this.state;
       this.state = 'LEVEL_UP';
     }
+    this.input.attack = false;
+    this.modalInputCooldownUntil = Date.now() + 450;
     if (this.ui && this.ui.interactionBadge) {
       this.ui.interactionBadge.style.display = 'none';
     }
 
     if (this.ui && this.ui.modalRunLevel) {
       this.ui.modalRunLevel.textContent = window.progression.runLevel;
+    }
+
+    if (this.ui && this.ui.levelupCardsContainer) {
+      this.ui.levelupCardsContainer.classList.add('modal-input-locked');
+      setTimeout(() => {
+        if (this.ui && this.ui.levelupCardsContainer) {
+          this.ui.levelupCardsContainer.classList.remove('modal-input-locked');
+        }
+      }, 450);
     }
 
     if (window.soundEngine) {
@@ -3259,6 +3317,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       });
 
       card.addEventListener('click', () => {
+        if (Date.now() < this.modalInputCooldownUntil) return;
         window.progression.chooseBoon(b);
         this.closeLevelUpModal();
       });
@@ -3268,6 +3327,8 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
   }
 
   closeLevelUpModal() {
+    this.input.attack = false;
+    this.modalInputCooldownUntil = 0;
     if (this.pendingLevelUps > 1) {
       this.pendingLevelUps--;
       this.openLevelUpModal();

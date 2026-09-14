@@ -68,6 +68,23 @@ html, body {
   image-rendering: crisp-edges;
 }
 
+/* ─── HIDDEN CURSOR DURING GAMEPLAY ─── */
+body.cursor-hidden,
+body.cursor-hidden *,
+#game-canvas.cursor-hidden,
+#game-container.cursor-hidden,
+#game-container.cursor-hidden * {
+  cursor: none !important;
+}
+
+/* ─── MODAL INPUT LOCK (ANTI ACCIDENTAL LEVEL-UP SPAM CLICK) ─── */
+.modal-input-locked,
+.modal-input-locked * {
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
+
 /* ─── HUD OVERLAYS ─── */
 #hud {
   position: absolute;
@@ -1628,6 +1645,18 @@ body.in-menu #virtual-controls {
   padding: 24px 20px;
   text-align: center;
   box-shadow: 0 0 60px rgba(244, 208, 111, 0.4);
+  animation: modalScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.93) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .boon-modal-subtitle {
