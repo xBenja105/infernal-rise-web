@@ -78,6 +78,16 @@ class Player {
     this.animTimer = 0;
     this.stepTimer = 0;
 
+    // Tactical Dash System (Shadows & i-Frames)
+    this.dashCooldown = 0;
+    this.dashCooldownMax = 0.75;
+    this.isDashing = false;
+    this.dashTimer = 0;
+    this.dashDuration = 0.18;
+    this.dashSpeed = 9.8;
+    this.dashDir = 1;
+    this.dashTrail = [];
+
     // Checkpoint
     this.checkpoint = { x: x, y: y };
     this.lastActivatedCheckpoint = null;
@@ -107,6 +117,10 @@ class Player {
     this.prevVy = 0;
     this.vx = 0;
     this.vy = 0;
+    this.isDashing = false;
+    this.dashTimer = 0;
+    this.dashCooldown = 0;
+    this.dashTrail = [];
     this.facing = 1;
     this.renderFacing = 1.0;
     this.bodyTilt = 0.0;
@@ -138,6 +152,64 @@ class Player {
       this.vx = 0;
       this.animState = 'idle';
       return 'ALIVE';
+    }
+
+    // ─── TACTICAL DASH & SHADOW TRAIL ───
+    if (this.dashCooldown > 0) this.dashCooldown = Math.max(0, this.dashCooldown - dt);
+
+    if (this.dashTrail && this.dashTrail.length > 0) {
+      for (let i = this.dashTrail.length - 1; i >= 0; i--) {
+        this.dashTrail[i].alpha -= dt * 4.2;
+        if (this.dashTrail[i].alpha <= 0) {
+          this.dashTrail.splice(i, 1);
+        }
+      }
+    }
+
+    const hasHermes = window.progression && window.progression.hasRelic('relic_dash_master');
+    const cdMax = hasHermes ? 0.38 : this.dashCooldownMax;
+
+    if (input.dash && this.dashCooldown <= 0 && !this.isClimbing && !this.isFrozen) {
+      this.isDashing = true;
+      this.dashTimer = this.dashDuration;
+      this.dashCooldown = cdMax;
+      const dDir = input.left ? -1 : (input.right ? 1 : this.facing);
+      this.dashDir = dDir !== 0 ? dDir : this.facing;
+      this.facing = this.dashDir;
+      this.vx = this.dashDir * this.dashSpeed;
+      this.vy = 0;
+      this.invulnerableTimer = Math.max(this.invulnerableTimer, 0.22); // i-frames!
+
+      this.dashTrail.push({ x: this.x, y: this.y, facing: this.facing, alpha: 0.75 });
+
+      if (particleSys) {
+        particleSys.spawnSlashSparks(this.x + this.w / 2, this.y + this.h / 2, this.dashDir);
+        if (hasHermes) {
+          particleSys.spawnBloodExplosion(this.x + this.w / 2, this.y + this.h / 2, 8);
+        }
+      }
+      if (soundEng) soundEng.playSwordSlash();
+      input.dash = false;
+    }
+
+    if (this.isDashing) {
+      this.dashTimer -= dt;
+      this.vx = this.dashDir * this.dashSpeed;
+      this.vy = 0;
+      this.invulnerableTimer = Math.max(this.invulnerableTimer, 0.08);
+
+      if (Math.random() < 0.6) {
+        this.dashTrail.push({ x: this.x, y: this.y, facing: this.facing, alpha: 0.65 });
+      }
+
+      if (hasHermes && window.game && Math.random() < 0.25) {
+        window.game.spawnFlameWave(this.x, this.y + 10, -this.dashDir);
+      }
+
+      if (this.dashTimer <= 0) {
+        this.isDashing = false;
+        this.vx = this.dashDir * this.maxWalkSpeed;
+      }
     }
 
     const stats = window.progression ? window.progression.getPlayerStats() : null;
@@ -598,6 +670,27 @@ class Player {
   }
 
   draw(ctx, camX, camY) {
+    // ─── DASH ETHEREAL SHADOW TRAIL ───
+    if (this.dashTrail && this.dashTrail.length > 0) {
+      for (const ghost of this.dashTrail) {
+        if (ghost.alpha <= 0.02) continue;
+        const gx = Math.round(ghost.x - camX);
+        const gy = Math.round(ghost.y - camY);
+        ctx.save();
+        ctx.globalAlpha = ghost.alpha * 0.45;
+        ctx.translate(gx + this.w / 2, gy + this.h);
+        ctx.scale(ghost.facing, 1.0);
+        ctx.translate(-this.w / 2, -this.h);
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(4, 6, 16, 26);
+        ctx.fillStyle = '#818cf8';
+        ctx.fillRect(6, 0, 12, 10);
+        ctx.fillStyle = '#c084fc';
+        ctx.fillRect(8, 20, 8, 16);
+        ctx.restore();
+      }
+    }
+
     const rx = Math.round(this.x - camX);
     const ry = Math.round(this.y - camY);
 
@@ -2068,12 +2161,22 @@ class SkeletonEnemy {
     if (window.progression && window.progression.hasBoon('vampirism') && window.game && window.game.player) {
       window.game.player.hp = Math.min(window.game.player.maxHp, window.game.player.hp + 5);
     }
+    if (isMegabonk && window.progression && window.progression.hasRelic('relic_vampiric_eye') && window.game && window.game.player) {
+      window.game.player.hp = Math.min(window.game.player.maxHp, window.game.player.hp + 12);
+    }
 
     if (this.hp <= 0 && !this.hasDropped) {
       this.hasDropped = true;
       this.state = 'dead';
       this.deathTimer = 0.9;
       this.animFrame = 0;
+
+      // Corazón de Magma (Reliquia: Ignición en Cadena)
+      if (window.progression && window.progression.hasRelic('relic_chain_burn') && window.game) {
+        window.game.spawnFlameWave(this.x + this.w / 2, this.y + 10, 1);
+        window.game.spawnFlameWave(this.x + this.w / 2, this.y + 10, -1);
+      }
+
       if (window.progression) {
         if (window.progression.unlockAchievement) window.progression.unlockAchievement('first_blood');
         if (window.progression.recordEnemyKill) window.progression.recordEnemyKill(this.isElite ? 'elite' : 'skeleton');

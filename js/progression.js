@@ -76,6 +76,55 @@ class ProgressionManager {
     this.bestiaryKills = { skeleton: 0, elite: 0, bat: 0, boss: 0 };
     this.selectedSkin = 'soldier';
 
+    // ─── RELIQUIAS PASIVAS Y MEJORAS DE TIENDA EN RUN ───
+    this.runRelics = [];
+    this.runBonusDaggerDmg = 0;
+    this.runBonusRegen = 0;
+    this.relicDefinitions = [
+      {
+        id: 'relic_double_jump',
+        name: 'Pluma Celeste',
+        icon: '🪶',
+        desc: 'Permite ejecutar un salto doble sagrado en el aire.',
+        rarity: 'Legendaria'
+      },
+      {
+        id: 'relic_chain_burn',
+        name: 'Corazón de Magma',
+        icon: '🔥',
+        desc: 'Los impactos causan ignición que se propaga en cadena entre enemigos.',
+        rarity: 'Épica'
+      },
+      {
+        id: 'relic_bouncing_projectiles',
+        name: 'Espejo Espectral',
+        icon: '🪞',
+        desc: 'Tus proyectiles rebotan en muros y ganan +25% de velocidad y daño.',
+        rarity: 'Rara'
+      },
+      {
+        id: 'relic_dash_master',
+        name: 'Sandalias de Hermes',
+        icon: '👟',
+        desc: 'Reduce el enfriamiento del Dash a 0.4s y deja una estela de fuego.',
+        rarity: 'Épica'
+      },
+      {
+        id: 'relic_vampiric_eye',
+        name: 'Ojo Vampírico',
+        icon: '👁️',
+        desc: 'Los Megabonks y críticos de espada restauran +12 HP.',
+        rarity: 'Rara'
+      },
+      {
+        id: 'relic_soul_magnet_aura',
+        name: 'Vórtice de Almas',
+        icon: '🌀',
+        desc: 'Atrae automáticamente orbes y gemas desde 400px de distancia.',
+        rarity: 'Común'
+      }
+    ];
+
     // Active rogue-lite boons for the current run
     this.activeBoons = [];
 
@@ -920,26 +969,57 @@ class ProgressionManager {
 
   // ─── CALCULATE COMBAT & MOVEMENT STATS ───
   getPlayerStats() {
+    const doubleJumpActive = this.upgrades.doubleJump > 0 || this.hasRelic('relic_double_jump');
+    const magnetRange = this.hasRelic('relic_soul_magnet_aura') ? 400 : (this.hasBoon('soulMagnet') ? 260 : 70);
+    const bonusDmg = this.runBonusDaggerDmg || 0;
+    const bonusRegen = this.runBonusRegen || 0;
+
     return {
       maxHp: 100 + (this.upgrades.vitality * 10),
-      hpRegen: (this.upgrades.healthRegen || 0) * 0.5,
+      hpRegen: (this.upgrades.healthRegen || 0) * 0.5 + bonusRegen,
       hasSpikeResist: this.upgrades.spikeResist > 0,
       spikeDamageRatio: Math.max(0.35, 0.70 - (this.upgrades.spikeResist * 0.07)),
       moveSpeedMult: 1.0 + (this.upgrades.agility * 0.035),
       jumpForceMult: 1.0 + (this.upgrades.jumpPower * 0.02),
       weaponName: 'Daga Básica',
       weaponType: 'dagger',
-      daggerDamage: 16 + (this.upgrades.bladeMastery * 2.5),
-      swordDamage: 16 + (this.upgrades.bladeMastery * 2.5),
-      hasDoubleJump: this.upgrades.doubleJump > 0,
-      magnetRadius: this.hasBoon('soulMagnet') ? 260 : 70
+      daggerDamage: 16 + (this.upgrades.bladeMastery * 2.5) + bonusDmg,
+      swordDamage: 16 + (this.upgrades.bladeMastery * 2.5) + bonusDmg,
+      hasDoubleJump: doubleJumpActive,
+      magnetRadius: magnetRange
     };
+  }
+
+  // ─── RELIC MANAGEMENT ───
+  hasRelic(id) {
+    if (!this.runRelics) return false;
+    return this.runRelics.some(r => (typeof r === 'string' ? r === id : r.id === id));
+  }
+
+  addRelic(relicOrId) {
+    if (!this.runRelics) this.runRelics = [];
+    const id = typeof relicOrId === 'string' ? relicOrId : (relicOrId && relicOrId.id);
+    if (!id || this.hasRelic(id)) return;
+
+    const relicDef = this.relicDefinitions.find(r => r.id === id) || (typeof relicOrId === 'object' ? relicOrId : { id, name: id, icon: '🔮', desc: '' });
+    this.runRelics.push(relicDef);
+
+    if (window.game && window.game.showGothicAnnouncement) {
+      window.game.showGothicAnnouncement(`${relicDef.icon || '🔮'} ¡RELIQUIA OBTENIDA!`, `${relicDef.name}: ${relicDef.desc}`);
+    }
+    if (window.soundEngine && window.soundEngine.playAchievementUnlocked) {
+      window.soundEngine.playAchievementUnlocked();
+    }
+    this.updateHUD();
   }
 
   // ─── ROGUE-LITE BOONS & PASSIVE WEAPONS PER RUN ───
   resetRunBoons() {
     this.activeBoons = [];
     this.activeJokers = [];
+    this.runRelics = [];
+    this.runBonusDaggerDmg = 0;
+    this.runBonusRegen = 0;
     this.runLevel = 1;
     this.runXp = 0;
     this.runXpToNext = 30;
@@ -1262,10 +1342,22 @@ class ProgressionManager {
       }
     }
 
-    // Boons icons
+    // Boons & Relics icons
     const boonsContainer = document.getElementById('hud-active-boons');
     if (boonsContainer) {
       boonsContainer.innerHTML = '';
+      // Render Relics first with glowing gold frame
+      if (this.runRelics) {
+        for (const r of this.runRelics) {
+          const badge = document.createElement('span');
+          badge.className = 'boon-badge relic-badge';
+          badge.style.border = '1px solid #ffd700';
+          badge.style.boxShadow = '0 0 6px rgba(255, 215, 0, 0.4)';
+          badge.title = `[RELIQUIA] ${r.name}: ${r.desc}`;
+          badge.textContent = r.icon || '🔮';
+          boonsContainer.appendChild(badge);
+        }
+      }
       for (const b of this.activeBoons) {
         const badge = document.createElement('span');
         badge.className = 'boon-badge';

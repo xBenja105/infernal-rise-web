@@ -928,6 +928,18 @@ class PassiveWeaponsManager {
           }
         }
       }
+
+      // Reliquia: Espejo Espectral (Rebote en muros laterales con +25% daño y velocidad)
+      if (window.progression && window.progression.hasRelic('relic_bouncing_projectiles') && !p.hasBounced) {
+        const lvlW = (level && level.width) ? level.width : 960;
+        if ((p.x <= 16 && p.vx < 0) || (p.x >= lvlW - 16 && p.vx > 0)) {
+          p.vx = -p.vx * 1.25;
+          p.damage = Math.round(p.damage * 1.25);
+          p.hasBounced = true;
+          if (particleSys) particleSys.spawnSlashSparks(p.x, p.y, Math.sign(p.vx));
+          if (soundEng && soundEng.playSwordSlash) soundEng.playSwordSlash();
+        }
+      }
     }
 
     // ─── 7. UPDATE LIGHTNING TIMERS ───

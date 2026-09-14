@@ -3361,6 +3361,89 @@ body.in-menu #virtual-controls {
   text-align: center;
 }
 
+/* ─── HERMIT HAVEN SHOP MODAL ─── */
+.hermit-shop-container {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 45px rgba(245, 158, 11, 0.3), 0 0 80px rgba(0, 0, 0, 0.9) !important;
+}
+
+.hermit-item-card {
+  background: rgba(26, 17, 10, 0.85);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+
+.hermit-item-card:hover {
+  border-color: #f59e0b;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.4);
+  transform: translateY(-2px);
+}
+
+.hermit-item-card.is-purchased {
+  opacity: 0.45;
+  border-color: #555;
+  pointer-events: none;
+}
+
+.hermit-item-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hermit-item-icon {
+  font-size: 26px;
+}
+
+.hermit-item-name {
+  font-family: 'Cinzel', serif;
+  font-size: 15px;
+  font-weight: bold;
+  color: #fef08a;
+}
+
+.hermit-item-desc {
+  font-size: 13px;
+  line-height: 1.4;
+  color: #cbd5e1;
+}
+
+.hermit-item-btn {
+  background: linear-gradient(180deg, #d97706 0%, #78350f 100%);
+  border: 1px solid #f59e0b;
+  color: #fff;
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: bold;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.hermit-item-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #f59e0b 0%, #92400e 100%);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
+}
+
+.hermit-item-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.relic-badge {
+  border: 1px solid #ffd700 !important;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.5) !important;
+  background: rgba(245, 158, 11, 0.2) !important;
+}
+
+
 
 
 

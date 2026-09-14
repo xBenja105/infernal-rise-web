@@ -33,16 +33,20 @@ class Game {
       down: false,
       jump: false,
       attack: false,
+      dash: false,
       interact: false
     };
 
-    // Entities
+    // Entities & Interactables
     this.player = null;
     this.enemies = [];
     this.bats = [];
     this.enemyProjectiles = [];
     this.boss = null;
     this.bossProjectiles = [];
+    this.hermitMerchant = null;
+    this.nearHermitMerchant = false;
+    this.nearChallengeShrine = false;
     this.ladders = [];
     this.movingPlatforms = [];
     this.crumblingPlatforms = [];
@@ -100,8 +104,12 @@ class Game {
       down: ['KeyS', 'ArrowDown'],
       jump: ['Space'],
       attack: ['KeyZ', 'KeyJ'],
+      dash: ['ShiftLeft', 'ShiftRight', 'KeyK'],
       interact: ['KeyE']
     };
+    if (!this.keybindings.dash) {
+      this.keybindings.dash = ['ShiftLeft', 'ShiftRight', 'KeyK'];
+    }
     this.rebindingAction = null;
 
     // UI elements
@@ -219,8 +227,16 @@ class Game {
       btnSlotStartRun: document.getElementById('btn-slot-start-run'),
       slotLeverHitbox: document.getElementById('slot-lever-hitbox'),
       slotStatusBox: document.getElementById('slot-status-box'),
-      slotPlayerSouls: document.getElementById('slot-player-souls'),
       slotCurrentWeapons: document.getElementById('slot-current-weapons'),
+
+      // Hermit Haven Shop Modal
+      hermitShopModal: document.getElementById('hermit-shop-modal'),
+      hermitShopGrid: document.getElementById('hermit-shop-grid'),
+      hermitShopSouls: document.getElementById('hermit-shop-souls'),
+      hermitShopHp: document.getElementById('hermit-shop-hp'),
+      hermitShopRelicsCount: document.getElementById('hermit-shop-relics-count'),
+      btnCloseHermitShop: document.getElementById('btn-close-hermit-shop'),
+      btnHermitShopDone: document.getElementById('btn-hermit-shop-done'),
 
       // Mobile Touch Elements
       btnTouchPause: document.getElementById('btn-touch-pause'),
@@ -406,6 +422,7 @@ class Game {
       }
 
       if (this.isActionKey('attack', e.code)) this.input.attack = true;
+      if (this.isActionKey('dash', e.code)) this.input.dash = true;
 
       if (this.isActionKey('interact', e.code)) {
         this.input.interact = true;
@@ -417,6 +434,10 @@ class Game {
           this.openSlotMachineModal();
         } else if (this.nearSanctuary) {
           this.openSanctuaryModal();
+        } else if (this.nearHermitMerchant) {
+          this.openHermitShopModal();
+        } else if (this.nearChallengeShrine) {
+          this.activateChallengeShrine(this.level.challengeShrine);
         } else {
           this.checkNpcInteraction();
         }
@@ -434,7 +455,9 @@ class Game {
           this.renderKeyRemapUI();
           return;
         }
-        if (this.state === 'SANCTUARY') {
+        if (this.state === 'HERMIT_SHOP') {
+          this.closeHermitShopModal();
+        } else if (this.state === 'SANCTUARY') {
           this.closeSanctuaryModal();
         } else if (this.state === 'SLOT_MACHINE') {
           this.closeSlotMachineModal();
@@ -453,6 +476,7 @@ class Game {
       if (this.isActionKey('down', e.code)) this.input.down = false;
       if (this.isActionKey('jump', e.code)) this.input.jump = false;
       if (this.isActionKey('attack', e.code)) this.input.attack = false;
+      if (this.isActionKey('dash', e.code)) this.input.dash = false;
       if (this.isActionKey('interact', e.code)) this.input.interact = false;
     });
 
@@ -901,6 +925,14 @@ class Game {
     if (this.ui.slotLeverHitbox) {
       this.ui.slotLeverHitbox.addEventListener('click', () => this.spinSlotMachine());
     }
+
+    // Tienda del Ermitaño Modal Actions
+    if (this.ui.btnCloseHermitShop) {
+      this.ui.btnCloseHermitShop.addEventListener('click', () => this.closeHermitShopModal());
+    }
+    if (this.ui.btnHermitShopDone) {
+      this.ui.btnHermitShopDone.addEventListener('click', () => this.closeHermitShopModal());
+    }
   }
 
   // ─── STATE / SCREEN TRANSITIONS ───
@@ -1098,6 +1130,9 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     this.healthOrbs = [];
     this.flameWaves = [];
     this.activeChest = null;
+    this.hermitMerchant = null;
+    this.nearHermitMerchant = false;
+    this.nearChallengeShrine = false;
     this.lastReportedAltitude = 0;
     this.levelGraceTimer = 4.0;
     this.chests = (this.level.chests || []).map(c => new BoonChest(c));
@@ -1358,6 +1393,18 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       bossName: this.boss.name
     });
     this.chests.push(bossChest);
+
+    // Spawn Hermit Haven Shop NPC (Comerciante del Averno)
+    this.hermitMerchant = {
+      x: Math.max(90, chestX - 100),
+      y: 412,
+      w: 28,
+      h: 40,
+      name: 'Ermitaño del Averno'
+    };
+    if (window.particleSystem) {
+      window.particleSystem.spawnTeleportSparks(this.hermitMerchant.x + 14, this.hermitMerchant.y + 20);
+    }
 
     // Spawn Ascension Portal in Boss Room
     if (this.boss.nextLevel) {
@@ -1779,6 +1826,31 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       bat.update(dt, this.player, this.level, window.soundEngine, window.particleSystem);
     }
 
+    // 4c. Update Challenge Shrine Progress
+    if (this.level && this.level.challengeShrine && this.level.challengeShrine.active) {
+      const cs = this.level.challengeShrine;
+      const aliveChallenge = this.enemies.filter(e => e.isChallenge && !e.isDead && e.hp > 0).length;
+      cs.enemiesLeft = aliveChallenge;
+      if (aliveChallenge === 0) {
+        cs.active = false;
+        cs.completed = true;
+        this.level.lavaSpeed = this.originalLavaSpeed !== undefined ? this.originalLavaSpeed : 21;
+        this.showGothicAnnouncement('✨ ¡DESAFÍO SUPERADO!', 'El Monolito ha liberado el Cofre Legendario.');
+        if (window.soundEngine && window.soundEngine.playAchievementUnlocked) {
+          window.soundEngine.playAchievementUnlocked();
+        }
+        const relicChest = new BoonChest({
+          x: cs.x - 4,
+          y: cs.y + 14,
+          id: `challenge_relic_${this.level.id}`,
+          isRelic: true
+        });
+        this.chests.push(relicChest);
+        this.spawnSoulOrbs(cs.x + 16, cs.y + 10, 4, 80);
+        if (window.progression) window.progression.addRunXp(50);
+      }
+    }
+
     // Sword attack hitbox for urns, bats, and projectiles
     let swordHitbox = null;
     if (this.player.isAttacking && (this.player.attackFrame === 1 || this.player.attackFrame === 2)) {
@@ -1933,14 +2005,39 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
     const btnKey = this.lastInputDevice === 'gamepad' ? '[RB/B]' : '[E]';
 
-    // Interaction Badge (Chest, Slot Machine, Sanctuary, or NPC)
+    // Interaction Badge (Chest, Slot Machine, Sanctuary, Hermit, Challenge, or NPC)
     this.nearSanctuary = false;
     this.nearSlotMachine = false;
+    this.nearHermitMerchant = false;
+    this.nearChallengeShrine = false;
+
     if (this.activeChest) {
       this.ui.interactionBadge.style.display = 'block';
       this.ui.interactionBadge.textContent = `${btnKey} Abrir Cofre`;
       const screenX = ((this.activeChest.x + this.activeChest.w / 2 - this.camX) / this.vWidth) * 100;
       const screenY = ((this.activeChest.y - 14 - this.camY) / this.vHeight) * 100;
+      this.ui.interactionBadge.style.left = `${screenX}%`;
+      this.ui.interactionBadge.style.top = `${screenY}%`;
+    } else if (this.hermitMerchant && Math.hypot(
+        (this.player.x + this.player.w / 2) - (this.hermitMerchant.x + 14),
+        (this.player.y + this.player.h / 2) - (this.hermitMerchant.y + 20)
+      ) < 75 && this.state !== 'DIALOGUE') {
+      this.nearHermitMerchant = true;
+      this.ui.interactionBadge.style.display = 'block';
+      this.ui.interactionBadge.textContent = `🎒 ${btnKey} Tienda del Ermitaño`;
+      const screenX = ((this.hermitMerchant.x + 14 - this.camX) / this.vWidth) * 100;
+      const screenY = ((this.hermitMerchant.y - 16 - this.camY) / this.vHeight) * 100;
+      this.ui.interactionBadge.style.left = `${screenX}%`;
+      this.ui.interactionBadge.style.top = `${screenY}%`;
+    } else if (this.level && this.level.challengeShrine && !this.level.challengeShrine.completed && !this.level.challengeShrine.active && Math.hypot(
+        (this.player.x + this.player.w / 2) - (this.level.challengeShrine.x + 16),
+        (this.player.y + this.player.h / 2) - (this.level.challengeShrine.y + 20)
+      ) < 75 && this.state !== 'DIALOGUE') {
+      this.nearChallengeShrine = true;
+      this.ui.interactionBadge.style.display = 'block';
+      this.ui.interactionBadge.textContent = `⚔️ ${btnKey} Activar Desafío del Averno`;
+      const screenX = ((this.level.challengeShrine.x + 16 - this.camX) / this.vWidth) * 100;
+      const screenY = ((this.level.challengeShrine.y - 16 - this.camY) / this.vHeight) * 100;
       this.ui.interactionBadge.style.left = `${screenX}%`;
       this.ui.interactionBadge.style.top = `${screenY}%`;
     } else if (this.level && this.level.slotMachine && Math.hypot(
@@ -2131,6 +2228,14 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     // 7. Draw NPC
     if (this.level.npc) {
       this.drawNpc(this.level.npc, finalCamX, finalCamY);
+    }
+
+    // 7b. Draw Hermit Haven Merchant & Challenge Shrine
+    if (this.hermitMerchant) {
+      this.drawHermitMerchant(this.hermitMerchant, finalCamX, finalCamY);
+    }
+    if (this.level.challengeShrine) {
+      this.drawChallengeShrine(this.level.challengeShrine, finalCamX, finalCamY);
     }
 
     // 8. Draw Enemies & Bats
@@ -3184,6 +3289,285 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     }
   }
 
+  drawHermitMerchant(merchant, camX, camY) {
+    if (!merchant) return;
+    const rx = Math.round(merchant.x - camX);
+    const ry = Math.round(merchant.y - camY);
+    const bob = Math.sin(Date.now() / 400) * 1.5;
+    const ctx = this.ctx;
+    ctx.save();
+
+    // Robed hermit body
+    ctx.fillStyle = '#1e1b4b'; // Dark mystic navy robe
+    ctx.fillRect(rx + 6, ry + 12 + bob, 16, 26);
+    // Cowl & hood
+    ctx.fillStyle = '#312e81';
+    ctx.beginPath();
+    ctx.moveTo(rx + 5, ry + 12 + bob);
+    ctx.lineTo(rx + 14, ry + 2 + bob);
+    ctx.lineTo(rx + 23, ry + 12 + bob);
+    ctx.closePath();
+    ctx.fill();
+    // Glowing yellow eyes inside cowl
+    ctx.fillStyle = '#fef08a';
+    ctx.fillRect(rx + 10, ry + 8 + bob, 2, 2);
+    ctx.fillRect(rx + 16, ry + 8 + bob, 2, 2);
+    // Wooden staff
+    ctx.fillStyle = '#78350f';
+    ctx.fillRect(rx + 24, ry + 6 + bob, 3, 32);
+    // Golden lantern hanging from staff with warm aura
+    const lanternFlicker = 0.8 + Math.sin(Date.now() / 150) * 0.2;
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillRect(rx + 22, ry + 20 + bob, 7, 9);
+    ctx.fillStyle = `rgba(245, 158, 11, ${0.35 * lanternFlicker})`;
+    ctx.beginPath();
+    ctx.arc(rx + 25, ry + 24 + bob, 22, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Overhead title
+    ctx.font = 'bold 9px Cinzel, serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#fde047';
+    ctx.shadowColor = '#000';
+    ctx.shadowBlur = 4;
+    ctx.fillText('Ermitaño del Averno', rx + 14, ry - 6);
+
+    ctx.restore();
+  }
+
+  drawChallengeShrine(cs, camX, camY) {
+    if (!cs) return;
+    const rx = Math.round(cs.x - camX);
+    const ry = Math.round(cs.y - camY);
+    const ctx = this.ctx;
+    ctx.save();
+
+    // Obelisk stone pillar
+    ctx.fillStyle = cs.completed ? '#475569' : '#0f172a';
+    ctx.fillRect(rx + 6, ry + 8, 20, 34);
+    // Base pedestal
+    ctx.fillStyle = cs.completed ? '#334155' : '#1e293b';
+    ctx.fillRect(rx + 2, ry + 36, 28, 6);
+
+    // Glowing runes on the pillar
+    const runeColor = cs.completed ? '#94a3b8' : (cs.active ? '#ef4444' : '#f59e0b');
+    const glowPulse = cs.completed ? 0.3 : (0.6 + Math.sin(Date.now() / 250) * 0.35);
+    ctx.fillStyle = runeColor;
+    ctx.globalAlpha = glowPulse;
+    ctx.fillRect(rx + 14, ry + 14, 4, 4);
+    ctx.fillRect(rx + 12, ry + 22, 8, 3);
+    ctx.fillRect(rx + 15, ry + 28, 2, 5);
+
+    // Floating Runic Orb on top
+    const orbBob = Math.sin(Date.now() / 350) * 3;
+    ctx.globalAlpha = 1.0;
+    ctx.fillStyle = runeColor;
+    ctx.beginPath();
+    ctx.arc(rx + 16, ry + 2 + orbBob, 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Glowing aura
+    ctx.fillStyle = cs.active ? 'rgba(239, 68, 68, 0.3)' : 'rgba(245, 158, 11, 0.25)';
+    ctx.beginPath();
+    ctx.arc(rx + 16, ry + 2 + orbBob, 16, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (cs.active) {
+      ctx.fillStyle = '#ef4444';
+      ctx.font = 'bold 11px Cinzel, serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`⚔️ Restantes: ${cs.enemiesLeft}`, rx + 16, ry - 14);
+    } else {
+      ctx.fillStyle = cs.completed ? '#94a3b8' : '#ffd166';
+      ctx.font = 'bold 9px Cinzel, serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(cs.completed ? 'Desafío Superado' : 'Monolito de Desafío', rx + 16, ry - 10);
+    }
+    ctx.restore();
+  }
+
+  activateChallengeShrine(cs) {
+    if (!cs || cs.active || cs.completed) return;
+    cs.active = true;
+    this.originalLavaSpeed = this.level.lavaSpeed;
+    this.level.lavaSpeed = Math.min(6, (this.level.lavaSpeed || 21) * 0.25); // Slow down lava during challenge
+
+    this.showGothicAnnouncement('⚔️ ¡DESAFÍO DEL AVERNO!', 'Purga a los 4 campeones para desbloquear el Cofre Legendario.');
+    if (window.soundEngine && window.soundEngine.playMeteorExplosion) {
+      window.soundEngine.playMeteorExplosion();
+    }
+    this.triggerScreenShake(7, 0.4);
+
+    // Spawn 4 elite enemies on and near the shrine platform
+    const p = cs.platform;
+    for (let i = 0; i < 4; i++) {
+      const offsetX = (i % 2 === 0 ? -1 : 1) * (30 + i * 28);
+      const ex = Math.max(p.x + 8, Math.min(p.x + p.w - 32, cs.x + offsetX));
+      const skin = this.level.biome || 'abyss';
+      const enemy = new SkeletonEnemy({
+        x: ex,
+        y: p.y - 42,
+        isElite: true,
+        skin: skin,
+        hp: 75 + (i * 10),
+        minX: p.x + 4,
+        maxX: p.x + p.w - 4
+      });
+      enemy.isChallenge = true;
+      this.enemies.push(enemy);
+      if (window.particleSystem) {
+        window.particleSystem.spawnBloodExplosion(ex + 12, p.y - 20, 20);
+      }
+    }
+  }
+
+  // ─── TIENDA DE RESPIRO DEL ERMITAÑO ───
+  openHermitShopModal() {
+    if (!this.ui.hermitShopModal) return;
+    this.state = 'HERMIT_SHOP';
+    this.ui.hermitShopModal.classList.remove('hidden');
+    this.renderHermitShopItems();
+    if (window.soundEngine && window.soundEngine.playOpenSanctuary) {
+      window.soundEngine.playOpenSanctuary();
+    }
+  }
+
+  closeHermitShopModal() {
+    if (!this.ui.hermitShopModal) return;
+    this.ui.hermitShopModal.classList.add('hidden');
+    this.state = 'PLAYING';
+    if (window.soundEngine && window.soundEngine.playCloseSanctuary) {
+      window.soundEngine.playCloseSanctuary();
+    }
+  }
+
+  renderHermitShopItems() {
+    if (!this.ui.hermitShopGrid) return;
+    this.ui.hermitShopGrid.innerHTML = '';
+
+    const souls = window.progression ? Math.floor(window.progression.souls) : 0;
+    const playerHp = this.player ? Math.round(this.player.hp) : 100;
+    const playerMaxHp = this.player ? Math.round(this.player.maxHp) : 100;
+    const relicsCount = window.progression && window.progression.runRelics ? window.progression.runRelics.length : 0;
+
+    if (this.ui.hermitShopSouls) this.ui.hermitShopSouls.textContent = souls;
+    if (this.ui.hermitShopHp) this.ui.hermitShopHp.textContent = `${playerHp}/${playerMaxHp}`;
+    if (this.ui.hermitShopRelicsCount) this.ui.hermitShopRelicsCount.textContent = relicsCount;
+
+    const items = [
+      {
+        id: 'potion_heal',
+        name: 'Poción de Sangre Vital',
+        icon: '🍷',
+        cost: 35,
+        desc: 'Restaura +75 HP de salud inmediatamente para resistir el próximo piso.',
+        canBuy: () => this.player && this.player.hp < this.player.maxHp,
+        buy: () => {
+          if (this.player) {
+            this.player.hp = Math.min(this.player.maxHp, this.player.hp + 75);
+            if (window.particleSystem) window.particleSystem.spawnHealingCrosses(this.player.x + 12, this.player.y + 16, 12);
+          }
+        }
+      },
+      {
+        id: 'potion_regen',
+        name: 'Elixir de Regeneración',
+        icon: '🧪',
+        cost: 60,
+        desc: 'Otorga +2.0 HP/s de regeneración pasiva permanente para el resto de la run.',
+        canBuy: () => true,
+        buy: () => {
+          if (window.progression) {
+            window.progression.runBonusRegen = (window.progression.runBonusRegen || 0) + 2.0;
+          }
+        }
+      },
+      {
+        id: 'weapon_sharpen',
+        name: 'Piedra de Afilado Sombría',
+        icon: '🗡️',
+        cost: 50,
+        desc: 'Afila la daga básica aumentando su daño en +10 para toda la partida.',
+        canBuy: () => true,
+        buy: () => {
+          if (window.progression) {
+            window.progression.runBonusDaggerDmg = (window.progression.runBonusDaggerDmg || 0) + 10;
+          }
+        }
+      },
+      {
+        id: 'relic_random',
+        name: 'Reliquia Arcana del Ermitaño',
+        icon: '🔮',
+        cost: 85,
+        desc: 'El Ermitaño te entrega una reliquia pasiva ancestral que aún no posees.',
+        canBuy: () => {
+          if (!window.progression) return false;
+          return window.progression.relicDefinitions.some(r => !window.progression.hasRelic(r.id));
+        },
+        buy: () => {
+          if (window.progression) {
+            const available = window.progression.relicDefinitions.filter(r => !window.progression.hasRelic(r.id));
+            if (available.length > 0) {
+              const picked = available[Math.floor(Math.random() * available.length)];
+              window.progression.addRelic(picked.id);
+            }
+          }
+        }
+      },
+      {
+        id: 'relic_hermes',
+        name: 'Sandalias de Hermes',
+        icon: '👟',
+        cost: 70,
+        desc: 'Reliquia Pasiva: Reduce el enfriamiento del Dash a 0.4s y deja una estela de fuego.',
+        canBuy: () => window.progression && !window.progression.hasRelic('relic_dash_master'),
+        buy: () => {
+          if (window.progression) window.progression.addRelic('relic_dash_master');
+        }
+      }
+    ];
+
+    for (const item of items) {
+      const card = document.createElement('div');
+      card.className = 'hermit-item-card';
+
+      const availableToBuy = item.canBuy();
+      const canAfford = souls >= item.cost;
+
+      card.innerHTML = `
+        <div>
+          <div class="hermit-item-header">
+            <span class="hermit-item-icon">${item.icon}</span>
+            <span class="hermit-item-name">${item.name}</span>
+          </div>
+          <div class="hermit-item-desc" style="margin-top:6px;">${item.desc}</div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+          <span style="color:#f4d06f; font-weight:bold; font-size:14px;">${item.cost} 🔮 Almas</span>
+          <button class="hermit-item-btn" ${(!canAfford || !availableToBuy) ? 'disabled' : ''}>
+            ${!availableToBuy ? 'Adquirido' : (canAfford ? 'Comprar' : 'Almas Insuficientes')}
+          </button>
+        </div>
+      `;
+
+      const buyBtn = card.querySelector('.hermit-item-btn');
+      if (buyBtn && canAfford && availableToBuy) {
+        buyBtn.addEventListener('click', () => {
+          window.progression.souls -= item.cost;
+          item.buy();
+          if (window.soundEngine && window.soundEngine.playUpgradePurchase) {
+            window.soundEngine.playUpgradePurchase();
+          }
+          window.progression.updateHUD();
+          this.renderHermitShopItems();
+        });
+      }
+
+      this.ui.hermitShopGrid.appendChild(card);
+    }
+  }
+
   getLavaPalette() {
     const theme = this.level ? this.level.lavaTheme : null;
     const levelId = this.level ? this.level.id : '';
@@ -4193,7 +4577,10 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       if (curr[2]) this.input.attack = true;
       else if (this.lastInputDevice === 'gamepad') this.input.attack = false;
 
-      if (curr[1] || curr[5]) this.input.interact = true;
+      if (curr[1] || curr[5]) this.input.dash = true;
+      else if (this.lastInputDevice === 'gamepad') this.input.dash = false;
+
+      if (curr[3] || curr[4]) this.input.interact = true;
       else if (this.lastInputDevice === 'gamepad') this.input.interact = false;
 
       if (justPressed(0) && this.player) {
@@ -4203,7 +4590,9 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
     // One-shot Controller Buttons
     if (justPressed(9)) { // Start / Options -> Pause toggle
-      if (this.state === 'SANCTUARY') {
+      if (this.state === 'HERMIT_SHOP') {
+        this.closeHermitShopModal();
+      } else if (this.state === 'SANCTUARY') {
         this.closeSanctuaryModal();
       } else if (this.state === 'SLOT_MACHINE') {
         this.closeSlotMachineModal();
@@ -4466,6 +4855,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       down: ['KeyS', 'ArrowDown'],
       jump: ['Space'],
       attack: ['KeyZ', 'KeyJ'],
+      dash: ['ShiftLeft', 'ShiftRight', 'KeyK'],
       interact: ['KeyE']
     };
     this.rebindingAction = null;
@@ -4489,6 +4879,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       { id: 'down', labelKey: 'action.down', fallback: 'Bajar Escalera' },
       { id: 'jump', labelKey: 'action.jump', fallback: 'Saltar' },
       { id: 'attack', labelKey: 'action.attack', fallback: 'Atacar (Espada)' },
+      { id: 'dash', labelKey: 'action.dash', fallback: 'Esquiva / Dash' },
       { id: 'interact', labelKey: 'action.interact', fallback: 'Interactuar' }
     ];
 

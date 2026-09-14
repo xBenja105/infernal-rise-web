@@ -379,6 +379,24 @@ class LevelManager {
       label: config.portalLabel
     };
 
+    // Optional Tower Challenge Shrine (Mini-Evento del Averno en mitad de la torre)
+    let challengeShrine = null;
+    const midY = height * 0.5;
+    const candidatePlatforms = platforms.filter(p => Math.abs(p.y - midY) < 550 && p.w >= 140 && p.y > 600 && p.y < height - 500);
+    if (candidatePlatforms.length > 0) {
+      const bestPlat = candidatePlatforms[Math.floor(candidatePlatforms.length / 2)];
+      challengeShrine = {
+        x: bestPlat.x + Math.floor(bestPlat.w / 2) - 16,
+        y: bestPlat.y - 42,
+        w: 32,
+        h: 42,
+        active: false,
+        completed: false,
+        enemiesLeft: 0,
+        platform: bestPlat
+      };
+    }
+
     return {
       id: config.id,
       name: config.name,
@@ -405,6 +423,7 @@ class LevelManager {
       spikes,
       torches,
       npc: config.npc || null,
+      challengeShrine,
       enemies,
       bats,
       urns,

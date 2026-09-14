@@ -761,6 +761,33 @@
       </div>
     </div>
 
+    <!-- Hermit Shop Modal (Haven Rest Shop between Bosses & Floors) -->
+    <div id="hermit-shop-modal" class="screen-overlay hidden" style="z-index: 9600;">
+      <div class="sanctuary-container hermit-shop-container" style="max-width: 680px;">
+        <div class="sanctuary-header">
+          <div class="sanctuary-title-wrap">
+            <h2 class="game-title" style="font-size: 26px; margin: 0; color: #f59e0b;">Tienda del Ermitaño del Averno</h2>
+            <div class="sanctuary-subtitle">Un refugio sombrío donde adquirir reliquias arcanas y elixires antes de ascender</div>
+          </div>
+          <button id="btn-close-hermit-shop" class="btn-modal-close" title="Cerrar">✕</button>
+        </div>
+
+        <div class="sanctuary-wallet-bar">
+          <div class="wallet-stat"><span>🔮 Almas:</span> <b id="hermit-shop-souls">0</b></div>
+          <div class="wallet-stat"><span>❤️ Salud:</span> <b id="hermit-shop-hp">100/100</b></div>
+          <div class="wallet-stat"><span>🪶 Reliquias:</span> <b id="hermit-shop-relics-count">0</b></div>
+        </div>
+
+        <div id="hermit-shop-grid" class="upgrades-grid" style="margin-top: 14px; max-height: 380px; overflow-y: auto;">
+          <!-- Populated dynamically via JS -->
+        </div>
+
+        <div class="modal-footer-actions" style="margin-top: 16px; display: flex; justify-content: center;">
+          <button id="btn-hermit-shop-done" class="btn-infernal" style="min-width: 220px;">Continuar Ascenso ➔</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Reset Progress Confirmation Modal -->
     <div id="reset-confirm-modal" class="screen-overlay hidden" style="z-index: 10000;">
       <div class="sanctuary-container" style="max-width: 480px; text-align: center; padding: 28px; border-color: #ff3333; box-shadow: 0 0 35px rgba(255, 51, 51, 0.4);">
