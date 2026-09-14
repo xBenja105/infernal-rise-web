@@ -67,6 +67,10 @@ class PassiveWeaponsManager {
     };
   }
 
+  getArsenalStatus() {
+    return this.getActiveVisuals();
+  }
+
   acquireOrUpgrade(type) {
     if (this.weapons.has(type)) {
       const w = this.weapons.get(type);
@@ -93,7 +97,7 @@ class PassiveWeaponsManager {
 
     if (window.progression && window.progression.unlockAchievement) {
       window.progression.unlockAchievement('weapon_master');
-      if (this.weapons.size >= 7 || this.getArsenalStatus().hasAllWeapons) {
+      if (this.weapons.size >= 7 || (this.getActiveVisuals && this.getActiveVisuals().hasAllWeapons)) {
         window.progression.unlockAchievement('arsenal_complete');
       }
     }

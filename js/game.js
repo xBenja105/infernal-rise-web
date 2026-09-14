@@ -3467,6 +3467,8 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     if (this.level && this.level.id !== 'prologue' && !this.nearSlotMachine) return;
     this.prevStateBeforeSlot = this.state;
     this.state = 'SLOT_MACHINE';
+    this.isSlotSpinning = false;
+    if (this.ui.btnSpinSlot) this.ui.btnSpinSlot.disabled = false;
     this.updateSlotMachineUI();
     ['slot-reel-1', 'slot-reel-2', 'slot-reel-3'].forEach(id => {
       const w = document.getElementById(id);
@@ -3481,6 +3483,8 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     if (this.ui.slotMachineModal) {
       this.ui.slotMachineModal.classList.add('hidden');
     }
+    this.isSlotSpinning = false;
+    if (this.ui.btnSpinSlot) this.ui.btnSpinSlot.disabled = false;
     this.state = this.prevStateBeforeSlot || 'PLAYING';
   }
 
@@ -3495,11 +3499,13 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
         this.ui.slotCurrentWeapons.textContent = 'Ninguna equipada';
       } else {
         const weaponNames = [];
-        if (active.hasHolyCross) weaponNames.push('Cruces ✝️');
-        if (active.hasHellfireOrb) weaponNames.push('Orbe ☄️');
-        if (active.hasLightning) weaponNames.push('Rayos ⚡');
-        if (active.hasScythe) weaponNames.push('Guadaña 🪓');
-        if (active.hasGarlic) weaponNames.push('Penitencia 📿');
+        if (active.hasHolyCross) weaponNames.push(`Cruces ✝️ (Nv.${active.holyCrossLevel || 1})`);
+        if (active.hasHellfireOrb) weaponNames.push(`Orbe ☄️ (Nv.${active.hellfireOrbLevel || 1})`);
+        if (active.hasLightning) weaponNames.push(`Rayos ⚡ (Nv.${active.lightningLevel || 1})`);
+        if (active.hasScythe) weaponNames.push(`Guadaña 🪓 (Nv.${active.scytheLevel || 1})`);
+        if (active.hasGarlic) weaponNames.push(`Penitencia 📿 (Nv.${active.garlicLevel || 1})`);
+        if (active.hasJavelin) weaponNames.push(`Lanza 🔱 (Nv.${active.javelinLevel || 1})`);
+        if (active.hasChakram) weaponNames.push(`Chakram 🌀 (Nv.${active.chakramLevel || 1})`);
         this.ui.slotCurrentWeapons.textContent = weaponNames.join(', ');
       }
     }
@@ -3685,117 +3691,127 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
     // Stop Reel 3 at 2.35s & Evaluate
     setTimeout(() => {
-      isReel3Spinning = false;
-      clearInterval(tickInterval);
-      if (reel3) {
-        reel3.classList.remove('spinning');
-        reel3.innerHTML = `<div class="slot-symbol">${finalSymbols[2].icon}</div>`;
-      }
-      if (window.soundEngine && window.soundEngine.playSlotReelStop) {
-        window.soundEngine.playSlotReelStop();
-      }
+      try {
+        isReel3Spinning = false;
+        clearInterval(tickInterval);
+        if (reel3) {
+          reel3.classList.remove('spinning');
+          reel3.innerHTML = `<div class="slot-symbol">${finalSymbols[2].icon}</div>`;
+        }
+        if (window.soundEngine && window.soundEngine.playSlotReelStop) {
+          window.soundEngine.playSlotReelStop();
+        }
 
-      // Process Result
-      if (outcomeType === 'jackpot') {
-        [reelWindow1, reelWindow2, reelWindow3].forEach(w => w && w.classList.add('winner'));
-        const chosen = weaponSymbols[Math.floor(Math.random() * weaponSymbols.length)];
-        if (this.passiveWeaponsManager) {
-          this.passiveWeaponsManager.acquireOrUpgrade(chosen.id);
-        }
-        if (window.progression) {
-          window.progression.addSouls(100);
-        }
-        if (window.soundEngine && window.soundEngine.playSlotJackpot) {
-          window.soundEngine.playSlotJackpot();
-        }
-        if (window.particleSystem) {
-          window.particleSystem.triggerScreenShake(0.35, 8);
-          window.particleSystem.spawnFloatingText(`👑 ¡GRAN JACKPOT!`, this.player ? this.player.x + 12 : 1170, this.player ? this.player.y - 20 : 330, { isMegabonk: true });
-        }
-        if (this.ui.slotStatusBox) {
-          this.ui.slotStatusBox.innerHTML = `👑 <b style="color:#ffd700;">¡TRIPLE CORONA! ¡GRAN JACKPOT!</b> Has obtenido <b>${chosen.name} ${chosen.icon}</b> + 100 🔮 de bonificación.`;
-        }
-        if (window.progression && window.progression.unlockAchievement) {
-          window.progression.unlockAchievement('lucky_spin');
-        }
-      } else if (outcomeType === 'weapon_win') {
-        [reelWindow1, reelWindow2, reelWindow3].forEach(w => w && w.classList.add('winner'));
-        if (this.passiveWeaponsManager) {
-          this.passiveWeaponsManager.acquireOrUpgrade(matchedSymbol.id);
-        }
-        if (window.soundEngine && window.soundEngine.playSlotJackpot) {
-          window.soundEngine.playSlotJackpot();
-        }
-        if (window.particleSystem) {
-          window.particleSystem.spawnFloatingText(`✨ ¡${matchedSymbol.name.toUpperCase()}!`, this.player ? this.player.x + 12 : 1170, this.player ? this.player.y - 20 : 330, { isMegabonk: true });
-        }
-        if (this.ui.slotStatusBox) {
-          this.ui.slotStatusBox.innerHTML = `✨ <b style="color:#00f5d4;">¡TRIPLE COINCIDENCIA!</b> Has ganado: <b>${matchedSymbol.name} ${matchedSymbol.icon}</b> para iniciar tu run.`;
-        }
-        if (window.progression && window.progression.unlockAchievement) {
-          window.progression.unlockAchievement('lucky_spin');
-        }
-      } else if (outcomeType === 'souls_win') {
-        [reelWindow1, reelWindow2, reelWindow3].forEach(w => w && w.classList.add('winner'));
-        if (window.progression) {
-          window.progression.addSouls(160);
-        }
-        if (window.soundEngine && window.soundEngine.playSlotJackpot) {
-          window.soundEngine.playSlotJackpot();
-        }
-        if (window.particleSystem) {
-          window.particleSystem.spawnFloatingText(`+160 🔮`, this.player ? this.player.x + 12 : 1170, this.player ? this.player.y - 20 : 330, { isMegabonk: true });
-        }
-        if (this.ui.slotStatusBox) {
-          this.ui.slotStatusBox.innerHTML = `🔮 <b style="color:#a78bfa;">¡TRIPLE CÁLIZ DE ALMAS!</b> Has ganado <b>160 🔮</b> (¡el doble de tu ofrenda!).`;
-        }
-        if (window.progression && window.progression.unlockAchievement) {
-          window.progression.unlockAchievement('lucky_spin');
-        }
-      } else if (outcomeType === 'two_match') {
-        // Highlight the 2 matching reels and dim the 3rd
-        finalSymbols.forEach((s, idx) => {
-          const w = [reelWindow1, reelWindow2, reelWindow3][idx];
-          if (w) {
-            if (s.id === matchedSymbol.id) w.classList.add('match-two');
-            else w.classList.add('no-match');
+        // Process Result
+        if (outcomeType === 'jackpot') {
+          [reelWindow1, reelWindow2, reelWindow3].forEach(w => w && w.classList.add('winner'));
+          const chosen = weaponSymbols[Math.floor(Math.random() * weaponSymbols.length)];
+          if (this.passiveWeaponsManager) {
+            this.passiveWeaponsManager.acquireOrUpgrade(chosen.id);
           }
-        });
-        const consolationSouls = 25;
-        if (window.progression) {
-          window.progression.addSouls(consolationSouls);
+          if (window.progression) {
+            window.progression.addSouls(100);
+          }
+          if (window.soundEngine && window.soundEngine.playSlotJackpot) {
+            window.soundEngine.playSlotJackpot();
+          }
+          if (window.particleSystem) {
+            window.particleSystem.triggerScreenShake(0.35, 8);
+            window.particleSystem.spawnFloatingText(`👑 ¡GRAN JACKPOT!`, this.player ? this.player.x + 12 : 1170, this.player ? this.player.y - 20 : 330, { isMegabonk: true });
+          }
+          if (this.ui.slotStatusBox) {
+            this.ui.slotStatusBox.innerHTML = `👑 <b style="color:#ffd700;">¡TRIPLE CORONA! ¡GRAN JACKPOT!</b> Has obtenido <b>${chosen.name} ${chosen.icon}</b> + 100 🔮 de bonificación.`;
+          }
+          if (window.progression && window.progression.unlockAchievement) {
+            window.progression.unlockAchievement('lucky_spin');
+          }
+        } else if (outcomeType === 'weapon_win') {
+          [reelWindow1, reelWindow2, reelWindow3].forEach(w => w && w.classList.add('winner'));
+          const alreadyHad = this.passiveWeaponsManager && this.passiveWeaponsManager.hasWeapon(matchedSymbol.id);
+          if (this.passiveWeaponsManager) {
+            this.passiveWeaponsManager.acquireOrUpgrade(matchedSymbol.id);
+          }
+          const newLvl = this.passiveWeaponsManager ? this.passiveWeaponsManager.getLevel(matchedSymbol.id) : 1;
+          if (window.soundEngine && window.soundEngine.playSlotJackpot) {
+            window.soundEngine.playSlotJackpot();
+          }
+          if (window.particleSystem) {
+            window.particleSystem.spawnFloatingText(`✨ ¡${matchedSymbol.name.toUpperCase()}!`, this.player ? this.player.x + 12 : 1170, this.player ? this.player.y - 20 : 330, { isMegabonk: true });
+          }
+          if (this.ui.slotStatusBox) {
+            if (alreadyHad) {
+              this.ui.slotStatusBox.innerHTML = `✨ <b style="color:#00f5d4;">¡TRIPLE COINCIDENCIA!</b> Arma potenciada: <b>${matchedSymbol.name} ${matchedSymbol.icon}</b> a <b>Nv.${newLvl}</b>.`;
+            } else {
+              this.ui.slotStatusBox.innerHTML = `✨ <b style="color:#00f5d4;">¡TRIPLE COINCIDENCIA!</b> Has ganado: <b>${matchedSymbol.name} ${matchedSymbol.icon}</b> (Nv.1) para iniciar tu run.`;
+            }
+          }
+          if (window.progression && window.progression.unlockAchievement) {
+            window.progression.unlockAchievement('lucky_spin');
+          }
+        } else if (outcomeType === 'souls_win') {
+          [reelWindow1, reelWindow2, reelWindow3].forEach(w => w && w.classList.add('winner'));
+          if (window.progression) {
+            window.progression.addSouls(160);
+          }
+          if (window.soundEngine && window.soundEngine.playSlotJackpot) {
+            window.soundEngine.playSlotJackpot();
+          }
+          if (window.particleSystem) {
+            window.particleSystem.spawnFloatingText(`+160 🔮`, this.player ? this.player.x + 12 : 1170, this.player ? this.player.y - 20 : 330, { isMegabonk: true });
+          }
+          if (this.ui.slotStatusBox) {
+            this.ui.slotStatusBox.innerHTML = `🔮 <b style="color:#a78bfa;">¡TRIPLE CÁLIZ DE ALMAS!</b> Has ganado <b>160 🔮</b> (¡el doble de tu ofrenda!).`;
+          }
+          if (window.progression && window.progression.unlockAchievement) {
+            window.progression.unlockAchievement('lucky_spin');
+          }
+        } else if (outcomeType === 'two_match') {
+          // Highlight the 2 matching reels and dim the 3rd
+          finalSymbols.forEach((s, idx) => {
+            const w = [reelWindow1, reelWindow2, reelWindow3][idx];
+            if (w) {
+              if (s.id === matchedSymbol.id) w.classList.add('match-two');
+              else w.classList.add('no-match');
+            }
+          });
+          const consolationSouls = 25;
+          if (window.progression) {
+            window.progression.addSouls(consolationSouls);
+          }
+          if (window.soundEngine && window.soundEngine.playSlotNearMiss) {
+            window.soundEngine.playSlotNearMiss();
+          } else if (window.soundEngine && window.soundEngine.playSoulPickup) {
+            window.soundEngine.playSoulPickup();
+          }
+          if (window.particleSystem) {
+            window.particleSystem.spawnFloatingText(`+25 🔮 Consuelo`, this.player ? this.player.x + 12 : 1170, this.player ? this.player.y - 20 : 330);
+          }
+          if (this.ui.slotStatusBox) {
+            this.ui.slotStatusBox.innerHTML = `🥈 <b style="color:#ffd166;">¡CASI! 2 coincidencias de ${matchedSymbol.name} ${matchedSymbol.icon}</b>. La tercera runa fue distinta. No obtienes el arma, pero recuperas <b>${consolationSouls} 🔮</b> de consuelo.`;
+          }
+        } else {
+          // Total Miss
+          [reelWindow1, reelWindow2, reelWindow3].forEach(w => w && w.classList.add('no-match'));
+          if (window.soundEngine && window.soundEngine.playSlotLose) {
+            window.soundEngine.playSlotLose();
+          } else if (window.soundEngine && window.soundEngine.playHit) {
+            window.soundEngine.playHit();
+          }
+          if (window.particleSystem) {
+            window.particleSystem.spawnFloatingText(`Sin suerte`, this.player ? this.player.x + 12 : 1170, this.player ? this.player.y - 20 : 330);
+          }
+          if (this.ui.slotStatusBox) {
+            this.ui.slotStatusBox.innerHTML = `💀 <span style="color:#ff6b6b;"><b>Sin coincidencias.</b> Los rodillos mostraron runas dispares. ¡Vuelve a tirar si deseas probar tu destino!</span>`;
+          }
         }
-        if (window.soundEngine && window.soundEngine.playSlotNearMiss) {
-          window.soundEngine.playSlotNearMiss();
-        } else if (window.soundEngine && window.soundEngine.playSoulPickup) {
-          window.soundEngine.playSoulPickup();
-        }
-        if (window.particleSystem) {
-          window.particleSystem.spawnFloatingText(`+25 🔮 Consuelo`, this.player ? this.player.x + 12 : 1170, this.player ? this.player.y - 20 : 330);
-        }
-        if (this.ui.slotStatusBox) {
-          this.ui.slotStatusBox.innerHTML = `🥈 <b style="color:#ffd166;">¡CASI! 2 coincidencias de ${matchedSymbol.name} ${matchedSymbol.icon}</b>. La tercera runa fue distinta. No obtienes el arma, pero recuperas <b>${consolationSouls} 🔮</b> de consuelo.`;
-        }
-      } else {
-        // Total Miss
-        [reelWindow1, reelWindow2, reelWindow3].forEach(w => w && w.classList.add('no-match'));
-        if (window.soundEngine && window.soundEngine.playSlotLose) {
-          window.soundEngine.playSlotLose();
-        } else if (window.soundEngine && window.soundEngine.playHit) {
-          window.soundEngine.playHit();
-        }
-        if (window.particleSystem) {
-          window.particleSystem.spawnFloatingText(`Sin suerte`, this.player ? this.player.x + 12 : 1170, this.player ? this.player.y - 20 : 330);
-        }
-        if (this.ui.slotStatusBox) {
-          this.ui.slotStatusBox.innerHTML = `💀 <span style="color:#ff6b6b;"><b>Sin coincidencias.</b> Los rodillos mostraron runas dispares. ¡Vuelve a tirar si deseas probar tu destino!</span>`;
-        }
+      } catch (err) {
+        console.error('Error evaluating slot outcome:', err);
+      } finally {
+        this.updateSlotMachineUI();
+        this.renderSanctuaryWallet();
+        this.isSlotSpinning = false;
+        if (this.ui.btnSpinSlot) this.ui.btnSpinSlot.disabled = false;
       }
-
-      this.updateSlotMachineUI();
-      this.renderSanctuaryWallet();
-      this.isSlotSpinning = false;
-      if (this.ui.btnSpinSlot) this.ui.btnSpinSlot.disabled = false;
     }, 2350);
   }
 
