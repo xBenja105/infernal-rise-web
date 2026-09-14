@@ -2658,7 +2658,14 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       runic: props.runicTile,
       ice: props.iceTile,
       gold: props.goldTile,
-      mud: props.mudTile
+      mud: props.mudTile,
+      // 6 DEDICATED ORIGINAL TILES PER TOWER FLOOR
+      basalt_abyss: props.basaltAbyssTile || props.obsidianTile,
+      catacomb_stone: props.catacombStoneTile || props.stoneTile,
+      crimson_iron: props.crimsonIronTile || props.stoneTile,
+      glacial_ice: props.glacialIceTile || props.iceTile,
+      gold_vault: props.goldVaultTile || props.goldTile,
+      terrenal_sanctuary: props.terrenalSanctuaryTile || props.runicTile
     };
 
     const styleMap = {
@@ -2668,7 +2675,19 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       runic: { rim: '#bf00ff', hi: '#ff80df', corbel: '#190a26', dark: '#090212' },
       ice: { rim: '#00b4d8', hi: '#caf0f8', corbel: '#0f2438', dark: '#05101a' },
       gold: { rim: '#fbbf24', hi: '#fef08a', corbel: '#451a03', dark: '#1f0a00' },
-      mud: { rim: '#52b788', hi: '#95d5b2', corbel: '#132a1f', dark: '#08140e' }
+      mud: { rim: '#52b788', hi: '#95d5b2', corbel: '#132a1f', dark: '#08140e' },
+      // FLOOR 1: El Foso Abisal (Porous Volcanic Basalt & Flaming Core)
+      basalt_abyss: { rim: '#ff4400', hi: '#fde047', corbel: '#220a16', dark: '#0a0206' },
+      // FLOOR 2: Las Catacumbas Hundidas (Decayed Emerald Crypt Masonry & Moss)
+      catacomb_stone: { rim: '#40916c', hi: '#74c69d', corbel: '#0f241c', dark: '#06120e' },
+      // FLOOR 3: Las Murallas Carmesí (Heavy Crimson War Steel & Iron Rivets)
+      crimson_iron: { rim: '#dc2626', hi: '#fca5a5', corbel: '#380a10', dark: '#160205' },
+      // FLOOR 4: Las Agujas Glaciares (Pure Electric-Cyan Permafrost & Snow)
+      glacial_ice: { rim: '#00b4d8', hi: '#ffffff', corbel: '#062842', dark: '#02101c' },
+      // FLOOR 5: El Atrio Dorado (Polished 24k Imperial Bullion & Filigree)
+      gold_vault: { rim: '#f59e0b', hi: '#ffffff', corbel: '#451a03', dark: '#1c0800' },
+      // FLOOR 6: La Gran Puerta Terrenal (Sunlit Limestone & Living World Flora)
+      terrenal_sanctuary: { rim: '#eab308', hi: '#ffffff', corbel: '#292524', dark: '#141211' }
     };
 
     for (const p of this.level.platforms) {
@@ -2752,45 +2771,80 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
   }
 
   drawPlatformUndersideDecorations(x, y, width, type) {
-    if (type === 'obsidian') {
-      this.ctx.fillStyle = '#ff3300';
-      this.ctx.fillRect(x + 18, y, 3, 9);
-      this.ctx.fillRect(x + width - 24, y, 3, 11);
+    if (type === 'basalt_abyss' || type === 'obsidian') {
+      // Magma stalactites dripping molten lava
+      this.ctx.fillStyle = '#ff2200';
+      this.ctx.fillRect(x + 16, y, 4, 11);
+      this.ctx.fillRect(x + width - 24, y, 3, 14);
       this.ctx.fillStyle = '#ffaa00';
-      this.ctx.fillRect(x + 19, y + 6, 1, 3);
-      this.ctx.fillRect(x + width - 23, y + 8, 1, 3);
-    } else if (type === 'ice') {
-      this.ctx.fillStyle = '#48cae4';
-      this.ctx.fillRect(x + 14, y, 3, 12);
-      this.ctx.fillRect(x + 28, y, 2, 7);
-      this.ctx.fillRect(x + width - 32, y, 3, 13);
-      this.ctx.fillRect(x + width - 18, y, 2, 8);
+      this.ctx.fillRect(x + 17, y + 6, 2, 6);
+      this.ctx.fillRect(x + width - 23, y + 8, 1, 7);
       this.ctx.fillStyle = '#ffffff';
-      this.ctx.fillRect(x + 15, y, 1, 10);
-      this.ctx.fillRect(x + width - 31, y, 1, 11);
-    } else if (type === 'bone') {
-      this.ctx.fillStyle = '#8f7b7f';
-      this.ctx.fillRect(x + 16, y, 3, 9);
-      this.ctx.fillRect(x + width - 22, y, 3, 10);
-      this.ctx.fillStyle = '#c4b3a5';
-      this.ctx.fillRect(x + 17, y, 1, 7);
-      this.ctx.fillRect(x + width - 21, y, 1, 8);
-    } else if (type === 'stone' || type === 'runic') {
-      if (width >= 80) {
-        this.ctx.fillStyle = '#231826';
-        this.ctx.fillRect(x + 22, y, 3, 14);
-        this.ctx.fillRect(x + width - 26, y, 3, 16);
-        this.ctx.fillStyle = '#48354c';
-        this.ctx.fillRect(x + 23, y + 2, 1, 10);
-        this.ctx.fillRect(x + width - 25, y + 2, 1, 12);
-      }
-    } else if (type === 'gold') {
+      this.ctx.fillRect(x + 17, y + 10, 1, 2);
+    } else if (type === 'catacomb_stone') {
+      // Weeping swamp moss & ancient crypt roots
+      this.ctx.fillStyle = '#143828';
+      this.ctx.fillRect(x + 14, y, 3, 13);
+      this.ctx.fillRect(x + 24, y, 2, 8);
+      this.ctx.fillRect(x + width - 28, y, 3, 15);
+      this.ctx.fillRect(x + width - 16, y, 2, 9);
+      this.ctx.fillStyle = '#52b788';
+      this.ctx.fillRect(x + 15, y + 6, 1, 8);
+      this.ctx.fillRect(x + width - 27, y + 8, 1, 8);
+    } else if (type === 'crimson_iron') {
+      // Heavy spiked iron fortress chains & rivets
+      this.ctx.fillStyle = '#1e293b';
+      this.ctx.fillRect(x + 18, y, 3, 14);
+      this.ctx.fillRect(x + width - 26, y, 3, 16);
+      this.ctx.fillStyle = '#64748b';
+      this.ctx.fillRect(x + 18, y + 2, 3, 2);
+      this.ctx.fillRect(x + 18, y + 6, 3, 2);
+      this.ctx.fillRect(x + 18, y + 10, 3, 2);
+      this.ctx.fillRect(x + width - 26, y + 3, 3, 2);
+      this.ctx.fillRect(x + width - 26, y + 7, 3, 2);
+      this.ctx.fillRect(x + width - 26, y + 11, 3, 2);
+      this.ctx.fillStyle = '#dc2626';
+      this.ctx.fillRect(x + 19, y + 13, 1, 3);
+      this.ctx.fillRect(x + width - 25, y + 15, 1, 3);
+    } else if (type === 'glacial_ice' || type === 'ice') {
+      // Sharp crystalline icicles with frost gleams
+      this.ctx.fillStyle = '#0077b6';
+      this.ctx.fillRect(x + 12, y, 3, 14);
+      this.ctx.fillRect(x + 22, y, 2, 8);
+      this.ctx.fillRect(x + width - 30, y, 4, 16);
+      this.ctx.fillRect(x + width - 18, y, 2, 9);
+      this.ctx.fillStyle = '#48cae4';
+      this.ctx.fillRect(x + 13, y, 1, 12);
+      this.ctx.fillRect(x + width - 29, y, 2, 14);
+      this.ctx.fillStyle = '#ffffff';
+      this.ctx.fillRect(x + 13, y + 11, 1, 3);
+      this.ctx.fillRect(x + width - 29, y + 13, 1, 3);
+    } else if (type === 'gold_vault' || type === 'gold') {
+      // Carved royal gold filigree pendants & hanging ruby gems
       this.ctx.fillStyle = '#b45309';
-      this.ctx.fillRect(x + 16, y, 3, 8);
-      this.ctx.fillRect(x + width - 22, y, 3, 9);
-      this.ctx.fillStyle = '#f59e0b';
-      this.ctx.fillRect(x + 17, y + 4, 2, 4);
-      this.ctx.fillRect(x + width - 21, y + 4, 2, 4);
+      this.ctx.fillRect(x + 16, y, 4, 10);
+      this.ctx.fillRect(x + width - 22, y, 4, 11);
+      this.ctx.fillStyle = '#fde047';
+      this.ctx.fillRect(x + 17, y + 3, 2, 5);
+      this.ctx.fillRect(x + width - 21, y + 4, 2, 5);
+      this.ctx.fillStyle = '#ef4444'; // Inset ruby drop
+      this.ctx.fillRect(x + 17, y + 9, 2, 3);
+      this.ctx.fillRect(x + width - 21, y + 10, 2, 3);
+    } else if (type === 'terrenal_sanctuary') {
+      // Living flora: lush ivy tendrils with green leaves & morning dew
+      this.ctx.fillStyle = '#15803d';
+      this.ctx.fillRect(x + 14, y, 2, 14);
+      this.ctx.fillRect(x + 22, y, 2, 8);
+      this.ctx.fillRect(x + width - 26, y, 2, 16);
+      this.ctx.fillRect(x + width - 16, y, 2, 9);
+      this.ctx.fillStyle = '#4ade80';
+      this.ctx.fillRect(x + 12, y + 5, 3, 3);
+      this.ctx.fillRect(x + 15, y + 10, 3, 3);
+      this.ctx.fillRect(x + width - 28, y + 6, 3, 3);
+      this.ctx.fillRect(x + width - 25, y + 12, 3, 3);
+      this.ctx.fillStyle = '#38bdf8'; // Glistening dew drops
+      this.ctx.fillRect(x + 14, y + 13, 1, 2);
+      this.ctx.fillRect(x + width - 26, y + 15, 1, 2);
     } else if (type === 'mud') {
       this.ctx.fillStyle = '#1b4332';
       this.ctx.fillRect(x + 14, y, 4, 11);

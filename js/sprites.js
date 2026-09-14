@@ -953,7 +953,9 @@ class SpriteManager {
       blood: [],
       gargoyle: [],
       frost: [],
-      toxic: []
+      toxic: [],
+      gold: [],
+      celestial: []
     };
     const bw = 40, bh = 32;
 
@@ -1017,6 +1019,30 @@ class SpriteManager {
         wingMem2: '#0f3d21',
         wingBone: '#22c55e',
         claw: '#86efac'
+      },
+      gold: {
+        bodyDark: '#451a03',
+        bodyMid: '#78350f',
+        bodyLight: '#d97706',
+        earInner: '#fbbf24',
+        eyeIris: '#fde047',
+        eyePupil: '#ffffff',
+        wingMem1: '#b45309',
+        wingMem2: '#92400e',
+        wingBone: '#fbbf24',
+        claw: '#fef08a'
+      },
+      celestial: {
+        bodyDark: '#312e81',
+        bodyMid: '#4338ca',
+        bodyLight: '#6366f1',
+        earInner: '#fde047',
+        eyeIris: '#ffd700',
+        eyePupil: '#ffffff',
+        wingMem1: '#fef08a',
+        wingMem2: '#fde047',
+        wingBone: '#ffd700',
+        claw: '#ffffff'
       }
     };
 
@@ -2033,8 +2059,204 @@ class SpriteManager {
     mpctx.fillStyle = '#40916c';
     mpctx.fillRect(0, 0, 32, 3);
     mpctx.fillStyle = '#74c69d';
-    mpctx.fillRect(0, 0, 32, 1);
     this.sprites.props.mudTile = mc;
+
+    // ─── 6 UNIQUE PLATFORM TILES FOR THE 6 TOWERS FLOORS ───
+
+    // Floor 1 Tile: Basalt Abyss (Porous Charcoal Basalt with Magma Fissures)
+    const { canvas: f1c, ctx: f1p } = this.createCanvas(32, 32);
+    f1p.fillStyle = '#140915';
+    f1p.fillRect(0, 0, 32, 32);
+    f1p.fillStyle = '#220e24';
+    f1p.fillRect(2, 2, 13, 13);
+    f1p.fillRect(17, 2, 13, 13);
+    f1p.fillRect(2, 17, 28, 13);
+    // Molten Magma Arteries
+    f1p.fillStyle = '#b91c1c';
+    f1p.fillRect(14, 0, 3, 32);
+    f1p.fillRect(0, 15, 32, 3);
+    f1p.fillStyle = '#ea580c';
+    f1p.fillRect(15, 0, 1, 32);
+    f1p.fillRect(0, 16, 32, 1);
+    f1p.fillStyle = '#fde047';
+    f1p.fillRect(15, 7, 2, 6);
+    f1p.fillRect(7, 16, 6, 2);
+    f1p.fillRect(15, 16, 2, 2);
+    // Magma bubbling ember nodes
+    f1p.fillStyle = '#f97316';
+    f1p.fillRect(6, 6, 3, 3);
+    f1p.fillRect(22, 22, 3, 3);
+    // Top Obsidian Rim
+    f1p.fillStyle = '#ff4400';
+    f1p.fillRect(0, 0, 32, 3);
+    f1p.fillStyle = '#fde047';
+    f1p.fillRect(0, 0, 32, 1);
+    this.sprites.props.basaltAbyssTile = f1c;
+
+    // Floor 2 Tile: Catacomb Stone (Ancient Mossy Crypt Masonry & Embedded Relics)
+    const { canvas: f2c, ctx: f2p } = this.createCanvas(32, 32);
+    f2p.fillStyle = '#0b1a14';
+    f2p.fillRect(0, 0, 32, 32);
+    f2p.fillStyle = '#142c22';
+    f2p.fillRect(2, 2, 13, 12);
+    f2p.fillRect(17, 2, 13, 12);
+    f2p.fillRect(2, 16, 28, 14);
+    // Weeping Emerald Moss Lichen
+    f2p.fillStyle = '#2d6a4f';
+    f2p.fillRect(4, 4, 8, 4);
+    f2p.fillRect(18, 6, 8, 5);
+    f2p.fillRect(6, 18, 12, 6);
+    f2p.fillStyle = '#52b788';
+    f2p.fillRect(6, 6, 4, 2);
+    f2p.fillRect(20, 8, 4, 2);
+    f2p.fillRect(8, 20, 6, 2);
+    // Embedded fossil skull relief
+    f2p.fillStyle = '#1b4332';
+    f2p.fillRect(22, 19, 6, 6);
+    f2p.fillStyle = '#a7c4bc';
+    f2p.fillRect(23, 20, 4, 3);
+    f2p.fillStyle = '#0b1a14';
+    f2p.fillRect(23, 21, 1, 1);
+    f2p.fillRect(26, 21, 1, 1);
+    // Top Weeping Moss Rim
+    f2p.fillStyle = '#40916c';
+    f2p.fillRect(0, 0, 32, 3);
+    f2p.fillStyle = '#74c69d';
+    f2p.fillRect(0, 0, 32, 1);
+    this.sprites.props.catacombStoneTile = f2c;
+
+    // Floor 3 Tile: Crimson Iron (Heavy Riveted Fortress Steel War Plates)
+    const { canvas: f3c, ctx: f3p } = this.createCanvas(32, 32);
+    f3p.fillStyle = '#1a0508';
+    f3p.fillRect(0, 0, 32, 32);
+    f3p.fillStyle = '#4c0d15';
+    f3p.fillRect(2, 2, 28, 28);
+    // Steel Plate Seams & Bolted Grating
+    f3p.fillStyle = '#2b070d';
+    f3p.fillRect(15, 0, 2, 32);
+    f3p.fillRect(0, 15, 32, 2);
+    // Blood-iron armor highlights
+    f3p.fillStyle = '#7f1d1d';
+    f3p.fillRect(3, 3, 11, 11);
+    f3p.fillRect(18, 3, 11, 11);
+    f3p.fillRect(3, 18, 11, 11);
+    f3p.fillRect(18, 18, 11, 11);
+    // Heavy Forged Iron Rivets
+    f3p.fillStyle = '#0f172a';
+    f3p.fillRect(4, 4, 3, 3);
+    f3p.fillRect(25, 4, 3, 3);
+    f3p.fillRect(4, 25, 3, 3);
+    f3p.fillRect(25, 25, 3, 3);
+    f3p.fillStyle = '#fca5a5';
+    f3p.fillRect(5, 5, 1, 1);
+    f3p.fillRect(26, 5, 1, 1);
+    f3p.fillRect(5, 26, 1, 1);
+    f3p.fillRect(26, 26, 1, 1);
+    // Top Crimson Steel Bevel Rim
+    f3p.fillStyle = '#dc2626';
+    f3p.fillRect(0, 0, 32, 3);
+    f3p.fillStyle = '#fca5a5';
+    f3p.fillRect(0, 0, 32, 1);
+    this.sprites.props.crimsonIronTile = f3c;
+
+    // Floor 4 Tile: Glacial Ice (Electric-Cyan Permafrost with Crystalline Prism Cuts)
+    const { canvas: f4c, ctx: f4p } = this.createCanvas(32, 32);
+    f4p.fillStyle = '#031926';
+    f4p.fillRect(0, 0, 32, 32);
+    f4p.fillStyle = '#063a5f';
+    f4p.fillRect(2, 2, 28, 28);
+    // Angular Ice Prism Facets
+    f4p.fillStyle = '#0c5b94';
+    f4p.fillRect(3, 3, 12, 12);
+    f4p.fillRect(17, 17, 12, 12);
+    // Sharp Frost Stress Fractures
+    f4p.fillStyle = '#38bdf8';
+    f4p.fillRect(0, 14, 15, 1);
+    f4p.fillRect(14, 8, 1, 14);
+    f4p.fillRect(15, 22, 17, 1);
+    f4p.fillRect(24, 4, 1, 16);
+    // Crystalline Sparkle Highlights
+    f4p.fillStyle = '#caf0f8';
+    f4p.fillRect(5, 5, 3, 3);
+    f4p.fillRect(21, 21, 3, 3);
+    f4p.fillStyle = '#ffffff';
+    f4p.fillRect(6, 6, 1, 1);
+    f4p.fillRect(22, 22, 1, 1);
+    // Top Glacial Snow Rim
+    f4p.fillStyle = '#00b4d8';
+    f4p.fillRect(0, 0, 32, 3);
+    f4p.fillStyle = '#ffffff';
+    f4p.fillRect(0, 0, 32, 1);
+    this.sprites.props.glacialIceTile = f4c;
+
+    // Floor 5 Tile: Gold Vault (24k Imperial Bullion with Byzantine Engravings)
+    const { canvas: f5c, ctx: f5p } = this.createCanvas(32, 32);
+    f5p.fillStyle = '#381604';
+    f5p.fillRect(0, 0, 32, 32);
+    f5p.fillStyle = '#713f12';
+    f5p.fillRect(2, 2, 28, 28);
+    // Solid Gold Bricks
+    f5p.fillStyle = '#a16207';
+    f5p.fillRect(4, 5, 11, 9);
+    f5p.fillRect(17, 5, 11, 9);
+    f5p.fillRect(4, 18, 24, 10);
+    // Radiant Golden Luster
+    f5p.fillStyle = '#eab308';
+    f5p.fillRect(5, 6, 9, 7);
+    f5p.fillRect(18, 6, 9, 7);
+    f5p.fillRect(5, 19, 22, 8);
+    f5p.fillStyle = '#fef08a';
+    f5p.fillRect(5, 6, 9, 2);
+    f5p.fillRect(18, 6, 9, 2);
+    f5p.fillRect(5, 19, 22, 2);
+    // Royal Inset Rubies & Sapphires
+    f5p.fillStyle = '#ef4444';
+    f5p.fillRect(7, 22, 4, 4);
+    f5p.fillStyle = '#3b82f6';
+    f5p.fillRect(21, 22, 4, 4);
+    f5p.fillStyle = '#ffffff';
+    f5p.fillRect(8, 23, 1, 1);
+    f5p.fillRect(22, 23, 1, 1);
+    // Top Gleaming 24k Gold Rim
+    f5p.fillStyle = '#f59e0b';
+    f5p.fillRect(0, 0, 32, 3);
+    f5p.fillStyle = '#ffffff';
+    f5p.fillRect(0, 0, 32, 1);
+    this.sprites.props.goldVaultTile = f5c;
+
+    // Floor 6 Tile: Terrenal Sanctuary (Sunlit White Limestone with Living Flora of the Living World)
+    const { canvas: f6c, ctx: f6p } = this.createCanvas(32, 32);
+    f6p.fillStyle = '#1c1917';
+    f6p.fillRect(0, 0, 32, 32);
+    f6p.fillStyle = '#44403c';
+    f6p.fillRect(2, 2, 28, 28);
+    // Clean Sunlit Limestone Blocks
+    f6p.fillStyle = '#78716c';
+    f6p.fillRect(4, 5, 11, 9);
+    f6p.fillRect(17, 5, 11, 9);
+    f6p.fillRect(4, 18, 24, 10);
+    // Living World Flora: Sprouting Green Clovers & Ivy
+    f6p.fillStyle = '#15803d';
+    f6p.fillRect(5, 7, 7, 5);
+    f6p.fillRect(18, 8, 8, 4);
+    f6p.fillRect(6, 20, 12, 6);
+    f6p.fillStyle = '#22c55e';
+    f6p.fillRect(6, 8, 3, 3);
+    f6p.fillRect(19, 9, 3, 2);
+    f6p.fillRect(8, 21, 5, 3);
+    // Blooming Wildflowers of the Living Realm (Lavender & White Petals)
+    f6p.fillStyle = '#c084fc';
+    f6p.fillRect(14, 21, 3, 3);
+    f6p.fillRect(24, 9, 3, 3);
+    f6p.fillStyle = '#fef08a';
+    f6p.fillRect(15, 22, 1, 1);
+    f6p.fillRect(25, 10, 1, 1);
+    // Top Radiant Sunlight Gold Rim
+    f6p.fillStyle = '#eab308';
+    f6p.fillRect(0, 0, 32, 3);
+    f6p.fillStyle = '#ffffff';
+    f6p.fillRect(0, 0, 32, 1);
+    this.sprites.props.terrenalSanctuaryTile = f6c;
   }
 
   // ─── PROCEDURAL MULTI-BIOME NEXUS PARALLAX BACKGROUNDS ───

@@ -30,6 +30,7 @@
       "index.html",
       "styles.css",
       "electron-main.js",
+      "preload.js",
       "js/**/*",
       "assets/**/*",
       "build/**/*"

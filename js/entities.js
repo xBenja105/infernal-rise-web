@@ -1686,197 +1686,17 @@ class SkeletonEnemy {
     ctx.shadowBlur = 0;
     ctx.restore();
 
-    // ─── VISUAL EQUIPMENT & WEAPON OVERLAYS (VARIANTS 0-3, MAGE & ELITE) ───
+    // ─── FLOOR-EXCLUSIVE ORIGINAL ENEMY SPRITE OVERLAYS (100% UNIQUE PER FLOOR) ───
     if (this.state !== 'dead') {
       ctx.save();
+      const s = this.skin || 'abyss';
 
       if (this.isMage) {
-        // ── MAGE SKELETON: SORCERER HOOD, SHAWL & BONE STAFF ──
-        ctx.fillStyle = '#2e1065';
-        ctx.fillRect(12, 0, 11, 7); // Hood dome
-        ctx.fillStyle = '#7e22ce';
-        ctx.fillRect(11, 6, 3, 6);  // Draped cowl sides
-        ctx.fillRect(21, 6, 3, 6);
-        ctx.fillStyle = '#a855f7';  // Diadem rune stone
-        ctx.fillRect(16, 2, 3, 3);
-        ctx.fillStyle = '#f3e8ff';
-        ctx.fillRect(17, 3, 1, 1);
-
-        // Arcane Shawl
-        ctx.fillStyle = '#3b0764';
-        ctx.fillRect(12, 14, 10, 6);
-        ctx.fillStyle = '#c084fc';
-        ctx.fillRect(14, 16, 6, 2);
-
-        // Twisted Bone Staff with Arcane Skull Orb
-        ctx.fillStyle = '#78716c';
-        ctx.fillRect(24, 5, 2, 23); // Staff shaft
-        ctx.fillStyle = '#e2e8f0';
-        ctx.fillRect(23, 3, 4, 3);  // Staff bone claw
-        ctx.fillStyle = '#a855f7';  // Glowing magic orb
-        ctx.shadowColor = '#c084fc';
-        ctx.shadowBlur = 8;
-        ctx.fillRect(24, 1, 3, 3);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(25, 2, 1, 1);
-        ctx.shadowBlur = 0;
-
-        // Floating Arcane Rune Circle
-        ctx.fillStyle = 'rgba(168, 85, 247, 0.4)';
-        ctx.beginPath();
-        ctx.arc(17, 7, 12, 0, Math.PI * 2);
-        ctx.fill();
-
+        this.drawFloorMageOverlay(ctx, s);
       } else if (this.isElite) {
-        // ── ELITE CHAMPION: GIANT DEMON HORNED CROWN, GOTHIC CUIRASS & GREATSWORD ──
-        // Horned crown
-        ctx.fillStyle = '#ffd700';
-        ctx.shadowColor = '#ffb703';
-        ctx.shadowBlur = 6;
-        ctx.fillRect(10, 2, 14, 3);
-        ctx.fillRect(9, -4, 3, 6);
-        ctx.fillRect(16, -6, 2, 8);
-        ctx.fillRect(22, -4, 3, 6);
-        ctx.fillStyle = '#ff0054';
-        ctx.fillRect(16, -1, 2, 2);
-        ctx.shadowBlur = 0;
-
-        // Obsidian Gothic Pauldrons
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(7, 12, 6, 7);
-        ctx.fillStyle = '#f43f5e';
-        ctx.fillRect(7, 11, 6, 2);
-
-        // Gothic Cuirass
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(13, 15, 9, 8);
-        ctx.fillStyle = '#ffd700';
-        ctx.fillRect(16, 17, 3, 4);
-
-        // Colossal Obsidian Greatsword
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(24, 20, 3, 6); // Hilt
-        ctx.fillStyle = '#ffd700';
-        ctx.fillRect(22, 18, 7, 3); // Crossguard
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(26, 4, 4, 15); // Broad Greatsword Blade
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(29, 4, 1, 15); // Gleam
-        ctx.fillStyle = '#f43f5e';  // Runes
-        ctx.shadowColor = '#f43f5e';
-        ctx.shadowBlur = 5;
-        ctx.fillRect(27, 7, 2, 9);
-        ctx.shadowBlur = 0;
-
-      } else if (this.variant === 1) {
-        // ── VARIANT 1: ARMORED BRUTE (SPIKED BARBUTE HELM, PAULDRON & CLEAVER) ──
-        ctx.fillStyle = '#334155';
-        ctx.fillRect(13, 0, 9, 6);  // Helm dome
-        ctx.fillRect(13, 5, 2, 6);  // Cheek guard
-        ctx.fillRect(20, 5, 2, 6);
-        ctx.fillStyle = '#64748b';
-        ctx.fillRect(14, 1, 7, 2);
-        ctx.fillStyle = '#94a3b8';  // Top spike
-        ctx.fillRect(17, -3, 2, 4);
-
-        // Iron Pauldron
-        ctx.fillStyle = '#475569';
-        ctx.fillRect(10, 13, 4, 5);
-        ctx.fillStyle = '#94a3b8';
-        ctx.fillRect(9, 14, 2, 3);
-
-        // Segmented Chestplate
-        ctx.fillStyle = '#334155';
-        ctx.fillRect(14, 16, 7, 4);
-        ctx.fillStyle = '#64748b';
-        ctx.fillRect(15, 17, 5, 1);
-
-        // Executioner Cleaver
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(20, 20, 4, 2); // Shaft
-        ctx.fillStyle = '#475569';
-        ctx.fillRect(24, 14, 7, 9); // Cleaver head
-        ctx.fillStyle = '#f1f5f9';
-        ctx.fillRect(30, 14, 1, 9); // Sharp bevel
-        ctx.fillStyle = '#991b1b';
-        ctx.fillRect(26, 20, 3, 2); // Bloodstain
-
-      } else if (this.variant === 2) {
-        // ── VARIANT 2: BARBARIAN BERSERKER (DUAL HORNS, SASH & SCIMITAR) ──
-        ctx.fillStyle = '#b45309';
-        ctx.fillRect(13, 4, 9, 2); // Bronze brow band
-        ctx.fillStyle = '#d97706';
-        ctx.fillRect(16, 3, 3, 2);
-        // Dual curved beast horns
-        ctx.fillStyle = '#fde68a';
-        ctx.fillRect(11, 0, 2, 4);
-        ctx.fillRect(9, -2, 2, 3);
-        ctx.fillRect(21, 0, 2, 4);
-        ctx.fillRect(23, -2, 2, 3);
-
-        // Tattered Crimson Sash
-        ctx.fillStyle = '#881337';
-        ctx.fillRect(14, 24, 7, 6);
-        ctx.fillStyle = '#be123c';
-        ctx.fillRect(15, 25, 4, 4);
-
-        // Curved Falchion / Scimitar
-        ctx.fillStyle = '#b45309';
-        ctx.fillRect(21, 20, 2, 3); // Bronze hilt
-        ctx.fillStyle = '#cbd5e1';
-        ctx.fillRect(23, 19, 5, 2);
-        ctx.fillRect(27, 17, 4, 3);
-        ctx.fillRect(30, 15, 3, 2);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(32, 14, 1, 2);
-
-      } else if (this.variant === 3) {
-        // ── VARIANT 3: SHADOW CULTIST (DARK COWL, RAGGED CAPE & DUAL DAGGERS) ──
-        ctx.fillStyle = '#09090b';
-        ctx.fillRect(12, 1, 11, 7); // Dark cowl
-        ctx.fillRect(11, 7, 3, 6);  // Draped neck
-        ctx.fillRect(20, 7, 3, 6);
-        ctx.fillStyle = '#18181b';
-        ctx.fillRect(13, 2, 9, 3);
-
-        // Ragged Shadow Capelet
-        ctx.fillStyle = '#09090b';
-        ctx.fillRect(6, 13, 6, 13);
-        ctx.fillStyle = '#18181b';
-        ctx.fillRect(7, 15, 4, 9);
-
-        // Dual Spectral Daggers
-        ctx.fillStyle = '#6366f1';
-        ctx.fillRect(22, 17, 7, 2);
-        ctx.fillRect(9, 21, 5, 2);
-        ctx.fillStyle = '#c7d2fe';
-        ctx.fillRect(23, 17, 5, 1);
-        ctx.fillRect(9, 21, 3, 1);
-
+        this.drawFloorEliteOverlay(ctx, s);
       } else {
-        // ── VARIANT 0: RUSTED GRUNT (CRACKED SKULL RIVETS, LEATHER STRAP & BROADSWORD) ──
-        ctx.fillStyle = '#57534e';
-        ctx.fillRect(14, 2, 7, 2);  // Rusty skull plate
-        ctx.fillStyle = '#b45309';
-        ctx.fillRect(17, 1, 3, 2);
-        ctx.fillStyle = '#292524';
-        ctx.fillRect(15, 3, 1, 1);
-
-        // Cross-chest Leather Strap
-        ctx.fillStyle = '#451a03';
-        ctx.fillRect(14, 16, 3, 8);
-        ctx.fillStyle = '#78716c';
-        ctx.fillRect(15, 19, 2, 2); // Buckle
-
-        // Rusted Notched Broadsword
-        ctx.fillStyle = '#78716c';
-        ctx.fillRect(21, 19, 2, 6); // Crossguard
-        ctx.fillStyle = '#d6d3d1';
-        ctx.fillRect(23, 17, 10, 2); // Blade
-        ctx.fillStyle = '#b45309';
-        ctx.fillRect(27, 17, 2, 1);  // Rust notch
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(32, 17, 1, 2);  // Tip
+        this.drawFloorSoldierOverlay(ctx, s);
       }
 
       ctx.restore();
@@ -1925,6 +1745,267 @@ class SkeletonEnemy {
       ctx.fillRect(exX - 1, exY + 7.5, 2, 2);
       ctx.restore();
     }
+  }
+
+  drawFloorSoldierOverlay(ctx, skin) {
+    if (skin === 'mud' || skin === 'toxic') {
+      // ── PISO 2: CAMINANTE DE LA PESTE (Capucha de Cripta, Musgo y Maza Tóxica) ──
+      ctx.fillStyle = '#143828';
+      ctx.fillRect(11, 0, 13, 8); // Crypt hood
+      ctx.fillStyle = '#1b4332';
+      ctx.fillRect(10, 6, 4, 8);
+      ctx.fillRect(21, 6, 4, 8);
+      ctx.fillStyle = '#2d6a4f';
+      ctx.fillRect(13, 2, 9, 3);
+      // Rotten Moss Shroud on Chest
+      ctx.fillStyle = '#1b4332';
+      ctx.fillRect(12, 14, 10, 8);
+      ctx.fillStyle = '#52b788';
+      ctx.fillRect(14, 16, 6, 3);
+      // Spiked Crypt Mace with Dripping Poison
+      ctx.fillStyle = '#3e2723';
+      ctx.fillRect(21, 18, 3, 5); // Wood handle
+      ctx.fillStyle = '#1b4332';
+      ctx.fillRect(24, 10, 7, 9); // Spiked mace head
+      ctx.fillStyle = '#52b788';
+      ctx.fillRect(30, 11, 2, 2);
+      ctx.fillRect(23, 9, 2, 2);
+      ctx.fillStyle = '#a7f3d0';
+      ctx.fillRect(27, 19, 2, 4); // Toxic drip
+
+    } else if (skin === 'blood') {
+      // ── PISO 3: GLADIADOR ACORAZADO CARMESÍ (Yelmo de Guerra, Armadura Pesada y Gran Hacha) ──
+      ctx.fillStyle = '#7f1d1d';
+      ctx.fillRect(12, -2, 11, 9); // Heavy barbute helm
+      ctx.fillStyle = '#991b1b';
+      ctx.fillRect(12, 4, 3, 7);
+      ctx.fillRect(20, 4, 3, 7);
+      ctx.fillStyle = '#ef4444';
+      ctx.fillRect(15, -7, 4, 6);  // War plume crest
+      ctx.fillStyle = '#fca5a5';
+      ctx.fillRect(16, -7, 2, 6);
+      // Iron Fortress Cuirass & Spiked Pauldron
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(8, 12, 6, 6);   // Iron pauldron
+      ctx.fillStyle = '#fca5a5';
+      ctx.fillRect(9, 11, 4, 2);
+      ctx.fillStyle = '#7f1d1d';
+      ctx.fillRect(13, 14, 9, 8);  // Crimson breastplate
+      ctx.fillStyle = '#b91c1c';
+      ctx.fillRect(15, 16, 5, 4);
+      // Colossal Double-Edged Executioner Battleaxe
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(24, 5, 3, 25);  // Axe haft
+      ctx.fillStyle = '#7f1d1d';
+      ctx.fillRect(20, 4, 10, 8);  // Blade collar
+      ctx.fillStyle = '#dc2626';
+      ctx.fillRect(17, 2, 6, 13);  // Broad crescent axe head
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(16, 3, 1, 11);  // Razor steel edge
+
+    } else if (skin === 'frost' || skin === 'ice') {
+      // ── PISO 4: ESPECTRO GLACIAL (Corona de Carámbanos, Capa de Escarcha y Alabarda de Hielo) ──
+      ctx.fillStyle = '#0284c7';
+      ctx.fillRect(12, 3, 11, 3); // Frost circlet
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(11, -3, 2, 6);
+      ctx.fillRect(22, -3, 2, 6);
+      ctx.fillStyle = '#caf0f8';
+      ctx.fillRect(16, -6, 3, 9); // Central towering icicle
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(17, -6, 1, 9);
+      // Permafrost Mantle & Crystal Pauldron
+      ctx.fillStyle = '#0369a1';
+      ctx.fillRect(8, 12, 6, 6);
+      ctx.fillStyle = '#bae6fd';
+      ctx.fillRect(8, 11, 6, 2);
+      ctx.fillStyle = '#e0f2fe';
+      ctx.fillRect(13, 15, 8, 5); // Frozen chestplate
+      // Diamond Glacial Lance
+      ctx.fillStyle = '#0c4a6e';
+      ctx.fillRect(24, 4, 2, 26); // Frost shaft
+      ctx.fillStyle = '#00b4d8';
+      ctx.fillRect(22, -1, 6, 7);
+      ctx.fillStyle = '#caf0f8';
+      ctx.fillRect(23, -6, 4, 8); // Diamond spear tip
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(24, -6, 2, 10);
+
+    } else if (skin === 'gold') {
+      // ── PISO 5: CENTINELA IMPERIAL ÁUREO (Yelmo con Alas, Escudo y Espada de Oro 24k) ──
+      ctx.fillStyle = '#b45309';
+      ctx.fillRect(12, 0, 11, 7);  // Gold helm
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(13, 1, 9, 3);
+      ctx.fillStyle = '#fde047';
+      ctx.fillRect(16, -4, 3, 5);  // Golden crest
+      ctx.fillStyle = '#ef4444';
+      ctx.fillRect(17, -1, 1, 1);  // Ruby inset
+      ctx.fillStyle = '#fde047';
+      ctx.fillRect(9, 2, 3, 4);    // Winged ear guard
+      ctx.fillRect(23, 2, 3, 4);
+      // 24k Imperial Golden Cuirass & Pauldron
+      ctx.fillStyle = '#b45309';
+      ctx.fillRect(8, 12, 6, 6);
+      ctx.fillStyle = '#fde047';
+      ctx.fillRect(8, 11, 6, 2);
+      ctx.fillStyle = '#d97706';
+      ctx.fillRect(13, 14, 9, 8);
+      ctx.fillStyle = '#fde047';
+      ctx.fillRect(15, 16, 5, 4);  // Solar emblem
+      // Radiant Golden Sunblade & Imperial Shield
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(23, 19, 3, 5);  // Gold hilt
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(21, 17, 7, 2);
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(24, 4, 3, 15);  // Blade
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(25, 4, 1, 15);
+      // Left Hand Tower Shield
+      ctx.fillStyle = '#b45309';
+      ctx.fillRect(4, 13, 6, 13);
+      ctx.fillStyle = '#fde047';
+      ctx.fillRect(5, 14, 4, 11);
+      ctx.fillStyle = '#ef4444';
+      ctx.fillRect(6, 18, 2, 4);
+
+    } else if (skin === 'celestial') {
+      // ── PISO 6: GUARDIÁN DEL UMBRAL TERRENAL (Halo Solar, Alas de Serafín y Toga Blanca) ──
+      // Floating Solar Halo
+      ctx.save();
+      ctx.strokeStyle = '#ffd700';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.arc(17, -3, 8, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(16, -4, 2, 2);
+      ctx.restore();
+      // Ethereal Seraph Angel Wings on Back
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(3, 4, 5, 11);
+      ctx.fillRect(0, 1, 4, 9);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(1, 2, 3, 7);
+      ctx.fillRect(4, 6, 3, 8);
+      // Pure White Living World Silk Toga with Gold Trim
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(13, 13, 9, 11);
+      ctx.fillStyle = '#eab308';
+      ctx.fillRect(13, 13, 9, 2);
+      ctx.fillRect(16, 15, 3, 8);
+      // Sunburst Halberd of Dawn
+      ctx.fillStyle = '#ca8a04';
+      ctx.fillRect(24, 2, 2, 28);  // Golden spear shaft
+      ctx.fillStyle = '#fde047';
+      ctx.fillRect(21, -3, 8, 8);  // Sunburst head
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(24, -6, 2, 11); // Radiant tip
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(24, 0, 2, 2);
+
+    } else {
+      // ── PISO 1: DEMONIO ÍGNEO DE BASALTO (Cuernos de Magma, Pauldron y Espada Volcánica) ──
+      ctx.fillStyle = '#ff4500';
+      ctx.fillRect(10, 0, 3, 4);
+      ctx.fillRect(8, -5, 3, 6);   // Left curved magma horn
+      ctx.fillRect(22, 0, 3, 4);
+      ctx.fillRect(24, -5, 3, 6);  // Right curved magma horn
+      ctx.fillStyle = '#ffaa00';
+      ctx.fillRect(9, -3, 1, 4);
+      ctx.fillRect(25, -3, 1, 4);
+      // Molten Basalt Pauldron & Magma Heart Core
+      ctx.fillStyle = '#1c0c17';
+      ctx.fillRect(8, 12, 6, 6);
+      ctx.fillStyle = '#ff4500';
+      ctx.fillRect(8, 11, 6, 2);
+      ctx.fillStyle = '#ff3300';
+      ctx.fillRect(15, 16, 4, 4);  // Glowing magma rib furnace
+      ctx.fillStyle = '#ffee44';
+      ctx.fillRect(16, 17, 2, 2);
+      // Blazing Obsidian Broadsword
+      ctx.fillStyle = '#1c0c17';
+      ctx.fillRect(22, 19, 3, 5);  // Hilt
+      ctx.fillStyle = '#ff4500';
+      ctx.fillRect(24, 5, 4, 15);  // Magma blade
+      ctx.fillStyle = '#ffaa00';
+      ctx.fillRect(25, 6, 2, 13);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(25, 7, 1, 11);  // Superheated edge
+    }
+  }
+
+  drawFloorMageOverlay(ctx, skin) {
+    let hoodColor = '#2e1065', shawlColor = '#7e22ce', orbColor = '#a855f7';
+    if (skin === 'mud' || skin === 'toxic') {
+      hoodColor = '#143828'; shawlColor = '#2d6a4f'; orbColor = '#22c55e';
+    } else if (skin === 'blood') {
+      hoodColor = '#4c0519'; shawlColor = '#881337'; orbColor = '#ef4444';
+    } else if (skin === 'frost' || skin === 'ice') {
+      hoodColor = '#082f49'; shawlColor = '#0369a1'; orbColor = '#38bdf8';
+    } else if (skin === 'gold') {
+      hoodColor = '#451a03'; shawlColor = '#b45309'; orbColor = '#fbbf24';
+    } else if (skin === 'celestial') {
+      hoodColor = '#1e1b4b'; shawlColor = '#eab308'; orbColor = '#ffd700';
+    }
+
+    ctx.fillStyle = hoodColor;
+    ctx.fillRect(12, 0, 11, 7);
+    ctx.fillRect(11, 6, 3, 6);
+    ctx.fillRect(21, 6, 3, 6);
+    ctx.fillStyle = shawlColor;
+    ctx.fillRect(12, 14, 10, 6);
+
+    // Twisted Elemental Staff with Glowing Orb
+    ctx.fillStyle = '#78716c';
+    ctx.fillRect(24, 5, 2, 23);
+    ctx.fillStyle = orbColor;
+    ctx.shadowColor = orbColor;
+    ctx.shadowBlur = 8;
+    ctx.fillRect(23, 2, 4, 4);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(24, 3, 2, 2);
+    ctx.shadowBlur = 0;
+  }
+
+  drawFloorEliteOverlay(ctx, skin) {
+    // Colossal Horned Warlord Crown & Massive Greatsword
+    let crownColor = '#ffd700', runeColor = '#ff0054';
+    if (skin === 'frost' || skin === 'ice') {
+      crownColor = '#38bdf8'; runeColor = '#ffffff';
+    } else if (skin === 'mud' || skin === 'toxic') {
+      crownColor = '#22c55e'; runeColor = '#a7f3d0';
+    } else if (skin === 'celestial') {
+      crownColor = '#fde047'; runeColor = '#38bdf8';
+    }
+
+    ctx.fillStyle = crownColor;
+    ctx.shadowColor = crownColor;
+    ctx.shadowBlur = 6;
+    ctx.fillRect(9, 1, 15, 3);
+    ctx.fillRect(8, -5, 3, 7);
+    ctx.fillRect(15, -8, 3, 10);
+    ctx.fillRect(22, -5, 3, 7);
+    ctx.fillStyle = runeColor;
+    ctx.fillRect(16, -2, 2, 2);
+    ctx.shadowBlur = 0;
+
+    // Colossal Armor & Greatsword
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(6, 11, 7, 8);
+    ctx.fillRect(13, 14, 10, 9);
+    ctx.fillStyle = crownColor;
+    ctx.fillRect(15, 16, 6, 5);
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(24, 18, 3, 7);
+    ctx.fillStyle = crownColor;
+    ctx.fillRect(22, 16, 8, 3);
+    ctx.fillStyle = '#334155';
+    ctx.fillRect(25, 2, 5, 16);
+    ctx.fillStyle = runeColor;
+    ctx.fillRect(26, 4, 3, 11);
   }
 
   takeDamage(amount, sourceX, soundEng, particleSys) {
@@ -3927,6 +4008,8 @@ class AbyssalBat {
       ctx.fillStyle = '#ff1133';
       ctx.fillRect(this.dir > 0 ? 18 : 6, 6, 3, 3);
     }
+
+    this.drawFloorBatOverlay(ctx, this.subType);
     ctx.restore();
 
     // Alert "!" feedback
@@ -3942,6 +4025,77 @@ class AbyssalBat {
       ctx.fillRect(exX - 1, exY - 2, 2, 5);
       ctx.fillRect(exX - 1, exY + 5, 2, 2);
       ctx.restore();
+    }
+  }
+
+  drawFloorBatOverlay(ctx, type) {
+    if (type === 'abyss') {
+      // Piso 1: Magma horn tips & incandescent chest core
+      ctx.fillStyle = '#ff4500';
+      ctx.fillRect(11, -2, 2, 4);
+      ctx.fillRect(16, -2, 2, 4);
+      ctx.fillStyle = '#ffaa00';
+      ctx.fillRect(13, 9, 3, 3);
+    } else if (type === 'toxic') {
+      // Piso 2: Bioluminescent poisonous pustules & acid drops
+      ctx.fillStyle = '#a855f7';
+      ctx.beginPath();
+      ctx.arc(12, 6, 2, 0, Math.PI * 2);
+      ctx.arc(17, 7, 1.8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#22c55e';
+      ctx.fillRect(14, 12, 2, 3);
+    } else if (type === 'gargoyle' || type === 'blood') {
+      // Piso 3: Iron barbute crest & serrated steel wing claws
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillRect(12, 1, 5, 2);
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fillRect(14, -2, 2, 4);
+      ctx.fillRect(2, 4, 3, 2);
+      ctx.fillRect(24, 4, 3, 2);
+    } else if (type === 'frost') {
+      // Piso 4: Sharp crystalline frost horns & permafrost core
+      ctx.fillStyle = '#e0f2fe';
+      ctx.beginPath();
+      ctx.moveTo(11, 2);
+      ctx.lineTo(9, -4);
+      ctx.lineTo(13, 1);
+      ctx.moveTo(16, 1);
+      ctx.lineTo(19, -4);
+      ctx.lineTo(18, 2);
+      ctx.fill();
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(13, 9, 3, 3);
+    } else if (type === 'gold') {
+      // Piso 5: Golden royal crown with rubies & gilded talons
+      ctx.fillStyle = '#ffd700';
+      ctx.beginPath();
+      ctx.moveTo(11, 2);
+      ctx.lineTo(11, -3);
+      ctx.lineTo(13, 0);
+      ctx.lineTo(15, -4);
+      ctx.lineTo(16, 0);
+      ctx.lineTo(18, -3);
+      ctx.lineTo(18, 2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#ef4444';
+      ctx.fillRect(14, -1, 1, 1);
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(13, 15, 3, 2);
+    } else if (type === 'celestial') {
+      // Piso 6: Radiating solar halo ring & celestial seraph radiance
+      ctx.strokeStyle = '#fef08a';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.ellipse(14, -4, 7, 2.5, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(13, -5, 3, 1);
+      ctx.fillStyle = 'rgba(254, 240, 138, 0.4)';
+      ctx.beginPath();
+      ctx.arc(14, 10, 8, 0, Math.PI * 2);
+      ctx.fill();
     }
   }
 

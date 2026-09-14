@@ -384,6 +384,7 @@ class LevelManager {
       name: config.name,
       towerFloor: config.danteCircle,
       danteCircle: config.danteCircle,
+      platformType: config.basePlatformType,
       biome: config.biome,
       width,
       height,
@@ -425,11 +426,11 @@ class LevelManager {
       musicTrack: 'tower',
       ambientRain: true,
       hasLava: true,
-      basePlatformType: 'stone',
+      basePlatformType: 'basalt_abyss',
       tiers: [
-        { name: 'Foso Profundo', minY: 2500, maxY: 3600, platformType: 'stone', mageChance: 0.0, enemyHp: 35, enemySkin: 'abyss', batTypes: ['abyss', 'gargoyle'] },
-        { name: 'Ascenso de Ceniza', minY: 1450, maxY: 2500, platformType: 'stone', mageChance: 0.25, enemyHp: 45, enemySkin: 'ashen', batTypes: ['abyss', 'blood'] },
-        { name: 'Cimientos de Obsidiana', minY: 300, maxY: 1450, platformType: 'obsidian', mageChance: 0.35, enemyHp: 55, enemySkin: 'obsidian', batTypes: ['abyss', 'gargoyle'] }
+        { name: 'Foso Profundo', minY: 2500, maxY: 3600, platformType: 'basalt_abyss', mageChance: 0.0, enemyHp: 35, enemySkin: 'abyss', batTypes: ['abyss'] },
+        { name: 'Ascenso de Ceniza', minY: 1450, maxY: 2500, platformType: 'basalt_abyss', mageChance: 0.25, enemyHp: 45, enemySkin: 'abyss', batTypes: ['abyss'] },
+        { name: 'Cimientos de Basalto', minY: 300, maxY: 1450, platformType: 'basalt_abyss', mageChance: 0.35, enemyHp: 55, enemySkin: 'abyss', batTypes: ['abyss'] }
       ],
       wind: { force: 0.65, activeMinY: 1500, activeMaxY: 2500 },
       portalTarget: 'boss_minos',
@@ -452,11 +453,11 @@ class LevelManager {
       ambientRain: false,
       hasLava: false,
       platforms: [
-        { x: 80, y: 450, w: 1040, h: 42, type: 'runic' },
-        { x: 120, y: 350, w: 180, h: 22, type: 'stone' },
-        { x: 900, y: 350, w: 180, h: 22, type: 'stone' },
-        { x: 380, y: 300, w: 200, h: 22, type: 'stone' },
-        { x: 620, y: 300, w: 200, h: 22, type: 'stone' }
+        { x: 80, y: 450, w: 1040, h: 42, type: 'basalt_abyss' },
+        { x: 120, y: 350, w: 180, h: 22, type: 'basalt_abyss' },
+        { x: 900, y: 350, w: 180, h: 22, type: 'basalt_abyss' },
+        { x: 380, y: 300, w: 200, h: 22, type: 'basalt_abyss' },
+        { x: 620, y: 300, w: 200, h: 22, type: 'basalt_abyss' }
       ],
       ladders: [],
       movingPlatforms: [],
@@ -499,11 +500,11 @@ class LevelManager {
       musicTrack: 'ascent',
       ambientRain: false,
       hasLava: true,
-      basePlatformType: 'stone',
+      basePlatformType: 'catacomb_stone',
       tiers: [
-        { name: 'Galería de Huesos', minY: 2600, maxY: 3800, platformType: 'bone', ladderType: 'bone', mageChance: 0.2, enemyHp: 48, enemySkin: 'mud', batTypes: ['gargoyle', 'toxic'] },
-        { name: 'Pantano Subterráneo', minY: 1450, maxY: 2600, platformType: 'mud', mageChance: 0.3, enemyHp: 58, enemySkin: 'toxic', batTypes: ['toxic', 'gargoyle'] },
-        { name: 'Murallas Sumergidas', minY: 300, maxY: 1450, platformType: 'stone', mageChance: 0.45, enemyHp: 68, enemySkin: 'toxic', batTypes: ['toxic', 'abyss'] }
+        { name: 'Galería de Criptas', minY: 2600, maxY: 3800, platformType: 'catacomb_stone', mageChance: 0.2, enemyHp: 48, enemySkin: 'mud', batTypes: ['toxic'] },
+        { name: 'Cámaras del Fango', minY: 1450, maxY: 2600, platformType: 'catacomb_stone', mageChance: 0.3, enemyHp: 58, enemySkin: 'mud', batTypes: ['toxic'] },
+        { name: 'Bóvedas Espectrales', minY: 300, maxY: 1450, platformType: 'catacomb_stone', mageChance: 0.45, enemyHp: 68, enemySkin: 'mud', batTypes: ['toxic'] }
       ],
       portalTarget: 'boss_flegias',
       portalLabel: 'Santuario del Fango — Flegias'
@@ -525,11 +526,11 @@ class LevelManager {
       ambientRain: true,
       hasLava: false,
       platforms: [
-        { x: 80, y: 450, w: 1040, h: 42, type: 'stone' },
-        { x: 120, y: 350, w: 180, h: 22, type: 'stone' },
-        { x: 900, y: 350, w: 180, h: 22, type: 'stone' },
-        { x: 380, y: 300, w: 200, h: 22, type: 'stone' },
-        { x: 620, y: 300, w: 200, h: 22, type: 'stone' }
+        { x: 80, y: 450, w: 1040, h: 42, type: 'catacomb_stone' },
+        { x: 120, y: 350, w: 180, h: 22, type: 'catacomb_stone' },
+        { x: 900, y: 350, w: 180, h: 22, type: 'catacomb_stone' },
+        { x: 380, y: 300, w: 200, h: 22, type: 'catacomb_stone' },
+        { x: 620, y: 300, w: 200, h: 22, type: 'catacomb_stone' }
       ],
       ladders: [],
       movingPlatforms: [],
@@ -572,11 +573,11 @@ class LevelManager {
       musicTrack: 'tower',
       ambientRain: false,
       hasLava: true,
-      basePlatformType: 'obsidian',
+      basePlatformType: 'crimson_iron',
       tiers: [
-        { name: 'Bastión de Hierro', minY: 2600, maxY: 4000, platformType: 'obsidian', mageChance: 0.3, enemyHp: 65, enemySkin: 'obsidian', batTypes: ['blood', 'gargoyle'] },
-        { name: 'Torreón Carmesí', minY: 1400, maxY: 2600, platformType: 'runic', mageChance: 0.4, enemyHp: 75, enemySkin: 'blood', batTypes: ['blood', 'abyss'] },
-        { name: 'Almenas de Fuego', minY: 300, maxY: 1400, platformType: 'obsidian', mageChance: 0.5, enemyHp: 85, enemySkin: 'blood', batTypes: ['blood', 'gargoyle'] }
+        { name: 'Bastión de Hierro', minY: 2600, maxY: 4000, platformType: 'crimson_iron', mageChance: 0.3, enemyHp: 65, enemySkin: 'blood', batTypes: ['gargoyle', 'blood'] },
+        { name: 'Torreón Carmesí', minY: 1400, maxY: 2600, platformType: 'crimson_iron', mageChance: 0.4, enemyHp: 75, enemySkin: 'blood', batTypes: ['blood', 'gargoyle'] },
+        { name: 'Almenas de Fuego', minY: 300, maxY: 1400, platformType: 'crimson_iron', mageChance: 0.5, enemyHp: 85, enemySkin: 'blood', batTypes: ['gargoyle', 'blood'] }
       ],
       wind: { force: 0.5, activeMinY: 800, activeMaxY: 2400 },
       portalTarget: 'boss_azgalor',
@@ -600,11 +601,11 @@ class LevelManager {
       hasLava: true,
       lavaY: 515,
       platforms: [
-        { x: 80, y: 450, w: 1040, h: 42, type: 'obsidian' },
-        { x: 100, y: 360, w: 180, h: 22, type: 'obsidian' },
-        { x: 920, y: 360, w: 180, h: 22, type: 'obsidian' },
-        { x: 380, y: 310, w: 200, h: 22, type: 'obsidian' },
-        { x: 620, y: 310, w: 200, h: 22, type: 'obsidian' }
+        { x: 80, y: 450, w: 1040, h: 42, type: 'crimson_iron' },
+        { x: 100, y: 360, w: 180, h: 22, type: 'crimson_iron' },
+        { x: 920, y: 360, w: 180, h: 22, type: 'crimson_iron' },
+        { x: 380, y: 310, w: 200, h: 22, type: 'crimson_iron' },
+        { x: 620, y: 310, w: 200, h: 22, type: 'crimson_iron' }
       ],
       ladders: [],
       movingPlatforms: [],
@@ -647,11 +648,11 @@ class LevelManager {
       musicTrack: 'frozen',
       ambientRain: false,
       hasLava: false,
-      basePlatformType: 'ice',
+      basePlatformType: 'glacial_ice',
       tiers: [
-        { name: 'Escarcha Baja', minY: 2600, maxY: 4000, platformType: 'ice', mageChance: 0.35, enemyHp: 65, enemySkin: 'ice', batTypes: ['frost', 'gargoyle'] },
-        { name: 'Glaciar Colgante', minY: 1400, maxY: 2600, platformType: 'stone', mageChance: 0.45, enemyHp: 75, enemySkin: 'ice', batTypes: ['frost', 'blood'] },
-        { name: 'Agujas Árticas', minY: 300, maxY: 1400, platformType: 'ice', mageChance: 0.55, enemyHp: 85, enemySkin: 'ice', batTypes: ['frost', 'gargoyle'] }
+        { name: 'Escarcha Baja', minY: 2600, maxY: 4000, platformType: 'glacial_ice', mageChance: 0.35, enemyHp: 65, enemySkin: 'frost', batTypes: ['frost'] },
+        { name: 'Glaciar Colgante', minY: 1400, maxY: 2600, platformType: 'glacial_ice', mageChance: 0.45, enemyHp: 75, enemySkin: 'frost', batTypes: ['frost'] },
+        { name: 'Agujas Árticas', minY: 300, maxY: 1400, platformType: 'glacial_ice', mageChance: 0.55, enemyHp: 85, enemySkin: 'frost', batTypes: ['frost'] }
       ],
       wind: { force: -0.75, activeMinY: 500, activeMaxY: 2800 },
       portalTarget: 'boss_malacoda',
@@ -674,11 +675,11 @@ class LevelManager {
       ambientRain: false,
       hasLava: false,
       platforms: [
-        { x: 80, y: 450, w: 1040, h: 42, type: 'ice' },
-        { x: 100, y: 340, w: 180, h: 22, type: 'ice' },
-        { x: 920, y: 340, w: 180, h: 22, type: 'ice' },
-        { x: 360, y: 290, w: 220, h: 22, type: 'stone' },
-        { x: 640, y: 290, w: 220, h: 22, type: 'stone' }
+        { x: 80, y: 450, w: 1040, h: 42, type: 'glacial_ice' },
+        { x: 100, y: 340, w: 180, h: 22, type: 'glacial_ice' },
+        { x: 920, y: 340, w: 180, h: 22, type: 'glacial_ice' },
+        { x: 360, y: 290, w: 220, h: 22, type: 'glacial_ice' },
+        { x: 640, y: 290, w: 220, h: 22, type: 'glacial_ice' }
       ],
       ladders: [],
       movingPlatforms: [],
@@ -721,11 +722,11 @@ class LevelManager {
       musicTrack: 'summit',
       ambientRain: false,
       hasLava: false,
-      basePlatformType: 'gold',
+      basePlatformType: 'gold_vault',
       tiers: [
-        { name: 'Galería de Oro', minY: 2800, maxY: 4200, platformType: 'gold', ladderType: 'gold', mageChance: 0.40, enemyHp: 80, enemySkin: 'gold', batTypes: ['gargoyle', 'abyss'] },
-        { name: 'Mármol Rúnico', minY: 1450, maxY: 2800, platformType: 'runic', mageChance: 0.50, enemyHp: 90, enemySkin: 'gold', batTypes: ['gargoyle', 'blood'] },
-        { name: 'Bóveda Pre-Terrenal', minY: 300, maxY: 1450, platformType: 'gold', mageChance: 0.60, enemyHp: 100, enemySkin: 'gold', batTypes: ['gargoyle', 'frost'] }
+        { name: 'Galería de Oro', minY: 2800, maxY: 4200, platformType: 'gold_vault', ladderType: 'gold', mageChance: 0.40, enemyHp: 80, enemySkin: 'gold', batTypes: ['gold'] },
+        { name: 'Mármol Rúnico', minY: 1450, maxY: 2800, platformType: 'gold_vault', mageChance: 0.50, enemyHp: 90, enemySkin: 'gold', batTypes: ['gold'] },
+        { name: 'Bóveda Imperial', minY: 300, maxY: 1450, platformType: 'gold_vault', mageChance: 0.60, enemyHp: 100, enemySkin: 'gold', batTypes: ['gold'] }
       ],
       portalTarget: 'boss_glacior',
       portalLabel: 'Sagrario de la Cúpula — Centinela Glacior'
@@ -747,10 +748,10 @@ class LevelManager {
       ambientRain: false,
       hasLava: false,
       platforms: [
-        { x: 80, y: 450, w: 1040, h: 42, type: 'gold' },
-        { x: 100, y: 350, w: 200, h: 22, type: 'runic' },
-        { x: 900, y: 350, w: 200, h: 22, type: 'runic' },
-        { x: 480, y: 300, w: 240, h: 22, type: 'gold' }
+        { x: 80, y: 450, w: 1040, h: 42, type: 'gold_vault' },
+        { x: 100, y: 350, w: 200, h: 22, type: 'gold_vault' },
+        { x: 900, y: 350, w: 200, h: 22, type: 'gold_vault' },
+        { x: 480, y: 300, w: 240, h: 22, type: 'gold_vault' }
       ],
       ladders: [],
       movingPlatforms: [],
@@ -796,11 +797,11 @@ class LevelManager {
       musicTrack: 'summit',
       ambientRain: false,
       hasLava: false,
-      basePlatformType: 'runic',
+      basePlatformType: 'terrenal_sanctuary',
       tiers: [
-        { name: 'Ruinas del Alba', minY: 2100, maxY: 3200, platformType: 'runic', mageChance: 0.45, enemyHp: 90, enemySkin: 'gold', batTypes: ['gargoyle', 'frost'] },
-        { name: 'Jardín de Piedra', minY: 1100, maxY: 2100, platformType: 'stone', mageChance: 0.50, enemyHp: 100, enemySkin: 'celestial', batTypes: ['gargoyle'] },
-        { name: 'El Umbral Solar', minY: 300, maxY: 1100, platformType: 'gold', mageChance: 0.60, enemyHp: 110, enemySkin: 'celestial', batTypes: ['gargoyle'] }
+        { name: 'Ruinas del Alba', minY: 2100, maxY: 3200, platformType: 'terrenal_sanctuary', mageChance: 0.45, enemyHp: 90, enemySkin: 'celestial', batTypes: ['celestial'] },
+        { name: 'Jardín de Piedra Terrenal', minY: 1100, maxY: 2100, platformType: 'terrenal_sanctuary', mageChance: 0.50, enemyHp: 100, enemySkin: 'celestial', batTypes: ['celestial'] },
+        { name: 'El Umbral Solar de los Vivos', minY: 300, maxY: 1100, platformType: 'terrenal_sanctuary', mageChance: 0.60, enemyHp: 110, enemySkin: 'celestial', batTypes: ['celestial'] }
       ],
       portalTarget: 'victory',
       portalLabel: '☀️ El Gran Portal Terrenal (Cruzar a los Vivos)'
