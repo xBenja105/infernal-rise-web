@@ -1470,6 +1470,33 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     }, 4500);
   }
 
+  showGothicAnnouncement(titleText, subtitleText = '', icon = '⚔️') {
+    const banner = document.getElementById('boss-defeat-banner');
+    const title = document.getElementById('defeat-banner-title');
+    const sub = document.getElementById('defeat-banner-subtitle');
+    const crown = document.getElementById('defeat-banner-icon') || (banner ? banner.querySelector('.defeat-crown') : null);
+    if (!banner) return;
+    if (title) title.textContent = titleText;
+    if (sub) sub.textContent = subtitleText || '';
+    if (crown) crown.textContent = icon || '⚔️';
+    banner.style.display = 'block';
+    banner.classList.remove('hidden');
+    banner.classList.remove('fade-out');
+
+    if (this.defeatBannerTimeout) clearTimeout(this.defeatBannerTimeout);
+    if (this.defeatBannerFadeTimeout) clearTimeout(this.defeatBannerFadeTimeout);
+
+    this.defeatBannerTimeout = setTimeout(() => {
+      banner.classList.add('fade-out');
+      this.defeatBannerFadeTimeout = setTimeout(() => {
+        banner.classList.add('hidden');
+        banner.classList.remove('fade-out');
+        banner.style.display = 'none';
+        if (crown) crown.textContent = '👑';
+      }, 850);
+    }, 3200);
+  }
+
   updateDeathCounterUI() {
     const el = document.getElementById('death-count');
     if (el) el.textContent = this.deathCount;
@@ -3399,7 +3426,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     this.triggerScreenShake(7, 0.4);
 
     // Spawn 4 elite enemies on and near the shrine platform
-    const p = cs.platform;
+    const p = cs.platform || { x: cs.x - 70, y: cs.y + 42, w: 180 };
     for (let i = 0; i < 4; i++) {
       const offsetX = (i % 2 === 0 ? -1 : 1) * (30 + i * 28);
       const ex = Math.max(p.x + 8, Math.min(p.x + p.w - 32, cs.x + offsetX));
