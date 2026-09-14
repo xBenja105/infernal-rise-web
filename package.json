@@ -7,11 +7,12 @@
   "author": "Benja",
   "license": "MIT",
   "scripts": {
-    "build": "echo Static web files ready",
     "start": "electron .",
+    "dev": "electron .",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder",
+    "dist": "electron-builder --win portable",
     "dist:win": "electron-builder --win",
+    "dist:installer": "electron-builder --win nsis",
     "dist:portable": "electron-builder --win portable"
   },
   "devDependencies": {

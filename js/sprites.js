@@ -14,29 +14,31 @@ class SpriteManager {
 
   getSkeletonSkinPalette(skin) {
     switch (skin) {
+      case 'celestial':
+        return { tint: '#fde047', mode: 'source-atop', alpha: 0.42, eyeColor: '#ffd700', eyeGlow: 'rgba(255,215,0,0.9)', name: 'Centinela del Umbral Terrenal' };
       case 'blood':
-        return { tint: '#ef4444', mode: 'source-atop', alpha: 0.38, eyeColor: '#ff0054', eyeGlow: 'rgba(255,0,84,0.85)', name: 'Demonio Óseo de Malebolge' };
+        return { tint: '#ef4444', mode: 'source-atop', alpha: 0.38, eyeColor: '#ff0054', eyeGlow: 'rgba(255,0,84,0.85)', name: 'Guardia Óseo de la Fortaleza' };
       case 'gold':
       case 'avarice':
-        return { tint: '#f59e0b', mode: 'source-atop', alpha: 0.42, eyeColor: '#ffb703', eyeGlow: 'rgba(255,183,3,0.85)', name: 'Esqueleto Avaro Maldito' };
+        return { tint: '#f59e0b', mode: 'source-atop', alpha: 0.42, eyeColor: '#ffb703', eyeGlow: 'rgba(255,183,3,0.85)', name: 'Guardia Avaro de la Torre' };
       case 'shadow':
       case 'obsidian':
         return { tint: '#312e81', mode: 'source-atop', alpha: 0.55, eyeColor: '#ff3c00', eyeGlow: 'rgba(255,60,0,0.85)', name: 'Esqueleto de Obsidiana Ígnea' };
       case 'frost':
       case 'ice':
-        return { tint: '#38bdf8', mode: 'source-atop', alpha: 0.45, eyeColor: '#00e5ff', eyeGlow: 'rgba(0,229,255,0.85)', name: 'Espectro Glacial del Cocito' };
+        return { tint: '#38bdf8', mode: 'source-atop', alpha: 0.45, eyeColor: '#00e5ff', eyeGlow: 'rgba(0,229,255,0.85)', name: 'Espectro de las Agujas Heladas' };
       case 'toxic':
       case 'mud':
-        return { tint: '#22c55e', mode: 'source-atop', alpha: 0.42, eyeColor: '#70e000', eyeGlow: 'rgba(112,224,0,0.85)', name: 'Caminante del Fango Estigio' };
+        return { tint: '#22c55e', mode: 'source-atop', alpha: 0.42, eyeColor: '#70e000', eyeGlow: 'rgba(112,224,0,0.85)', name: 'Caminante de las Catacumbas' };
       case 'spectral':
       case 'ashen':
-        return { tint: '#c084fc', mode: 'source-atop', alpha: 0.38, eyeColor: '#c084fc', eyeGlow: 'rgba(192,132,252,0.85)', name: 'Cenizo Espectral del Limbo' };
+        return { tint: '#c084fc', mode: 'source-atop', alpha: 0.38, eyeColor: '#c084fc', eyeGlow: 'rgba(192,132,252,0.85)', name: 'Centinela de Ceniza' };
       case 'infernal':
         return { tint: '#f97316', mode: 'source-atop', alpha: 0.45, eyeColor: '#ff2200', eyeGlow: 'rgba(255,34,0,0.85)', name: 'Esqueleto de Fuego Infernal' };
       case 'abyss':
       case 'normal':
       default:
-        return { tint: '#94a3b8', mode: 'source-atop', alpha: 0.18, eyeColor: '#00f5d4', eyeGlow: 'rgba(0,245,212,0.85)', name: 'Condenado del Abismo' };
+        return { tint: '#94a3b8', mode: 'source-atop', alpha: 0.18, eyeColor: '#00f5d4', eyeGlow: 'rgba(0,245,212,0.85)', name: 'Condenado del Foso Abisal' };
     }
   }
 

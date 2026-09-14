@@ -1118,13 +1118,21 @@ class SkeletonEnemy {
 
   getSkinData() {
     switch (this.skin) {
+      case 'celestial':
+        return {
+          tint: 'rgba(255, 235, 120, 0.45)',
+          eyeColor: '#ffd700',
+          eyeGlow: 'rgba(255, 215, 0, 0.9)',
+          auraColor: 'rgba(255, 215, 0, 0.35)',
+          name: 'Centinela del Umbral Terrenal'
+        };
       case 'gold':
         return {
           tint: 'rgba(255, 215, 0, 0.38)',
           eyeColor: '#ffb703',
           eyeGlow: 'rgba(255, 183, 3, 0.8)',
           auraColor: 'rgba(255, 215, 0, 0.28)',
-          name: 'Esqueleto Avaro Maldito'
+          name: 'Guardia Avaro de la Torre'
         };
       case 'mud':
         return {
@@ -1132,7 +1140,7 @@ class SkeletonEnemy {
           eyeColor: '#70e000',
           eyeGlow: 'rgba(112, 224, 0, 0.8)',
           auraColor: 'rgba(112, 224, 0, 0.28)',
-          name: 'Caminante del Fango Estigio'
+          name: 'Caminante de las Catacumbas'
         };
       case 'obsidian':
         return {
@@ -1148,7 +1156,7 @@ class SkeletonEnemy {
           eyeColor: '#ff0054',
           eyeGlow: 'rgba(255, 0, 84, 0.85)',
           auraColor: 'rgba(255, 0, 84, 0.32)',
-          name: 'Demonio Óseo de Malebolge'
+          name: 'Guardia Óseo de la Fortaleza'
         };
       case 'ice':
         return {
@@ -1156,7 +1164,7 @@ class SkeletonEnemy {
           eyeColor: '#00b4d8',
           eyeGlow: 'rgba(0, 180, 216, 0.85)',
           auraColor: 'rgba(0, 180, 216, 0.32)',
-          name: 'Espectro Glacial del Cocito'
+          name: 'Espectro de las Agujas Heladas'
         };
       case 'ashen':
         return {
@@ -1164,7 +1172,7 @@ class SkeletonEnemy {
           eyeColor: '#90e0ef',
           eyeGlow: 'rgba(144, 224, 239, 0.75)',
           auraColor: 'rgba(144, 224, 239, 0.2)',
-          name: 'Cenizo de Lujuria'
+          name: 'Centinela de Ceniza'
         };
       case 'abyss':
       default:
@@ -1173,7 +1181,7 @@ class SkeletonEnemy {
           eyeColor: '#00f5d4',
           eyeGlow: 'rgba(0, 245, 212, 0.75)',
           auraColor: 'rgba(0, 245, 212, 0.2)',
-          name: 'Condenado del Limbo'
+          name: 'Esqueleto del Foso Abisal'
         };
     }
   }

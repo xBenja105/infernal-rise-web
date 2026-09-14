@@ -1,5 +1,10 @@
-const { app, BrowserWindow, Menu, shell } = require('electron');
+const { app, BrowserWindow, Menu, shell, ipcMain } = require('electron');
 const path = require('path');
+
+// Handle exit command from in-game UI
+ipcMain.on('app-quit', () => {
+  app.quit();
+});
 
 // Prevent multiple instances of the game running simultaneously
 const gotTheLock = app.requestSingleInstanceLock();
@@ -24,6 +29,7 @@ function createWindow() {
     useContentSize: true,
     show: false, // Show once ready-to-show to prevent white flash
     webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
       webSecurity: true,

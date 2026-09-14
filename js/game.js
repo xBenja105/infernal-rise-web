@@ -807,6 +807,19 @@ class Game {
     document.getElementById('btn-restart').addEventListener('click', () => this.restartLevel());
     document.getElementById('btn-quit').addEventListener('click', () => this.showMainMenu());
 
+    // Native Desktop Exit Handlers
+    const exitToDesktop = () => {
+      if (window.desktopAPI && window.desktopAPI.quit) {
+        window.desktopAPI.quit();
+      } else {
+        window.close();
+      }
+    };
+    const btnQuitDesktop = document.getElementById('btn-quit-desktop');
+    if (btnQuitDesktop) btnQuitDesktop.addEventListener('click', exitToDesktop);
+    const btnPauseQuitDesktop = document.getElementById('btn-pause-quit-desktop');
+    if (btnPauseQuitDesktop) btnPauseQuitDesktop.addEventListener('click', exitToDesktop);
+
     // Reset Progress Buttons & Confirmation Modal
     const btnResetSave = document.getElementById('btn-reset-save');
     const btnPauseResetSave = document.getElementById('btn-pause-reset-save');
@@ -1712,10 +1725,10 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       const p = this.level.portal;
       if (this.player.x + this.player.w > p.x && this.player.x < p.x + p.w &&
           this.player.y + this.player.h > p.y && this.player.y < p.y + p.h) {
-        if (p.isFinalPortal || !p.targetLevel) {
+        if (p.isFinalPortal || !p.targetLevel || p.targetLevel === 'victory') {
           this.state = 'VICTORY';
           if (this.ui.victoryMessage) {
-            this.ui.victoryMessage.textContent = `¡Has derrotado a Glacior y conquistado los 9 Círculos del Infierno de Dante! Tu alma ha alcanzado la redención eterna y la salida al Alba.`;
+            this.ui.victoryMessage.textContent = `¡Has conquistado la Gran Torre del Inframundo y cruzado el Umbral Terrenal hacia el Mundo de los Vivos! Tu alma renace bajo la luz del sol.`;
           }
           this.renderEndRunSummary(true);
           if (this.ui.victoryScreen) this.ui.victoryScreen.classList.remove('hidden');
@@ -2182,9 +2195,9 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       this.drawWindStreaks(finalCamX, finalCamY);
     }
 
-    // 15. Draw Dante Circle HUD Banner / Badge
-    if (this.level.danteCircle && this.state === 'PLAYING') {
-      this.drawDanteCircleBadge();
+    // 15. Draw Tower Floor HUD Banner / Badge
+    if ((this.level.towerFloor || this.level.danteCircle) && this.state === 'PLAYING') {
+      this.drawTowerFloorBadge();
     }
 
     // 16. Draw Cinematic White Flash (Boss defeat / Ascended blast)
@@ -2213,9 +2226,13 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     this.ctx.restore();
   }
 
-  drawDanteCircleBadge() {
+  drawTowerFloorBadge() {
     this.ctx.save();
-    const text = this.level.danteCircle;
+    const text = this.level.towerFloor || this.level.danteCircle;
+    if (!text) {
+      this.ctx.restore();
+      return;
+    }
     this.ctx.font = 'bold 11px "Cinzel", "Crimson Text", serif, sans-serif';
     const textMetrics = this.ctx.measureText(text);
     const boxW = textMetrics.width + 28;
@@ -2244,6 +2261,10 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     this.ctx.restore();
   }
 
+  drawDanteCircleBadge() {
+    this.drawTowerFloorBadge();
+  }
+
   drawParallaxBackgrounds(camX, camY) {
     // 1. Calculate Altitude Ratio for Seamless Vertical Atmospheric Transition
     // 0.0 = Base, 1.0 = Summit
@@ -2261,12 +2282,14 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       else biomeKey = 'surface_threshold';
     }
 
-    // In Tower 3: near the summit (y < 1200 / climbRatio > 0.62), the underworld gives way to the golden dawn of the human surface!
+    // Dynamic daylight transition as player ascends towards the living surface world
     let surfaceBlend = 0;
-    if (this.level && this.level.id === 'tower3' && climbRatio > 0.62) {
-      surfaceBlend = Math.min(1.0, (climbRatio - 0.62) / 0.38);
+    if (this.level && (this.level.id === 'tower6' || this.level.id === 'victory')) {
+      surfaceBlend = 0.45 + climbRatio * 0.55;
+    } else if (this.level && (this.level.id === 'tower5' || this.level.id === 'boss_glacior')) {
+      surfaceBlend = 0.20 + climbRatio * 0.35;
     } else if (biomeKey === 'surface_threshold') {
-      surfaceBlend = 1.0;
+      surfaceBlend = 0.85;
     }
 
     // 3. Dynamic Altitude Sky Gradient per Biome
@@ -2463,7 +2486,8 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     const biomeKey = (this.level && this.level.biome) ? this.level.biome : 'abyss';
     const levelId = this.level ? this.level.id : '';
     const isSpectral = (biomeKey === 'sunken_necropolis' || levelId === 'tower2' || levelId === 'boss_flegias');
-    const isCelestial = (biomeKey === 'surface_threshold' || levelId === 'tower3' || levelId === 'boss_glacior');
+    const isGlacial = (biomeKey === 'frozen_peaks' || levelId === 'tower4' || levelId === 'boss_malacoda');
+    const isCelestial = (biomeKey === 'surface_threshold' || levelId === 'tower5' || levelId === 'boss_glacior' || levelId === 'tower6' || levelId === 'victory');
 
     // 1. Dynamic Spectral Fog Waves in Level 2 / Abismo
     if (isSpectral) {

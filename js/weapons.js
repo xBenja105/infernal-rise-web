@@ -224,7 +224,7 @@ class PassiveWeaponsManager {
               id: 'evo_infernal_chakram',
               isEvolution: true,
               baseWeaponType: 'infernal_chakram',
-              name: 'Círculo del Infierno Eterno',
+              name: 'Disco del Fuego Eterno',
               rarity: 'Legendaria',
               desc: 'SUPER EVOLUCIÓN: 4 discos solares ardientes bumerán que rebanan dos veces a todos los enemigos dejando estelas de fuego eterno (90 de daño).',
               icon: '🌀'
@@ -293,7 +293,7 @@ class PassiveWeaponsManager {
         w.pierceAll = true;
         break;
       case 'infernal_chakram':
-        w.name = 'Círculo del Infierno Eterno';
+        w.name = 'Disco del Fuego Eterno';
         w.icon = '🌀';
         w.count = 4;
         w.maxCooldown = 0.8;

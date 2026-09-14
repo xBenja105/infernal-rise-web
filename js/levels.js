@@ -26,10 +26,16 @@ class LevelManager {
       this.currentLevel = this.createTower3Level();
     } else if (levelId === 'boss_azgalor') {
       this.currentLevel = this.createBossAzgalorLevel();
+    } else if (levelId === 'tower4') {
+      this.currentLevel = this.createTower4Level();
     } else if (levelId === 'boss_malacoda') {
       this.currentLevel = this.createBossMalacodaLevel();
+    } else if (levelId === 'tower5') {
+      this.currentLevel = this.createTower5Level();
     } else if (levelId === 'boss3' || levelId === 'boss5' || levelId === 'boss_glacior') {
       this.currentLevel = this.createBossGlaciorLevel();
+    } else if (levelId === 'tower6') {
+      this.currentLevel = this.createTower6Level();
     } else if (levelId === 'infernal') {
       this.currentLevel = this.createInfernalModeLevel();
     } else {
@@ -42,8 +48,8 @@ class LevelManager {
   createPrologueLevel() {
     return {
       id: 'prologue',
-      name: 'Refugio del Reino — El Santuario de los Caídos',
-      danteCircle: 'El Velo Crepuscular — Refugio y Forja de Almas',
+      name: 'Refugio del Inframundo — El Santuario de los Caídos',
+      danteCircle: 'El Santuario de los Caídos — Falda de la Gran Torre',
       biome: 'prologue',
       width: 960,
       height: 540,
@@ -117,7 +123,7 @@ class LevelManager {
         w: 70,
         h: 95,
         targetLevel: 'tower1',
-        label: 'A la Torre Infernal (Círculos I - III)'
+        label: 'Entrar a la Gran Torre (Piso 1)'
       }
     };
   }
@@ -362,18 +368,21 @@ class LevelManager {
 
     urns.push({ x: 680, y: 434, value: 60 });
 
+    const isFinalPortal = (config.portalTarget === 'victory');
     const portal = {
       x: 450,
       y: 260,
       w: 60,
       h: 100,
       targetLevel: config.portalTarget,
+      isFinalPortal: isFinalPortal,
       label: config.portalLabel
     };
 
     return {
       id: config.id,
       name: config.name,
+      towerFloor: config.danteCircle,
       danteCircle: config.danteCircle,
       biome: config.biome,
       width,
@@ -404,12 +413,12 @@ class LevelManager {
     };
   }
 
-  // ─── 1. TOWER 1: CÍRCULOS I - III (LIMBO, LUJURIA, GULA) ───
+  // ─── 1. TOWER 1: PISO 1 — EL FOSO ABISAL (CIMIENTOS DE OBSIDIANA) ───
   createTower1Level() {
     return this.generateProceduralTower({
       id: 'tower1',
-      name: 'La Torre del Inframundo — Círculos I - III',
-      danteCircle: 'Círculo I: Limbo | Círculo II: Lujuria | Círculo III: Gula',
+      name: 'Piso 1: El Foso Abisal — Cimientos de Basalto',
+      danteCircle: 'Piso 1: El Foso Abisal — Basalto y Fuego',
       biome: 'abyss',
       width: 960,
       height: 3600,
@@ -418,22 +427,22 @@ class LevelManager {
       hasLava: true,
       basePlatformType: 'stone',
       tiers: [
-        { name: 'Limbo', minY: 2500, maxY: 3600, platformType: 'stone', mageChance: 0.0, enemyHp: 35, enemySkin: 'abyss', batTypes: ['abyss', 'gargoyle'] },
-        { name: 'Lujuria', minY: 1450, maxY: 2500, platformType: 'stone', mageChance: 0.25, enemyHp: 45, enemySkin: 'ashen', batTypes: ['abyss', 'blood'] },
-        { name: 'Gula', minY: 300, maxY: 1450, platformType: 'bone', mageChance: 0.35, enemyHp: 55, enemySkin: 'toxic', batTypes: ['toxic', 'abyss'] }
+        { name: 'Foso Profundo', minY: 2500, maxY: 3600, platformType: 'stone', mageChance: 0.0, enemyHp: 35, enemySkin: 'abyss', batTypes: ['abyss', 'gargoyle'] },
+        { name: 'Ascenso de Ceniza', minY: 1450, maxY: 2500, platformType: 'stone', mageChance: 0.25, enemyHp: 45, enemySkin: 'ashen', batTypes: ['abyss', 'blood'] },
+        { name: 'Cimientos de Obsidiana', minY: 300, maxY: 1450, platformType: 'obsidian', mageChance: 0.35, enemyHp: 55, enemySkin: 'obsidian', batTypes: ['abyss', 'gargoyle'] }
       ],
       wind: { force: 0.65, activeMinY: 1500, activeMaxY: 2500 },
       portalTarget: 'boss_minos',
-      portalLabel: 'Sala de Juicio — Rey Minos'
+      portalLabel: 'Cámara de Juicio — Minos'
     });
   }
 
-  // ─── 2. BOSS 1: REY MINOS (JUEZ DE LOS CONDENADOS) ───
+  // ─── 2. BOSS 1: MINOS (JUEZ DE LAS FOSAS ABISALES) ───
   createBossMinosLevel() {
     return {
       id: 'boss_minos',
-      name: 'Círculo II: Sala de Juicio — Rey Minos',
-      danteCircle: 'Círculo II: Sala de Juicio del Rey Minos',
+      name: 'Cámara de Juicio — Minos, Juez de las Fosas',
+      danteCircle: 'Piso 1: Cámara de Juicio — Minos',
       biome: 'abyss',
       width: 1200,
       height: 540,
@@ -460,7 +469,7 @@ class LevelManager {
       ],
       boss: {
         type: 'minos',
-        name: 'Rey Minos, Juez de los Condenados',
+        name: 'Minos, Juez de las Fosas Abisales',
         x: 860,
         y: 374,
         maxHp: 850,
@@ -478,12 +487,12 @@ class LevelManager {
     };
   }
 
-  // ─── 3. TOWER 2: CÍRCULOS IV - VI (AVARICIA, IRA / ESTIGIA, HEREJÍA / DITE) ───
+  // ─── 3. TOWER 2: PISO 2 — LAS CATACUMBAS HUNDIDAS (GALERÍA ESPECTRAL) ───
   createTower2Level() {
     return this.generateProceduralTower({
       id: 'tower2',
-      name: 'La Torre del Inframundo — Círculos IV - VI',
-      danteCircle: 'Círculo IV: Avaricia | Círculo V: Laguna Estigia | Círculo VI: Murallas de Dite',
+      name: 'Piso 2: Las Catacumbas Hundidas — Galería Espectral',
+      danteCircle: 'Piso 2: Catacumbas Hundidas — Bruma y Criptas',
       biome: 'sunken_necropolis',
       width: 960,
       height: 3800,
@@ -492,21 +501,21 @@ class LevelManager {
       hasLava: true,
       basePlatformType: 'stone',
       tiers: [
-        { name: 'Avaricia', minY: 2600, maxY: 3800, platformType: 'gold', ladderType: 'gold', mageChance: 0.2, enemyHp: 48, enemySkin: 'gold', batTypes: ['gargoyle', 'blood'] },
-        { name: 'Estigia', minY: 1450, maxY: 2600, platformType: 'mud', mageChance: 0.3, enemyHp: 58, enemySkin: 'mud', batTypes: ['toxic', 'gargoyle'] },
-        { name: 'Dite', minY: 300, maxY: 1450, platformType: 'obsidian', mageChance: 0.45, enemyHp: 68, enemySkin: 'obsidian', batTypes: ['blood', 'toxic'] }
+        { name: 'Galería de Huesos', minY: 2600, maxY: 3800, platformType: 'bone', ladderType: 'bone', mageChance: 0.2, enemyHp: 48, enemySkin: 'mud', batTypes: ['gargoyle', 'toxic'] },
+        { name: 'Pantano Subterráneo', minY: 1450, maxY: 2600, platformType: 'mud', mageChance: 0.3, enemyHp: 58, enemySkin: 'toxic', batTypes: ['toxic', 'gargoyle'] },
+        { name: 'Murallas Sumergidas', minY: 300, maxY: 1450, platformType: 'stone', mageChance: 0.45, enemyHp: 68, enemySkin: 'toxic', batTypes: ['toxic', 'abyss'] }
       ],
       portalTarget: 'boss_flegias',
-      portalLabel: 'Laguna Estigia — Guardián Flegias'
+      portalLabel: 'Santuario del Fango — Flegias'
     });
   }
 
-  // ─── 4. BOSS 2: FLEGIAS (BARQUERO DE LA LAGUNA ESTIGIA) ───
+  // ─── 4. BOSS 2: FLEGIAS (BARQUERO DEL ABISMO HUNDIDO) ───
   createBossFlegiasLevel() {
     return {
       id: 'boss_flegias',
-      name: 'Círculo V: Laguna Estigia — Guardián Flegias',
-      danteCircle: 'Círculo V: Ira — La Fétida Laguna Estigia',
+      name: 'Santuario del Fango — Guardián Flegias',
+      danteCircle: 'Piso 2: Santuario del Fango — Flegias',
       biome: 'sunken_necropolis',
       width: 1200,
       height: 540,
@@ -533,7 +542,7 @@ class LevelManager {
       ],
       boss: {
         type: 'flegias',
-        name: 'Flegias, Barquero de la Laguna Estigia',
+        name: 'Flegias, Barquero del Abismo Hundido',
         x: 860,
         y: 382,
         maxHp: 1250,
@@ -551,36 +560,36 @@ class LevelManager {
     };
   }
 
-  // ─── 5. TOWER 3: CÍRCULOS VII - IX (VIOLENCIA, FRAUDE, TRAICIÓN) ───
+  // ─── 5. TOWER 3: PISO 3 — LAS MURALLAS CARMESÍ (FORTALEZA DE HIERRO) ───
   createTower3Level() {
     return this.generateProceduralTower({
       id: 'tower3',
-      name: 'La Torre del Inframundo — Círculos VII - IX',
-      danteCircle: 'Círculo VII: Flegetonte | Círculo VIII: Malebolge | Círculo IX: Cocito y Cumbres del Alba',
-      biome: 'frozen_peaks',
+      name: 'Piso 3: Las Murallas Carmesí — Fortaleza de Hierro',
+      danteCircle: 'Piso 3: Murallas Carmesí — Fortaleza de Hierro',
+      biome: 'abyss',
       width: 960,
-      height: 4200,
-      musicTrack: 'frozen',
-      ambientRain: true,
+      height: 4000,
+      musicTrack: 'tower',
+      ambientRain: false,
       hasLava: true,
       basePlatformType: 'obsidian',
       tiers: [
-        { name: 'Flegetonte', minY: 2800, maxY: 4200, platformType: 'obsidian', mageChance: 0.3, enemyHp: 65, enemySkin: 'obsidian', batTypes: ['blood', 'gargoyle'] },
-        { name: 'Malebolge', minY: 1450, maxY: 2800, platformType: 'runic', mageChance: 0.4, enemyHp: 75, enemySkin: 'blood', batTypes: ['blood', 'abyss'] },
-        { name: 'Cocito', minY: 300, maxY: 1450, platformType: 'ice', mageChance: 0.5, enemyHp: 85, enemySkin: 'ice', batTypes: ['frost', 'gargoyle'] }
+        { name: 'Bastión de Hierro', minY: 2600, maxY: 4000, platformType: 'obsidian', mageChance: 0.3, enemyHp: 65, enemySkin: 'obsidian', batTypes: ['blood', 'gargoyle'] },
+        { name: 'Torreón Carmesí', minY: 1400, maxY: 2600, platformType: 'runic', mageChance: 0.4, enemyHp: 75, enemySkin: 'blood', batTypes: ['blood', 'abyss'] },
+        { name: 'Almenas de Fuego', minY: 300, maxY: 1400, platformType: 'obsidian', mageChance: 0.5, enemyHp: 85, enemySkin: 'blood', batTypes: ['blood', 'gargoyle'] }
       ],
-      wind: { force: -0.75, activeMinY: 450, activeMaxY: 1450 },
+      wind: { force: 0.5, activeMinY: 800, activeMaxY: 2400 },
       portalTarget: 'boss_azgalor',
-      portalLabel: 'Círculo VII: Flegetonte — Azgalor'
+      portalLabel: 'Fortaleza del Fuego — Azgalor'
     });
   }
 
-  // ─── 6. BOSS 3: AZGALOR (SEÑOR DEL FUEGO Y LA VIOLENCIA) ───
+  // ─── 6. BOSS 3: AZGALOR (SEÑOR DEL FUEGO CARMESÍ) ───
   createBossAzgalorLevel() {
     return {
       id: 'boss_azgalor',
-      name: 'Círculo VII: Río Flegetonte — Azgalor, el Abrasador',
-      danteCircle: 'Círculo VII: Violencia — Río de Sangre Flegetonte',
+      name: 'Fortaleza del Fuego — Azgalor, el Abrasador',
+      danteCircle: 'Piso 3: Fortaleza del Fuego — Azgalor',
       biome: 'abyss',
       width: 1200,
       height: 540,
@@ -608,14 +617,14 @@ class LevelManager {
       ],
       boss: {
         type: 'azgalor',
-        name: 'Azgalor, el Abrasador',
+        name: 'Azgalor, el Abrasador de la Fortaleza',
         x: 860,
         y: 382,
         maxHp: 1750,
         hp: 1750,
         armor: 0.25,
         dialogueKey: 'azgalor_intro',
-        nextLevel: 'boss_malacoda'
+        nextLevel: 'tower4'
       },
       enemies: [],
       urns: [
@@ -626,13 +635,37 @@ class LevelManager {
     };
   }
 
-  // ─── 7. BOSS 4: MALACODA (CAPITÁN DE LOS MALEBRANCHE) ───
+  // ─── 7. TOWER 4: PISO 4 — LAS AGUJAS GLACIARES (EL GRAN FRÍO) ───
+  createTower4Level() {
+    return this.generateProceduralTower({
+      id: 'tower4',
+      name: 'Piso 4: Las Agujas Glaciares — El Gran Frío',
+      danteCircle: 'Piso 4: Agujas Glaciares — Viento y Escarcha',
+      biome: 'frozen_peaks',
+      width: 960,
+      height: 4000,
+      musicTrack: 'frozen',
+      ambientRain: false,
+      hasLava: false,
+      basePlatformType: 'ice',
+      tiers: [
+        { name: 'Escarcha Baja', minY: 2600, maxY: 4000, platformType: 'ice', mageChance: 0.35, enemyHp: 65, enemySkin: 'ice', batTypes: ['frost', 'gargoyle'] },
+        { name: 'Glaciar Colgante', minY: 1400, maxY: 2600, platformType: 'stone', mageChance: 0.45, enemyHp: 75, enemySkin: 'ice', batTypes: ['frost', 'blood'] },
+        { name: 'Agujas Árticas', minY: 300, maxY: 1400, platformType: 'ice', mageChance: 0.55, enemyHp: 85, enemySkin: 'ice', batTypes: ['frost', 'gargoyle'] }
+      ],
+      wind: { force: -0.75, activeMinY: 500, activeMaxY: 2800 },
+      portalTarget: 'boss_malacoda',
+      portalLabel: 'Cumbres Heladas — Bestia Malacoda'
+    });
+  }
+
+  // ─── 8. BOSS 4: MALACODA (BESTIA DE LAS AGUJAS) ───
   createBossMalacodaLevel() {
     return {
       id: 'boss_malacoda',
-      name: 'Círculo VIII: Las Malebolge — Malacoda',
-      danteCircle: 'Círculo VIII: Fraude — Fosas de Brea Hirviente',
-      biome: 'sunken_necropolis',
+      name: 'Cumbres Heladas — Bestia Malacoda',
+      danteCircle: 'Piso 4: Cumbres Heladas — Malacoda',
+      biome: 'frozen_peaks',
       width: 1200,
       height: 540,
       spawn: { x: 220, y: 412 },
@@ -641,31 +674,31 @@ class LevelManager {
       ambientRain: false,
       hasLava: false,
       platforms: [
-        { x: 80, y: 450, w: 1040, h: 42, type: 'runic' },
-        { x: 100, y: 340, w: 180, h: 22, type: 'runic' },
-        { x: 920, y: 340, w: 180, h: 22, type: 'runic' },
-        { x: 360, y: 290, w: 220, h: 22, type: 'runic' },
-        { x: 640, y: 290, w: 220, h: 22, type: 'runic' }
+        { x: 80, y: 450, w: 1040, h: 42, type: 'ice' },
+        { x: 100, y: 340, w: 180, h: 22, type: 'ice' },
+        { x: 920, y: 340, w: 180, h: 22, type: 'ice' },
+        { x: 360, y: 290, w: 220, h: 22, type: 'stone' },
+        { x: 640, y: 290, w: 220, h: 22, type: 'stone' }
       ],
       ladders: [],
       movingPlatforms: [],
       crumblingPlatforms: [],
       spikes: [],
       torches: [
-        { x: 180, y: 420, blue: false },
-        { x: 1020, y: 420, blue: false },
-        { x: 600, y: 260, blue: false }
+        { x: 180, y: 420, blue: true },
+        { x: 1020, y: 420, blue: true },
+        { x: 600, y: 260, blue: true }
       ],
       boss: {
         type: 'malacoda',
-        name: 'Malacoda, Capitán de los Malebranche',
+        name: 'Malacoda, Bestia de las Agujas',
         x: 860,
         y: 376,
         maxHp: 2300,
         hp: 2300,
         armor: 0.30,
         dialogueKey: 'malacoda_intro',
-        nextLevel: 'boss_glacior'
+        nextLevel: 'tower5'
       },
       enemies: [],
       urns: [
@@ -676,12 +709,35 @@ class LevelManager {
     };
   }
 
-  // ─── 8. BOSS 5: GLACIOR (EMPERADOR DEL COCITO / TRAICIÓN — SALIDA AL ALBA) ───
+  // ─── 9. TOWER 5: PISO 5 — EL ATRIO DORADO (CÚPULA PRE-TERRENAL) ───
+  createTower5Level() {
+    return this.generateProceduralTower({
+      id: 'tower5',
+      name: 'Piso 5: El Atrio Dorado — Cúpula Pre-Terrenal',
+      danteCircle: 'Piso 5: Atrio Dorado — El Velo de la Cúpula',
+      biome: 'surface_threshold',
+      width: 960,
+      height: 4200,
+      musicTrack: 'summit',
+      ambientRain: false,
+      hasLava: false,
+      basePlatformType: 'gold',
+      tiers: [
+        { name: 'Galería de Oro', minY: 2800, maxY: 4200, platformType: 'gold', ladderType: 'gold', mageChance: 0.40, enemyHp: 80, enemySkin: 'gold', batTypes: ['gargoyle', 'abyss'] },
+        { name: 'Mármol Rúnico', minY: 1450, maxY: 2800, platformType: 'runic', mageChance: 0.50, enemyHp: 90, enemySkin: 'gold', batTypes: ['gargoyle', 'blood'] },
+        { name: 'Bóveda Pre-Terrenal', minY: 300, maxY: 1450, platformType: 'gold', mageChance: 0.60, enemyHp: 100, enemySkin: 'gold', batTypes: ['gargoyle', 'frost'] }
+      ],
+      portalTarget: 'boss_glacior',
+      portalLabel: 'Sagrario de la Cúpula — Centinela Glacior'
+    });
+  }
+
+  // ─── 10. BOSS 5: GLACIOR (CENTINELA DEL UMBRAL) ───
   createBossGlaciorLevel() {
     return {
       id: 'boss_glacior',
-      name: 'Círculo IX: Lago Cocito — Glacior, Congelador de Almas',
-      danteCircle: 'Círculo IX: Cocito — El Umbral del Mundo Humano',
+      name: 'Cúpula Pre-Terrenal — Centinela Glacior',
+      danteCircle: 'Piso 5: Cúpula Pre-Terrenal — Glacior',
       biome: 'surface_threshold',
       width: 1200,
       height: 540,
@@ -691,10 +747,10 @@ class LevelManager {
       ambientRain: false,
       hasLava: false,
       platforms: [
-        { x: 80, y: 450, w: 1040, h: 42, type: 'ice' },
-        { x: 100, y: 350, w: 200, h: 22, type: 'ice' },
-        { x: 900, y: 350, w: 200, h: 22, type: 'ice' },
-        { x: 480, y: 300, w: 240, h: 22, type: 'ice' }
+        { x: 80, y: 450, w: 1040, h: 42, type: 'gold' },
+        { x: 100, y: 350, w: 200, h: 22, type: 'runic' },
+        { x: 900, y: 350, w: 200, h: 22, type: 'runic' },
+        { x: 480, y: 300, w: 240, h: 22, type: 'gold' }
       ],
       ladders: [],
       movingPlatforms: [],
@@ -710,14 +766,14 @@ class LevelManager {
       ],
       boss: {
         type: 'glacior',
-        name: 'Glacior, el Congelador de Almas',
+        name: 'Glacior, Centinela del Umbral',
         x: 860,
         y: 382,
         maxHp: 3000,
         hp: 3000,
         armor: 0.35,
         dialogueKey: 'glacior_intro',
-        nextLevel: null
+        nextLevel: 'tower6'
       },
       enemies: [],
       urns: [
@@ -726,6 +782,29 @@ class LevelManager {
       ],
       chests: []
     };
+  }
+
+  // ─── 11. TOWER 6: PISO 6 — LA GRAN PUERTA TERRENAL (EL UMBRAL DE LOS VIVOS) ───
+  createTower6Level() {
+    return this.generateProceduralTower({
+      id: 'tower6',
+      name: 'Piso 6: La Gran Puerta Terrenal — El Umbral de los Vivos',
+      danteCircle: 'Piso 6: Cumbre Terrenal — La Luz del Sol',
+      biome: 'surface_threshold',
+      width: 960,
+      height: 3200,
+      musicTrack: 'summit',
+      ambientRain: false,
+      hasLava: false,
+      basePlatformType: 'runic',
+      tiers: [
+        { name: 'Ruinas del Alba', minY: 2100, maxY: 3200, platformType: 'runic', mageChance: 0.45, enemyHp: 90, enemySkin: 'gold', batTypes: ['gargoyle', 'frost'] },
+        { name: 'Jardín de Piedra', minY: 1100, maxY: 2100, platformType: 'stone', mageChance: 0.50, enemyHp: 100, enemySkin: 'celestial', batTypes: ['gargoyle'] },
+        { name: 'El Umbral Solar', minY: 300, maxY: 1100, platformType: 'gold', mageChance: 0.60, enemyHp: 110, enemySkin: 'celestial', batTypes: ['gargoyle'] }
+      ],
+      portalTarget: 'victory',
+      portalLabel: '☀️ El Gran Portal Terrenal (Cruzar a los Vivos)'
+    });
   }
 
   // ─── 9. MODO INFERNAL (PROCEDURAL ROGUELITE SURVIVAL) ───
@@ -863,7 +942,8 @@ class LevelManager {
     return {
       id: 'infernal',
       name: 'Modo Infernal — Marea de Fuego',
-      danteCircle: 'Ascenso Continuo por los 9 Círculos',
+      towerFloor: 'Ascenso Infinito — La Gran Torre del Inframundo',
+      danteCircle: 'Ascenso Infinito — La Gran Torre del Inframundo',
       biome: 'dynamic_nexus',
       width: 960,
       height: 3000,

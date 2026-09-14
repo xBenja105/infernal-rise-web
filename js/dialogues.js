@@ -49,7 +49,7 @@ class DialogueManager {
         {
           speaker: 'Narrador',
           portrait: 'Kael',
-          text: 'Despertando en el Inframundo ante una torre colosal de obsidiana, tu única salvación es ascender y derrotar a los Guardianes.'
+          text: 'Despertando en el fondo del Inframundo ante la colosal Torre de las Almas, tu única salvación es ascender piso a piso hasta el Mundo Terrenal.'
         }
       ],
 
@@ -57,17 +57,17 @@ class DialogueManager {
         {
           speaker: 'Narrador',
           portrait: 'Kael',
-          text: 'Al cruzar el Limbo hacia los vientos tempestuosos de la Lujuria, una figura imponente enrosca su cola...'
+          text: 'En el umbral superior del Foso Abisal, un coloso espectral cierra el paso a la torre...'
         },
         {
           speaker: 'Minos',
           portrait: 'Minos',
-          text: '¡Detén tu paso, asesino! Soy Minos, Juez de los Condenados. Las vueltas de mi cola sentencian que tu destino es el abismo más profundo.'
+          text: '¡Detén tu paso, alma caída! Soy Minos, Juez de las Fosas Abisales. Nadie escapa hacia los pisos superiores de la Torre.'
         },
         {
           speaker: 'Kael',
           portrait: 'Kael',
-          text: 'No acato tu juicio, demonio. Mi espada forjará mi propio destino.'
+          text: 'No me doblegaré ante tus cadenas. Mi espada abrirá el camino hacia las alturas.'
         }
       ],
 
@@ -75,12 +75,12 @@ class DialogueManager {
         {
           speaker: 'Narrador',
           portrait: 'Kael',
-          text: 'Las aguas lodosas y pestilentes de la Laguna Estigia borbotean con el odio de los coléricos...'
+          text: 'En las Catacumbas Hundidas de la torre, las aguas pestilentes borbotean con odio...'
         },
         {
           speaker: 'Flegias',
           portrait: 'Flegias',
-          text: '¡Miserable intruso! Soy Flegias, señor del fango estigio. ¡Nadie cruza hacia las murallas de Dite con vida!'
+          text: '¡Miserable intruso! Soy Flegias, señor del pantano sumergido. ¡Nadie cruza hacia las murallas de la Torre con vida!'
         },
         {
           speaker: 'Kael',
@@ -93,17 +93,17 @@ class DialogueManager {
         {
           speaker: 'Narrador',
           portrait: 'Kael',
-          text: 'El río Flegetonte ruge con torrentes de sangre hirviente. El calor sofocante anuncia al verdugo de la Violencia...'
+          text: 'En las Murallas Carmesí de la Fortaleza de Hierro, el calor sofocante anuncia al verdugo de fuego...'
         },
         {
           speaker: 'Azgalor',
           portrait: 'Azgalor',
-          text: '¡Mortal sanguinario! Soy Azgalor, el carcelero del fuego. ¡Tus pecados alimentarán este lago de lava por la eternidad!'
+          text: '¡Alma insensata! Soy Azgalor, el señor de la Fortaleza. ¡Tus cenizas alimentarán estos hornos por la eternidad!'
         },
         {
           speaker: 'Kael',
           portrait: 'Kael',
-          text: 'Ya he ardido bastante en vida. Tu fuego no me asusta.'
+          text: 'Ya he ardido en las profundidades. Tu fuego no frenará mi ascenso a la superficie.'
         }
       ],
 
@@ -111,17 +111,17 @@ class DialogueManager {
         {
           speaker: 'Narrador',
           portrait: 'Kael',
-          text: 'El río Flegetonte ruge con torrentes de sangre hirviente. El calor sofocante anuncia al verdugo de la Violencia...'
+          text: 'En las Murallas Carmesí de la Fortaleza de Hierro, el calor sofocante anuncia al verdugo de fuego...'
         },
         {
           speaker: 'Azgalor',
           portrait: 'Azgalor',
-          text: '¡Mortal sanguinario! Soy Azgalor, el carcelero del fuego. ¡Tus pecados alimentarán este lago de lava por la eternidad!'
+          text: '¡Alma insensata! Soy Azgalor, el señor de la Fortaleza. ¡Tus cenizas alimentarán estos hornos por la eternidad!'
         },
         {
           speaker: 'Kael',
           portrait: 'Kael',
-          text: 'Ya he ardido bastante en vida. Tu fuego no me asusta.'
+          text: 'Ya he ardido en las profundidades. Tu fuego no frenará mi ascenso a la superficie.'
         }
       ],
 
@@ -129,17 +129,17 @@ class DialogueManager {
         {
           speaker: 'Narrador',
           portrait: 'Kael',
-          text: 'Las diez fosas de las Malebolge se abren ante Kael. El hedor a azufre y brea hirviente precede a los demonios con alas de murciélago...'
+          text: 'En las Agujas Glaciares, la ventisca helada aúlla entre las cumbres antes del Atrio Dorado...'
         },
         {
           speaker: 'Malacoda',
           portrait: 'Malacoda',
-          text: '¡Miren qué sabrosa presa ha caído en mis fosas! Soy Malacoda, capitán de los Malebranche. ¡Mis tridentes desgarrarán tu carne!'
+          text: '¡Hueles a vida! Soy Malacoda, la Bestia de las Agujas. ¡Tus huesos se congelarán en estas alturas antes de tocar la luz!'
         },
         {
           speaker: 'Kael',
           portrait: 'Kael',
-          text: 'Guarda tus bravuconadas, diablo alado. Tu brea será tu tumba.'
+          text: 'Guarda tus amenazas, demonio alado. Ni el hielo ni el viento impedirán que vea la luz del sol.'
         }
       ],
 
@@ -147,17 +147,17 @@ class DialogueManager {
         {
           speaker: 'Narrador',
           portrait: 'Kael',
-          text: 'El viento gélido del Cocito apaga toda calidez. En el círculo de la Traición, el frío de la muerte es absoluto...'
+          text: 'En el Atrio Dorado de la Cúpula, ante el último umbral antes del Mundo de los Vivos...'
         },
         {
           speaker: 'Glacior',
           portrait: 'Glacior',
-          text: '¡Traidor impío! Soy Glacior, emperador de la escarcha. Tu traición a los inocentes quedará congelada por siempre en el hielo cósmico.'
+          text: '¡Penitente impío! Soy Glacior, el Centinela del Umbral. Más allá aguarda la Puerta al Mundo Terrenal... ¡pero jamás permitiré que escapes!'
         },
         {
           speaker: 'Kael',
           portrait: 'Kael',
-          text: 'Cometí crímenes imperdonables... ¡pero romperé tu prisión helada y hallaré mi redención!'
+          text: 'He escalado la torre entera desde el foso más hondo. ¡Cruzare la Puerta Terrenal y renaceré!'
         }
       ],
 
@@ -165,17 +165,17 @@ class DialogueManager {
         {
           speaker: 'Narrador',
           portrait: 'Kael',
-          text: 'El viento gélido del Cocito apaga toda calidez. En el círculo de la Traición, el frío de la muerte es absoluto...'
+          text: 'En el Atrio Dorado de la Cúpula, ante el último umbral antes del Mundo de los Vivos...'
         },
         {
           speaker: 'Glacior',
           portrait: 'Glacior',
-          text: '¡Traidor impío! Soy Glacior, emperador de la escarcha. Tu traición a los inocentes quedará congelada por siempre en el hielo cósmico.'
+          text: '¡Penitente impío! Soy Glacior, el Centinela del Umbral. Más allá aguarda la Puerta al Mundo Terrenal... ¡pero jamás permitiré que escapes!'
         },
         {
           speaker: 'Kael',
           portrait: 'Kael',
-          text: 'Cometí crímenes imperdonables... ¡pero romperé tu prisión helada y hallaré mi redención!'
+          text: 'He escalado la torre entera desde el foso más hondo. ¡Cruzare la Puerta Terrenal y renaceré!'
         }
       ]
     };

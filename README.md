@@ -1,39 +1,41 @@
-# Infernal Rise 2.0 (Plataformer 2D Incremental Rogue-lite)
+# Infernal Rise 2.0 (Videojuego Nativo de Escritorio PC — Incremental Rogue-lite)
 
-[![Jugar en Vercel](https://img.shields.io/badge/Jugar%20Online-Vercel-black?style=for-the-badge&logo=vercel)](https://infernal-rise-web.vercel.app)
+[![Platform Windows](https://img.shields.io/badge/Plataforma-Windows%20PC-0078D6?style=for-the-badge&logo=windows)](https://github.com/xBenja105/infernal-rise-web)
+[![Engine Electron](https://img.shields.io/badge/Motor-Electron%20Desktop-47848F?style=for-the-badge&logo=electron)](https://github.com/xBenja105/infernal-rise-web)
 [![GitHub Repo](https://img.shields.io/badge/GitHub-xBenja105%2Finfernal--rise--web-181717?style=for-the-badge&logo=github)](https://github.com/xBenja105/infernal-rise-web)
 
-🎮 **Jugar Online en Vivo**: **[https://infernal-rise-web.vercel.app](https://infernal-rise-web.vercel.app)**
+🎮 **Juego Nativo de Escritorio PC**: Ejecuta directamente `JUGAR.bat` o `npm start`.
 
 **Autor**: Benjamín Arriagada ([@xBenja105](https://github.com/xBenja105))
 
 ---
 
 ## ⚔️ Acerca del Juego
-*Infernal Rise 2.0* es un videojuego de plataformas vertical y acción en 2D con ambientación de fantasía oscura y dificultad desafiante. En esta versión web, el juego se ha transformado en un **Plataformer Hardcore Incremental Rogue-lite** estructurado canónicamente según la **Divina Comedia de Dante Alighieri** (los 9 Círculos del Infierno).
+*Infernal Rise 2.0* es un videojuego de plataformas vertical y acción en 2D desarrollado nativamente para PC con ambientación de fantasía oscura y dificultad desafiante. Encarnas a **Kael**, un alma guerrera condenada a escalar las entrañas de **La Gran Torre del Inframundo**, una colosal megatorre que asciende desde los fosos más oscuros hasta la cumbre donde yace el **Gran Portal Terrenal hacia el Mundo de los Seres Vivos**.
 
-Encarnas a **Kael**, un soldado condenado a ascender desde las profundidades del Purgatorio a través de los 9 Círculos del Inframundo, enfrentando a los 5 Guardianes Legendarios:
-1. **Rey Minos** (Juez de los Condenados — Círculo II)
-2. **Flegias** (Barquero de la Laguna Estigia — Círculo V)
-3. **Azgalor** (Carcelero del Fuego y Flegetonte — Círculo VII)
-4. **Malacoda** (Capitán de los Diablos Malebranche — Círculo VIII)
-5. **Glacior** (Emperador de la Escarcha y el Hielo de Cocito — Círculo IX)
+A lo largo de los **6 Pisos de la Gran Torre**, enfrentarás a 5 Guardianes Legendarios:
+1. **Minos** (Juez de las Fosas Abisales — Piso 1)
+2. **Flegias** (Barquero del Abismo Hundido — Piso 2)
+3. **Azgalor** (Abrasador de la Fortaleza Carmesí — Piso 3)
+4. **Malacoda** (Bestia de las Agujas Glaciares — Piso 4)
+5. **Glacior** (Centinela del Umbral de la Cúpula — Piso 5)
+6. **La Gran Puerta Terrenal** (El Umbral hacia la Luz del Sol y la Vida — Piso 6)
 
 ---
 
-## 🏛️ Estructura de los 9 Círculos del Infierno
-- **Torre 1 (Círculos I - III)**:
-  - *Círculo I: Limbo* — Columnas de basalto gótico, escaleras de hierro y plataformas que se desmoronan.
-  - *Círculo II: Lujuria* — Vientos huracanados laterales que desvían la trayectoria en el aire; saltos de aguja con techos de pinchos que castigan sobrecargar el salto al 100%.
-  - *Círculo III: Gula* — Plataformas de hueso podrido y lluvia gélida.
-- **Torre 2 (Círculos IV - VI)**:
-  - *Círculo IV: Avaricia* — Plataformas de oro macizo (`goldTile`), riquezas malditas y estrechos saltos de aguja.
-  - *Círculo V: Ira / Laguna Estigia* — Fango estigio (`mudTile`) que vuelve la carrera pesada y resbalosa (`maxWalkSpeed: 1.35`), obligando a calibrar cada salto. Plataformas móviles sincronizadas sobre fosas de lodo.
-  - *Círculo VI: Herejía / Ciudad de Dite* — Sepulcros incandescentes, plataformas de obsidiana y elevadores de magma.
-- **Torre 3 (Círculos VII - IX)**:
-  - *Círculo VII: Violencia / Flegetonte* — Río de sangre y lava hirviente en la base, plataformas volcánicas y lluvia de meteoros.
-  - *Círculo VIII: Fraude / Las Malebolge* — Diez fosas de brea y azufre, puentes quebradizos y plataformas rúnicas oscilantes.
-  - *Círculo IX: Traición / Lago Cocito* — Piso de permafrost glacial (`iceTile`) con deslizamiento inercial de baja fricción y pinchos colgantes de hielo.
+## 🏛️ Estructura de la Gran Torre del Inframundo
+- **Piso 1: El Foso Abisal (Cimientos de Basalto y Fuego)**:
+  - Plataformas de basalto gótico, escaleras de hierro y fosas incandescentes. Custodiado por Minos.
+- **Piso 2: Las Catacumbas Hundidas (Bruma y Criptas)**:
+  - Fango espeso que altera la tracción, plataformas móviles sobre aguas estigias y esporas espectrales. Custodiado por Flegias.
+- **Piso 3: Las Murallas Carmesí (Fortaleza de Hierro)**:
+  - Plataformas de obsidiana, lluvia volcánica, trampas de pinchos y corrientes huracanadas. Custodiado por Azgalor.
+- **Piso 4: Las Agujas Glaciares (Viento y Escarcha)**:
+  - Cumbres de hielo resbaloso (`iceTile`), estalagmitas y tormentas de nieve helada. Custodiado por Malacoda.
+- **Piso 5: El Atrio Dorado (El Velo de la Cúpula)**:
+  - Mármol rúnico y plataformas de oro macizo (`goldTile`), luz pre-terrenal y guardianes dorados. Custodiado por Glacior.
+- **Piso 6: La Gran Puerta Terrenal (El Umbral de los Vivos)**:
+  - El ascenso definitivo bañado en rayos solares celestiales hacia el Gran Portal que te devolverá al mundo de los vivos.
 
 ---
 
@@ -103,7 +105,8 @@ Durante cada ascenso encontrarás cofres sagrados que te ofrecen **1 de 3 bendic
 
 ---
 
-## 🚀 Cómo Jugar y Despliegue
-- **En la Web (Vercel)**: Accede directamente desde cualquier navegador moderno en escritorio o móvil.
-- **Localmente**: Simplemente haz doble clic en `JUGAR.bat` o ejecuta `node server.js` (puerto 8080). No requiere librerías pesadas ni instalación.
+## 🚀 Cómo Jugar en PC (Escritorio Local)
+- **Inicio Rápido**: Haz doble clic en `JUGAR.bat`. Iniciará el juego nativo de escritorio para PC.
+- **Modo Desarrollo**: Ejecuta `npm start` en la terminal para iniciar el entorno Electron.
+- **Compilar Ejecutable Portátil**: Ejecuta `npm run dist:portable` para generar el instalador/ejecutable `.exe` independiente en la carpeta `dist/`.
 
