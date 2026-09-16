@@ -1782,7 +1782,11 @@ class SpriteManager {
     const tilesetDefs = [
       { key: 'build', file: 'assets/tilesets/main_lev_build.png' },
       { key: 'buildA', file: 'assets/tilesets/main_lev_buildA.png' },
-      { key: 'buildB', file: 'assets/tilesets/main_lev_buildB.png' }
+      { key: 'buildB', file: 'assets/tilesets/main_lev_buildB.png' },
+      { key: 'castleWalls', file: 'assets/castle/walls.png' },
+      { key: 'castleEnv', file: 'assets/castle/environment.png' },
+      { key: 'castleEnvObj', file: 'assets/castle/env_objects.png' },
+      { key: 'castleLights', file: 'assets/castle/anim_lights.png' }
     ];
 
     const promises = tilesetDefs.map(def => new Promise((resolve) => {
@@ -1803,6 +1807,10 @@ class SpriteManager {
     const b = this.sprites.tilesets.build;
     const bA = this.sprites.tilesets.buildA;
     const bB = this.sprites.tilesets.buildB;
+    const cw = this.sprites.tilesets.castleWalls;
+    const ce = this.sprites.tilesets.castleEnv;
+    const ceo = this.sprites.tilesets.castleEnvObj;
+    const cl = this.sprites.tilesets.castleLights;
 
     const slice = (img, sx, sy, sw, sh) => {
       if (!img) return null;
@@ -1813,38 +1821,59 @@ class SpriteManager {
 
     if (!this.sprites.props) this.sprites.props = {};
 
-    // Slices from main_lev_build.png (High Cathedral Architecture)
+    // 1. Core Platform Masonry: 100% flat, horizontal, seamless masonry tiles (no diagonal artifacts)
     if (b) {
-      // Core Platform Stone & Basalt Masonry (64x64)
-      const st = slice(b, 32, 64, 64, 64);
+      // Sanctuary / Haven / Prologue: Cathedral Ashlar Stone
+      const st = slice(b, 1184, 96, 64, 64);
       if (st) this.sprites.props.stoneTile = st;
 
-      const ba = slice(b, 32, 832, 64, 64);
+      // Floor 1: El Foso Abisal (Dark volcanic basalt masonry)
+      const ba = slice(b, 1184, 512, 64, 64);
       if (ba) this.sprites.props.basaltAbyssTile = ba;
+
+      // Floor 2: Las Agujas Glaciares (Dark cold slate/permafrost stone masonry)
+      const glac = slice(b, 1184, 864, 64, 64);
+      if (glac) this.sprites.props.glacialIceTile = glac;
+
+      // Floor 3: El Núcleo del Averno (Dark crimson war-steel / iron fortress masonry)
+      const crim = slice(b, 1080, 1056, 64, 64);
+      if (crim) this.sprites.props.crimsonIronTile = crim;
 
       // Cathedral Architectural Accents
       this.sprites.props.gothicArch = slice(b, 1088, 32, 192, 192);
       this.sprites.props.pillarCapital = slice(b, 1088, 224, 64, 64);
       this.sprites.props.pillarShaft = slice(b, 1088, 288, 64, 96);
       this.sprites.props.stoneBalustrade = slice(b, 672, 32, 128, 48);
+      this.sprites.props.stainedGlass = slice(b, 1440, 48, 48, 80);
     }
 
-    // Slices from main_lev_buildA.png (3 Biome Masonry Sets)
-    if (bA) {
-      // Mossy Catacomb stone
-      const cat = slice(bA, 32, 32, 64, 64);
+    // 2. Castle Walls masonry
+    if (cw) {
+      const cat = slice(cw, 16, 224, 64, 64);
       if (cat) this.sprites.props.catacombStoneTile = cat;
-
-      // Crimson Iron Fortress steel
-      const crim = slice(bA, 32, 448, 64, 64);
-      if (crim) this.sprites.props.crimsonIronTile = crim;
-
-      // Glacial Ice Permafrost masonry
-      const glac = slice(bA, 32, 896, 64, 64);
-      if (glac) this.sprites.props.glacialIceTile = glac;
     }
 
-    // Slices from main_lev_buildB.png (Pedestals, Capitals, Relics)
+    // 3. Castle Environmental Props (Sanctuary, Dungeons, Relics)
+    if (ceo) {
+      this.sprites.props.standingPillar = slice(ceo, 208, 0, 48, 128);
+      this.sprites.props.stoneCrest = slice(ceo, 368, 304, 48, 48);
+    }
+
+    if (ce) {
+      this.sprites.props.hangingChains = slice(ce, 384, 112, 16, 80);
+      this.sprites.props.armorStand = slice(ce, 216, 288, 48, 48);
+      this.sprites.props.anvil = slice(ce, 345, 230, 48, 32);
+      this.sprites.props.spikes = slice(ce, 416, 16, 64, 32);
+      this.sprites.props.bannerRed = slice(ce, 256, 240, 96, 48);
+      this.sprites.props.bannerBlue = slice(ce, 0, 240, 192, 96);
+    }
+
+    if (cl) {
+      this.sprites.props.skullCandle = slice(cl, 0, 0, 24, 32);
+      this.sprites.props.candelabra = slice(cl, 0, 128, 32, 32);
+    }
+
+    // 4. Slices from main_lev_buildB.png (Pedestals, Capitals, Relics)
     if (bB) {
       this.sprites.props.ornatePedestal = slice(bB, 0, 96, 96, 96);
       this.sprites.props.gargoyleFrieze = slice(bB, 0, 0, 96, 64);
