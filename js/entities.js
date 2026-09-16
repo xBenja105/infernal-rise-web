@@ -2385,16 +2385,36 @@ class SkeletonEnemy {
   }
 }
 
-// ─── GUARDIAN BOSSES (MINOS, FLEGIAS, AZGALOR, MALACODA, GLACIOR) ───
+// ─── 3 OFFICIAL BOSSES: MINOTAUR, FROST GUARDIAN, DEMON SLIME ───
 class Boss {
   constructor(data) {
-    this.type = data.type; // 'minos', 'flegias', 'azgalor', 'malacoda', 'glacior'
+    this.type = data.type; // 'minotaur', 'frost_guardian', 'demon_slime' (plus legacy aliases)
     this.name = data.name;
     this.x = data.x;
     this.y = data.y;
-    this.w = data.w || (data.type === 'flegias' ? 68 : (data.type === 'minos' ? 64 : (data.type === 'malacoda' ? 60 : 56)));
-    this.h = data.h || (data.type === 'minos' ? 76 : (data.type === 'malacoda' ? 74 : 68));
-    this.maxHp = data.maxHp || 550;
+
+    const bType = (this.type === 'minotaur' || this.type === 'minos') ? 'minotaur' :
+                  (this.type === 'frost_guardian' || this.type === 'glacior' || this.type === 'flegias') ? 'frost_guardian' :
+                  'demon_slime';
+
+    if (bType === 'minotaur') {
+      this.w = data.w || 72;
+      this.h = data.h || 84;
+      this.baseWalkSpeed = 1.8;
+      this.ultimateName = data.ultimateName || 'Furia del Laberinto';
+    } else if (bType === 'frost_guardian') {
+      this.w = data.w || 64;
+      this.h = data.h || 78;
+      this.baseWalkSpeed = 2.0;
+      this.ultimateName = data.ultimateName || 'Cero Absoluto';
+    } else {
+      this.w = data.w || 72;
+      this.h = data.h || 86;
+      this.baseWalkSpeed = 2.2;
+      this.ultimateName = data.ultimateName || 'Apocalipsis Ígneo';
+    }
+
+    this.maxHp = data.maxHp || (bType === 'demon_slime' ? 2200 : (bType === 'frost_guardian' ? 1600 : 1100));
     this.hp = data.hp || this.maxHp;
     this.dialogueKey = data.dialogueKey;
     this.nextLevel = data.nextLevel;
@@ -2407,8 +2427,7 @@ class Boss {
     this.renderFacing = -1.0;
     this.vx = 0;
     this.vy = 0;
-    this.groundY = data.y || 374;
-    this.baseWalkSpeed = data.type === 'malacoda' ? 2.3 : (data.type === 'azgalor' ? 2.1 : (data.type === 'flegias' ? 1.9 : 1.8));
+    this.groundY = data.y || 366;
     this.maxWalkSpeed = this.baseWalkSpeed;
     this.turnCooldown = 0;
     this.turnCooldownMax = 0.45;
@@ -2418,18 +2437,15 @@ class Boss {
     this.isEnraged = false;
     this.ultimateCooldown = 10.0;
     this.ultimateTimer = 4.0; // First ultimate triggered ~6s into the fight
-    this.ultimateName = data.type === 'minos' ? 'El Juicio del Abismo' :
-      (data.type === 'flegias' ? 'Maremoto del Estigia' :
-      (data.type === 'azgalor' ? 'Tormenta de Flegetonte' :
-      (data.type === 'malacoda' ? 'Cacería de los Malebranche' : 'Cero Absoluto')));
 
     // Combat State Machine: 'idle', 'walk', 'windup', 'attack', 'ultimate_windup', 'ultimate_cast', 'recovery', 'dead'
     this.state = 'idle';
+    this.lastState = 'idle';
     this.stateTimer = 0;
     this.animTimer = 0;
     this.animFrame = 0;
     this.attackTimer = 0;
-    this.baseAttackCooldown = data.type === 'malacoda' ? 1.5 : 1.75;
+    this.baseAttackCooldown = bType === 'demon_slime' ? 1.5 : 1.75;
     this.attackCooldown = this.baseAttackCooldown;
     this.attackType = 'melee';
     this.attackHitPlayer = false;
@@ -2443,6 +2459,7 @@ class Boss {
     this.isDead = false;
     this.hasDropped = false;
     this.hasVictoryTriggered = false;
+    this.deathAnimDone = false;
   }
 
   triggerEnrage(soundEng, particleSys) {
@@ -2464,191 +2481,88 @@ class Boss {
   }
 
   chooseAttackPattern(dist, dy) {
-    if (this.type === 'minos') {
+    const bType = (this.type === 'minotaur' || this.type === 'minos') ? 'minotaur' :
+                  (this.type === 'frost_guardian' || this.type === 'glacior' || this.type === 'flegias') ? 'frost_guardian' :
+                  'demon_slime';
+
+    if (bType === 'minotaur') {
       if (dist > 220) {
-        this.attackType = Math.random() < 0.6 ? 'tornado' : 'leap_slam';
-      } else if (dist < 155 && Math.random() < 0.6) {
-        this.attackType = 'tail_sweep';
+        this.attackType = Math.random() < 0.55 ? 'bull_charge' : 'earthquake_stomp';
+      } else if (dist < 150 && Math.random() < 0.6) {
+        this.attackType = 'axe_slam';
       } else {
-        this.attackType = Math.random() < 0.5 ? 'leap_slam' : 'tail_sweep';
+        this.attackType = Math.random() < 0.5 ? 'axe_slam' : 'bull_charge';
       }
-    } else if (this.type === 'flegias') {
+    } else if (bType === 'frost_guardian') {
       if (dist > 200) {
-        this.attackType = Math.random() < 0.55 ? 'mud_charge' : 'mud_bomb';
+        this.attackType = Math.random() < 0.55 ? 'icicle_salvo' : 'glacial_slam';
       } else if (Math.random() < 0.5) {
-        this.attackType = 'oar_crush';
+        this.attackType = 'frost_slash';
       } else {
-        this.attackType = 'mud_charge';
+        this.attackType = 'glacial_slam';
       }
-    } else if (this.type === 'azgalor') {
+    } else {
+      // demon_slime
       if (dist > 220) {
         const r = Math.random();
-        this.attackType = r < 0.45 ? 'flame_dash' : (r < 0.75 ? 'hellfire_cleave' : 'lava_burst');
+        this.attackType = r < 0.45 ? 'flame_dash' : (r < 0.75 ? 'hellfire_cleave' : 'meteor_burst');
       } else if (Math.random() < 0.5) {
         this.attackType = 'flame_dash';
       } else {
         this.attackType = 'hellfire_cleave';
-      }
-    } else if (this.type === 'malacoda') {
-      if (dist > 220) {
-        this.attackType = Math.random() < 0.5 ? 'spear_fan' : 'trident_dive';
-      } else if (Math.random() < 0.55) {
-        this.attackType = 'trident_dive';
-      } else {
-        this.attackType = 'malebranche_dash';
-      }
-    } else {
-      // Glacior
-      if (dist > 200) {
-        this.attackType = Math.random() < 0.5 ? 'frost_fan' : 'glacial_slam';
-      } else if (Math.random() < 0.5) {
-        this.attackType = 'frost_nova';
-      } else {
-        this.attackType = 'glacial_slam';
       }
     }
   }
 
   executeAttack(player, soundEng, particleSys, dist) {
     const dy = (player.y + player.h / 2) - (this.y + this.h / 2);
-    if (this.type === 'minos') {
-      if (this.attackType === 'tail_sweep') {
-        if (particleSys) particleSys.triggerScreenShake(0.35, 8);
+    const bType = (this.type === 'minotaur' || this.type === 'minos') ? 'minotaur' :
+                  (this.type === 'frost_guardian' || this.type === 'glacior' || this.type === 'flegias') ? 'frost_guardian' :
+                  'demon_slime';
+
+    if (bType === 'minotaur') {
+      if (this.attackType === 'axe_slam') {
+        if (particleSys) particleSys.triggerScreenShake(0.42, 10);
         if (soundEng && soundEng.playSwordSlash) soundEng.playSwordSlash();
-        // Tail sweep hits wide low and mid area
-        if (dist < 210 && Math.abs(dy) < 65) {
-          player.takeDamage(56, soundEng, particleSys);
+        if (dist < 200 && Math.abs(dy) < 70) {
+          player.takeDamage(this.isEnraged ? 64 : 54, soundEng, particleSys);
         }
-      } else if (this.attackType === 'leap_slam') {
-        this.vy = -11.2;
-        this.vx = this.dir * Math.max(3.8, Math.min(7.5, dist / 22));
+      } else if (this.attackType === 'earthquake_stomp') {
+        this.vy = -10.8;
+        this.vx = this.dir * Math.max(3.8, Math.min(7.0, dist / 24));
         if (soundEng && soundEng.playSwordSlash) soundEng.playSwordSlash();
       } else {
-        // Dark Tornado projectile
-        if (soundEng && soundEng.playMeteorExplosion) soundEng.playMeteorExplosion();
-        if (window.game) {
-          window.game.spawnBossProjectile(new BossProjectile({
-            x: this.x + (this.dir > 0 ? this.w : -24),
-            y: this.y + 20,
-            vx: this.dir * (this.isEnraged ? 5.8 : 4.8),
-            vy: 0,
-            type: 'tornado',
-            damage: 46
-          }));
-        }
+        // bull_charge
+        this.vx = this.dir * (this.isEnraged ? 8.8 : 7.2);
+        if (particleSys) particleSys.triggerScreenShake(0.35, 8);
+        if (dist < 120) player.takeDamage(56, soundEng, particleSys);
       }
-    } else if (this.type === 'flegias') {
-      if (this.attackType === 'mud_charge') {
-        this.vx = this.dir * (this.isEnraged ? 8.2 : 6.8);
-        if (particleSys) particleSys.triggerScreenShake(0.38, 9);
-        if (dist < 110) player.takeDamage(58, soundEng, particleSys);
-      } else if (this.attackType === 'mud_bomb') {
-        const bombCount = this.isEnraged ? 3 : 2;
-        for (let b = 0; b < bombCount; b++) {
+    } else if (bType === 'frost_guardian') {
+      if (this.attackType === 'frost_slash') {
+        if (particleSys) particleSys.triggerScreenShake(0.35, 8);
+        if (soundEng && soundEng.playSwordSlash) soundEng.playSwordSlash();
+        if (dist < 190 && Math.abs(dy) < 65) {
+          player.takeDamage(this.isEnraged ? 62 : 52, soundEng, particleSys);
+        }
+      } else if (this.attackType === 'icicle_salvo') {
+        const count = this.isEnraged ? 4 : 3;
+        for (let b = 0; b < count; b++) {
           if (window.game) {
             window.game.spawnBossProjectile(new BossProjectile({
               x: this.x + (this.dir > 0 ? this.w : -20),
               y: this.y + 10,
-              vx: this.dir * (3.5 + b * 1.2),
-              vy: -(5.8 + b * 1.2),
-              type: 'mud_bomb',
-              damage: 48
+              vx: this.dir * (3.8 + b * 1.1),
+              vy: -(4.8 + b * 1.1),
+              type: 'frost_lance',
+              damage: 46
             }));
           }
         }
       } else {
-        // Oar ground crush
-        if (particleSys) particleSys.triggerScreenShake(0.42, 10);
-        if (soundEng && soundEng.playHit) soundEng.playHit();
-        if (dist < 155 && Math.abs(dy) < 65) player.takeDamage(62, soundEng, particleSys);
-      }
-    } else if (this.type === 'azgalor') {
-      if (this.attackType === 'flame_dash') {
-        this.vx = this.dir * (this.isEnraged ? 8.8 : 7.2);
-        if (particleSys) particleSys.triggerScreenShake(0.4, 10);
-        if (dist < 110) player.takeDamage(60, soundEng, particleSys);
-      } else if (this.attackType === 'hellfire_cleave') {
-        if (particleSys) particleSys.triggerScreenShake(0.4, 10);
-        if (soundEng && soundEng.playMeteorExplosion) soundEng.playMeteorExplosion();
-        if (dist < 155 && Math.abs(dy) < 65) player.takeDamage(62, soundEng, particleSys);
-        if (window.game) {
-          [-1.0, 0, 1.0].forEach(vyOffset => {
-            window.game.spawnBossProjectile(new BossProjectile({
-              x: this.x + (this.dir > 0 ? this.w : -20),
-              y: this.y + 20,
-              vx: this.dir * 5.2,
-              vy: vyOffset * 1.6,
-              type: 'meteor',
-              damage: 48
-            }));
-          });
-        }
-      } else {
-        // Lava burst near player
+        // glacial_slam
         if (particleSys) particleSys.triggerScreenShake(0.45, 12);
-        if (soundEng && soundEng.playMeteorExplosion) soundEng.playMeteorExplosion();
-        if (window.game) {
-          window.game.spawnBossProjectile(new BossProjectile({
-            x: player.x,
-            y: 40,
-            vx: 0,
-            vy: 6.8,
-            type: 'meteor',
-            damage: 55
-          }));
-        }
-      }
-    } else if (this.type === 'malacoda') {
-      if (this.attackType === 'trident_dive') {
-        this.vx = this.dir * (this.isEnraged ? 9.2 : 7.6);
-        if (particleSys) particleSys.triggerScreenShake(0.42, 10);
         if (soundEng && soundEng.playSwordSlash) soundEng.playSwordSlash();
-        if (dist < 140) player.takeDamage(64, soundEng, particleSys);
-      } else if (this.attackType === 'spear_fan') {
-        if (soundEng && soundEng.playSwordSlash) soundEng.playSwordSlash();
-        if (window.game) {
-          const offsets = this.isEnraged ? [-1.8, -0.9, 0, 0.9, 1.8] : [-1.3, 0, 1.3];
-          offsets.forEach(vyOffset => {
-            window.game.spawnBossProjectile(new BossProjectile({
-              x: this.x + (this.dir > 0 ? this.w : -20),
-              y: this.y + 20,
-              vx: this.dir * 5.6,
-              vy: vyOffset * 1.6,
-              type: 'sulphur_spear',
-              damage: 48
-            }));
-          });
-        }
-      } else {
-        // Malebranche dash
-        this.vx = this.dir * 8.2;
-        if (dist < 125) player.takeDamage(60, soundEng, particleSys);
-      }
-    } else {
-      // Glacior
-      if (this.attackType === 'frost_fan') {
-        if (soundEng && soundEng.playSwordSlash) soundEng.playSwordSlash();
-        if (window.game) {
-          const shardAngles = [-0.4, -0.2, 0, 0.2, 0.4];
-          shardAngles.forEach(ang => {
-            window.game.spawnBossProjectile(new BossProjectile({
-              x: this.x + (this.dir > 0 ? this.w : -16),
-              y: this.y + 24,
-              vx: this.dir * Math.cos(ang) * 5.4,
-              vy: Math.sin(ang) * 5.4,
-              type: 'frost_lance',
-              damage: 46
-            }));
-          });
-        }
-      } else if (this.attackType === 'glacial_slam') {
-        this.vy = -10.8;
-        this.vx = this.dir * 4.4;
-        if (particleSys) particleSys.triggerScreenShake(0.4, 10);
-      } else {
-        // Frost Nova
-        if (soundEng && soundEng.playSwordSlash) soundEng.playSwordSlash();
-        if (dist < 170 && Math.abs(dy) < 70) player.takeDamage(60, soundEng, particleSys);
+        if (dist < 180 && Math.abs(dy) < 70) player.takeDamage(58, soundEng, particleSys);
         if (window.game) {
           for (let i = 0; i < 8; i++) {
             const a = (i / 8) * Math.PI * 2;
@@ -2658,20 +2572,60 @@ class Boss {
               vx: Math.cos(a) * 4.6,
               vy: Math.sin(a) * 4.6,
               type: 'frost_lance',
-              damage: 45
+              damage: 44
             }));
           }
+        }
+      }
+    } else {
+      // demon_slime (or azgalor / malacoda)
+      if (this.attackType === 'flame_dash') {
+        this.vx = this.dir * (this.isEnraged ? 9.2 : 7.8);
+        if (particleSys) particleSys.triggerScreenShake(0.40, 9);
+        if (dist < 120) player.takeDamage(62, soundEng, particleSys);
+      } else if (this.attackType === 'meteor_burst') {
+        if (soundEng && soundEng.playMeteorExplosion) soundEng.playMeteorExplosion();
+        if (window.game) {
+          for (let m = 0; m < 3; m++) {
+            window.game.spawnBossProjectile(new BossProjectile({
+              x: player.x + (m - 1) * 110,
+              y: 20,
+              vx: (Math.random() - 0.5) * 1.5,
+              vy: 5.2,
+              type: 'meteor',
+              damage: 55
+            }));
+          }
+        }
+      } else {
+        // hellfire_cleave
+        if (particleSys) particleSys.triggerScreenShake(0.45, 11);
+        if (soundEng && soundEng.playSwordSlash) soundEng.playSwordSlash();
+        if (dist < 200 && Math.abs(dy) < 70) player.takeDamage(64, soundEng, particleSys);
+        if (window.game) {
+          window.game.spawnBossProjectile(new BossProjectile({
+            x: this.x + (this.dir > 0 ? this.w : -24),
+            y: this.y + 20,
+            vx: this.dir * (this.isEnraged ? 6.2 : 5.0),
+            vy: 0,
+            type: 'tornado',
+            damage: 52
+          }));
         }
       }
     }
   }
 
   executeUltimate(player, soundEng, particleSys) {
-    if (particleSys) particleSys.triggerScreenShake(0.8, 16);
+    if (particleSys) particleSys.triggerScreenShake(0.85, 18);
     if (soundEng && soundEng.playMeteorExplosion) soundEng.playMeteorExplosion();
 
-    if (this.type === 'minos') {
-      // "El Juicio del Abismo": 6 pillars of judgment lightning across the arena + twin tornadoes
+    const bType = (this.type === 'minotaur' || this.type === 'minos') ? 'minotaur' :
+                  (this.type === 'frost_guardian' || this.type === 'glacior' || this.type === 'flegias') ? 'frost_guardian' :
+                  'demon_slime';
+
+    if (bType === 'minotaur') {
+      // "Furia del Laberinto": 6 judgment lightning pillars + twin shockwave tornadoes
       const pillars = [120, 300, 480, 660, 840, 1020];
       if (window.game) {
         pillars.forEach(lx => {
@@ -2684,7 +2638,6 @@ class Boss {
             damage: 75
           }));
         });
-        // Twin tornadoes going left and right
         [-1, 1].forEach(d => {
           window.game.spawnBossProjectile(new BossProjectile({
             type: 'tornado',
@@ -2696,31 +2649,35 @@ class Boss {
           }));
         });
       }
-    } else if (this.type === 'flegias') {
-      // "Maremoto del Estigia": floor acid wave + 4 falling mud boulders
+    } else if (bType === 'frost_guardian') {
+      // "Cero Absoluto": 8 falling icicles + 8-direction frost lances
       if (window.game) {
-        window.game.spawnBossProjectile(new BossProjectile({
-          type: 'styx_wave',
-          x: 80,
-          y: 440,
-          w: 1040,
-          h: 42,
-          damage: 36,
-          maxLife: 5.0
-        }));
-        [220, 460, 700, 940].forEach(bx => {
+        const icicles = [140, 280, 420, 560, 700, 840, 980, 1080];
+        icicles.forEach(ix => {
           window.game.spawnBossProjectile(new BossProjectile({
-            type: 'mud_bomb',
-            x: bx,
-            y: 30,
-            vx: (Math.random() - 0.5) * 2,
-            vy: 5.2,
-            damage: 52
+            type: 'icicle',
+            x: ix,
+            y: 20,
+            vx: 0,
+            vy: 3.2,
+            damage: 64
           }));
         });
+        for (let i = 0; i < 8; i++) {
+          const a = (i / 8) * Math.PI * 2;
+          window.game.spawnBossProjectile(new BossProjectile({
+            x: this.x + this.w / 2,
+            y: this.y + this.h / 2,
+            vx: Math.cos(a) * 5.2,
+            vy: Math.sin(a) * 5.2,
+            type: 'frost_lance',
+            damage: 48
+          }));
+        }
       }
-    } else if (this.type === 'azgalor') {
-      // "Tormenta de Flegetonte": 7 falling hellfire meteors across arena
+    } else {
+      // "Apocalipsis Ígneo": 7 falling hellfire meteors across arena + dash
+      this.vx = this.dir * 9.5;
       if (window.game) {
         const meteors = [160, 300, 440, 580, 720, 860, 1000];
         meteors.forEach(mx => {
@@ -2729,49 +2686,8 @@ class Boss {
             x: mx,
             y: 15,
             vx: (player.x - mx) * 0.007,
-            vy: 5.8,
-            damage: 68
-          }));
-        });
-      }
-    } else if (this.type === 'malacoda') {
-      // "Cacería de los Malebranche": Supersonic dive across arena + 8-spear radial burst
-      this.vx = this.dir * 9.5;
-      if (window.game) {
-        for (let i = 0; i < 8; i++) {
-          const a = (i / 8) * Math.PI * 2;
-          window.game.spawnBossProjectile(new BossProjectile({
-            type: 'sulphur_spear',
-            x: this.x + this.w / 2,
-            y: this.y + this.h / 2,
-            vx: Math.cos(a) * 5.8,
-            vy: Math.sin(a) * 5.8,
-            damage: 52
-          }));
-        }
-      }
-    } else {
-      // Glacior: "Cero Absoluto": 360-degree spiral of 12 frost lances + 6 falling icicles
-      if (window.game) {
-        for (let i = 0; i < 12; i++) {
-          const a = (i / 12) * Math.PI * 2;
-          window.game.spawnBossProjectile(new BossProjectile({
-            type: 'frost_lance',
-            x: this.x + this.w / 2,
-            y: this.y + this.h / 2,
-            vx: Math.cos(a) * 5.2,
-            vy: Math.sin(a) * 5.2,
-            damage: 52
-          }));
-        }
-        [180, 360, 540, 720, 900, 1080].forEach(ix => {
-          window.game.spawnBossProjectile(new BossProjectile({
-            type: 'icicle',
-            x: ix,
-            y: 20,
-            vx: 0,
-            vy: 2.6,
-            damage: 62
+            vy: 6.0,
+            damage: 70
           }));
         });
       }
@@ -2904,9 +2820,10 @@ class Boss {
       if (!this.attackHitPlayer && player.hp > 0) {
         const isMeleeAttack = (this.attackType === 'tail_sweep' || this.attackType === 'oar_crush' ||
                                this.attackType === 'hellfire_cleave' || this.attackType === 'frost_nova' ||
-                               this.attackType === 'glacial_slam');
+                               this.attackType === 'glacial_slam' || this.attackType === 'axe_slam' ||
+                               this.attackType === 'frost_slash');
         if (isMeleeAttack) {
-          const reachX = this.attackType === 'tail_sweep' ? 220 : 165;
+          const reachX = (this.attackType === 'tail_sweep' || this.attackType === 'axe_slam' || this.attackType === 'hellfire_cleave') ? 220 : 180;
           if (dist < reachX && Math.abs(dy) < 70) {
             const meleeDmg = this.isEnraged ? 64 : 56;
             player.takeDamage(meleeDmg, soundEng, particleSys);
@@ -2916,7 +2833,8 @@ class Boss {
       }
       // If charge or dash attack, move continuously and damage player every frame!
       const isChargeAttack = (this.attackType === 'mud_charge' || this.attackType === 'flame_dash' ||
-                              this.attackType === 'trident_dive' || this.attackType === 'malebranche_dash');
+                              this.attackType === 'trident_dive' || this.attackType === 'malebranche_dash' ||
+                              this.attackType === 'bull_charge');
       if (isChargeAttack) {
         this.x += this.vx * dt * 60;
         const arenaMaxX = (window.game && window.game.level ? (window.game.level.width || 1200) : 1200) - 80;
@@ -2935,8 +2853,8 @@ class Boss {
           player.takeDamage(this.isEnraged ? 66 : 58, soundEng, particleSys);
         }
         if (particleSys && Math.random() < 0.4) {
-          if (this.type === 'azgalor') particleSys.spawnLavaBubble(this.x + this.w / 2, this.y + this.h);
-          else if (this.type === 'flegias') particleSys.spawnDust(this.x + this.w / 2, this.y + this.h, 3);
+          if (this.type === 'demon_slime' || this.type === 'azgalor') particleSys.spawnLavaBubble(this.x + this.w / 2, this.y + this.h);
+          else if (this.type === 'minotaur') particleSys.spawnDust(this.x + this.w / 2, this.y + this.h, 3);
           else particleSys.spawnSlashSparks(this.x + this.w / 2, this.y + this.h / 2, this.dir);
         }
       }
@@ -2996,13 +2914,18 @@ class Boss {
       }
     }
 
+    if (this.state !== this.lastState) {
+      this.lastState = this.state;
+      this.animTimer = 0;
+    }
+
     this.breathTimer += dt;
     this.animTimer += dt;
-    this.animFrame = Math.floor(this.animTimer / 0.12) % 8;
+    this.animFrame = Math.floor(this.animTimer / 0.10);
   }
 
   draw(ctx, camX, camY) {
-    if (this.isDead) return;
+    if (this.isDead && this.deathAnimDone) return;
     const rx = Math.round(this.x - camX);
     const ry = Math.round(this.y - camY);
 
@@ -3010,28 +2933,106 @@ class Boss {
     if (this.invulnerableTimer > 0 && Math.floor(Date.now() / 65) % 2 === 0) {
       ctx.globalAlpha = 0.55;
     }
-    const breathY = Math.sin(this.breathTimer * 2.2) * 1.6;
+    const breathY = (this.isDead || this.state === 'dead') ? 0 : Math.sin(this.breathTimer * 2.2) * 1.6;
+
+    const bossMap = window.spriteManager ? window.spriteManager.sprites : null;
+    let bossKey = this.type;
+    if (bossKey === 'minos') bossKey = 'minotaur';
+    else if (bossKey === 'glacior' || bossKey === 'flegias') bossKey = 'frost_guardian';
+    else if (bossKey === 'azgalor' || bossKey === 'malacoda') bossKey = 'demon_slime';
+
+    const bossSprites = (bossMap && bossMap.bosses && bossMap.bosses[bossKey]) ? bossMap.bosses[bossKey] :
+                        (bossMap ? bossMap[bossKey] : null);
+
+    let animList = null;
+    let animSpeed = 0.10;
+    let isLooping = true;
+
+    if (this.isDead || this.state === 'dead') {
+      if (bossSprites && bossSprites.death && bossSprites.death.length > 0) {
+        animList = bossSprites.death;
+        animSpeed = 0.09;
+        isLooping = false;
+      } else {
+        this.deathAnimDone = true;
+        ctx.restore();
+        return;
+      }
+    } else if (this.state === 'windup' || this.state === 'attack' || this.state === 'ultimate_windup' || this.state === 'ultimate_cast') {
+      if (bossSprites && bossSprites.attack && bossSprites.attack.length > 0) {
+        animList = bossSprites.attack;
+        animSpeed = 0.08;
+      }
+    } else if (this.invulnerableTimer > 0 && bossSprites && bossSprites.hurt && bossSprites.hurt.length > 0) {
+      animList = bossSprites.hurt;
+      animSpeed = 0.08;
+    } else if (this.state === 'walk') {
+      if (bossSprites && bossSprites.walk && bossSprites.walk.length > 0) {
+        animList = bossSprites.walk;
+        animSpeed = 0.09;
+      }
+    }
+
+    if (!animList && bossSprites) {
+      animList = bossSprites.idle;
+      animSpeed = 0.10;
+    }
+
+    let frame = null;
+    if (animList && animList.length > 0) {
+      if (isLooping) {
+        const idx = Math.floor(this.animTimer / animSpeed) % animList.length;
+        frame = animList[idx] || animList[0];
+      } else {
+        const idx = Math.floor(this.animTimer / animSpeed);
+        if (idx >= animList.length) {
+          this.deathAnimDone = true;
+          ctx.restore();
+          return;
+        }
+        frame = animList[idx];
+      }
+    }
 
     // Anchor transform at feet bottom-center
     ctx.translate(rx + this.w / 2, ry + this.h + breathY);
-    ctx.scale(-this.dir * this.scaleX, this.scaleY);
-    ctx.translate(-this.w / 2, -this.h);
-
-    const bossMap = window.spriteManager.sprites;
-    const bossSprites = bossMap ? bossMap[this.type] : null;
-    const frame = bossSprites && bossSprites.idle ? (bossSprites.idle[this.animFrame % bossSprites.idle.length] || bossSprites.idle[0]) : null;
+    ctx.scale(this.dir * this.scaleX, this.scaleY);
 
     if (frame) {
       if (this.isEnraged) {
-        ctx.shadowColor = this.type === 'glacior' ? '#00e5ff' : (this.type === 'flegias' ? '#2ec4b6' : '#ff1a35');
+        ctx.shadowColor = (bossKey === 'frost_guardian' ? '#00e5ff' : '#ff1a35');
         ctx.shadowBlur = 24 + Math.sin(Date.now() / 120) * 8;
       } else if (this.state === 'windup' || this.state === 'ultimate_windup') {
-        ctx.shadowColor = (this.type === 'azgalor' ? '#ff4400' : (this.type === 'minos' ? '#9d4edd' : (this.type === 'flegias' ? '#2ec4b6' : (this.type === 'malacoda' ? '#e63946' : '#00e5ff'))));
+        ctx.shadowColor = (bossKey === 'frost_guardian' ? '#00e5ff' : (bossKey === 'demon_slime' ? '#ff3300' : '#ffaa00'));
         ctx.shadowBlur = 20;
       }
-      const dw = frame.width / 2;
-      const dh = frame.height / 2;
-      ctx.drawImage(frame, -8, -4, dw, dh);
+
+      // Exact pixel-perfect content anchors:
+      // Minotaur (288x160): content center ~154, feet ~144
+      // Frost Guardian (192x128): content center ~95, feet ~110
+      // Demon Slime (288x160): content center ~145, feet ~158
+      let offX = -154, offY = -144, dw = 288, dh = 160;
+      if (bossKey === 'frost_guardian') {
+        offX = -95;
+        offY = -110;
+        dw = 192;
+        dh = 128;
+      } else if (bossKey === 'demon_slime') {
+        offX = -145;
+        offY = -158;
+        dw = 288;
+        dh = 160;
+      } else { // minotaur
+        offX = -154;
+        offY = -144;
+        dw = 288;
+        dh = 160;
+      }
+
+      ctx.drawImage(frame, offX, offY, dw, dh);
+    } else {
+      ctx.fillStyle = this.isEnraged ? '#ff2222' : '#882222';
+      ctx.fillRect(-this.w / 2, -this.h, this.w, this.h);
     }
 
     ctx.restore();

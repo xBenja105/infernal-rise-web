@@ -16,26 +16,16 @@ class LevelManager {
       this.currentLevel = this.createPrologueLevel();
     } else if (levelId === 'tower' || levelId === 'tower1') {
       this.currentLevel = this.createTower1Level();
-    } else if (levelId === 'boss1' || levelId === 'boss_minos') {
-      this.currentLevel = this.createBossMinosLevel();
+    } else if (levelId === 'boss1' || levelId === 'boss_minotaur' || levelId === 'boss_minos') {
+      this.currentLevel = this.createBossMinotaurLevel();
     } else if (levelId === 'tower2') {
       this.currentLevel = this.createTower2Level();
-    } else if (levelId === 'boss2' || levelId === 'boss_flegias') {
-      this.currentLevel = this.createBossFlegiasLevel();
+    } else if (levelId === 'boss2' || levelId === 'boss_frost_guardian' || levelId === 'boss_flegias' || levelId === 'boss_glacior') {
+      this.currentLevel = this.createBossFrostGuardianLevel();
     } else if (levelId === 'tower3') {
       this.currentLevel = this.createTower3Level();
-    } else if (levelId === 'boss_azgalor') {
-      this.currentLevel = this.createBossAzgalorLevel();
-    } else if (levelId === 'tower4') {
-      this.currentLevel = this.createTower4Level();
-    } else if (levelId === 'boss_malacoda') {
-      this.currentLevel = this.createBossMalacodaLevel();
-    } else if (levelId === 'tower5') {
-      this.currentLevel = this.createTower5Level();
-    } else if (levelId === 'boss3' || levelId === 'boss5' || levelId === 'boss_glacior') {
-      this.currentLevel = this.createBossGlaciorLevel();
-    } else if (levelId === 'tower6') {
-      this.currentLevel = this.createTower6Level();
+    } else if (levelId === 'boss3' || levelId === 'boss_demon_slime' || levelId === 'boss_azgalor' || levelId === 'boss_malacoda') {
+      this.currentLevel = this.createBossDemonSlimeLevel();
     } else if (levelId === 'infernal') {
       this.currentLevel = this.createInfernalModeLevel();
     } else {
@@ -452,17 +442,17 @@ class LevelManager {
         { name: 'Cimientos de Basalto', minY: 300, maxY: 1450, platformType: 'basalt_abyss', mageChance: 0.35, enemyHp: 55, enemySkin: 'abyss', batTypes: ['abyss'] }
       ],
       wind: { force: 0.65, activeMinY: 1500, activeMaxY: 2500 },
-      portalTarget: 'boss_minos',
-      portalLabel: 'Cámara de Juicio — Minos'
+      portalTarget: 'boss_minotaur',
+      portalLabel: 'Cámara de Combate — El Minotauro'
     });
   }
 
-  // ─── 2. BOSS 1: MINOS (JUEZ DE LAS FOSAS ABISALES) ───
-  createBossMinosLevel() {
+  // ─── 2. BOSS 1: MINOTAURO (TITÁN ASTADO DE LAS FOSAS) ───
+  createBossMinotaurLevel() {
     return {
-      id: 'boss_minos',
-      name: 'Cámara de Juicio — Minos, Juez de las Fosas',
-      danteCircle: 'Piso 1: Cámara de Juicio — Minos',
+      id: 'boss_minotaur',
+      name: 'Cámara de Combate — Minotauro, Titán Astado',
+      danteCircle: 'Piso 1: Cámara de Combate — Minotauro',
       biome: 'abyss',
       width: 1200,
       height: 540,
@@ -488,14 +478,14 @@ class LevelManager {
         { x: 600, y: 270, blue: true }
       ],
       boss: {
-        type: 'minos',
-        name: 'Minos, Juez de las Fosas Abisales',
+        type: 'minotaur',
+        name: 'Minotauro, Titán Astado',
         x: 860,
-        y: 374,
-        maxHp: 850,
-        hp: 850,
+        y: 366,
+        maxHp: 1100,
+        hp: 1100,
         armor: 0.15,
-        dialogueKey: 'minos_intro',
+        dialogueKey: 'minotaur_intro',
         nextLevel: 'tower2'
       },
       enemies: [],
@@ -506,50 +496,54 @@ class LevelManager {
       chests: []
     };
   }
+  createBossMinosLevel() {
+    return this.createBossMinotaurLevel();
+  }
 
-  // ─── 3. TOWER 2: PISO 2 — LAS CATACUMBAS HUNDIDAS (GALERÍA ESPECTRAL) ───
+  // ─── 3. TOWER 2: PISO 2 — LAS AGUJAS GLACIARES (EL GRAN FRÍO) ───
   createTower2Level() {
     return this.generateProceduralTower({
       id: 'tower2',
-      name: 'Piso 2: Las Catacumbas Hundidas — Galería Espectral',
-      danteCircle: 'Piso 2: Catacumbas Hundidas — Bruma y Criptas',
-      biome: 'sunken_necropolis',
+      name: 'Piso 2: Las Agujas Glaciares — El Gran Frío',
+      danteCircle: 'Piso 2: Cumbres Glaciares — Viento y Escarcha',
+      biome: 'frozen_peaks',
       width: 960,
       height: 3800,
-      musicTrack: 'ascent',
+      musicTrack: 'frozen',
       ambientRain: false,
-      hasLava: true,
-      basePlatformType: 'catacomb_stone',
+      hasLava: false,
+      basePlatformType: 'glacial_ice',
       tiers: [
-        { name: 'Galería de Criptas', minY: 2600, maxY: 3800, platformType: 'catacomb_stone', mageChance: 0.2, enemyHp: 48, enemySkin: 'mud', batTypes: ['toxic'] },
-        { name: 'Cámaras del Fango', minY: 1450, maxY: 2600, platformType: 'catacomb_stone', mageChance: 0.3, enemyHp: 58, enemySkin: 'mud', batTypes: ['toxic'] },
-        { name: 'Bóvedas Espectrales', minY: 300, maxY: 1450, platformType: 'catacomb_stone', mageChance: 0.45, enemyHp: 68, enemySkin: 'mud', batTypes: ['toxic'] }
+        { name: 'Escarcha Baja', minY: 2600, maxY: 3800, platformType: 'glacial_ice', mageChance: 0.25, enemyHp: 55, enemySkin: 'frost', batTypes: ['frost'] },
+        { name: 'Glaciar Colgante', minY: 1400, maxY: 2600, platformType: 'glacial_ice', mageChance: 0.35, enemyHp: 65, enemySkin: 'frost', batTypes: ['frost'] },
+        { name: 'Agujas Árticas', minY: 300, maxY: 1400, platformType: 'glacial_ice', mageChance: 0.45, enemyHp: 75, enemySkin: 'frost', batTypes: ['frost'] }
       ],
-      portalTarget: 'boss_flegias',
-      portalLabel: 'Santuario del Fango — Flegias'
+      wind: { force: -0.65, activeMinY: 600, activeMaxY: 2600 },
+      portalTarget: 'boss_frost_guardian',
+      portalLabel: 'Santuario Glaciar — Guardián de Hielo'
     });
   }
 
-  // ─── 4. BOSS 2: FLEGIAS (BARQUERO DEL ABISMO HUNDIDO) ───
-  createBossFlegiasLevel() {
+  // ─── 4. BOSS 2: GUARDIÁN DE HIELO (CENTINELA GLACIAR) ───
+  createBossFrostGuardianLevel() {
     return {
-      id: 'boss_flegias',
-      name: 'Santuario del Fango — Guardián Flegias',
-      danteCircle: 'Piso 2: Santuario del Fango — Flegias',
-      biome: 'sunken_necropolis',
+      id: 'boss_frost_guardian',
+      name: 'Santuario Glaciar — Guardián de Hielo',
+      danteCircle: 'Piso 2: Santuario Glaciar — Guardián de Hielo',
+      biome: 'frozen_peaks',
       width: 1200,
       height: 540,
       spawn: { x: 220, y: 412 },
       isCombatScene: true,
       musicTrack: 'boss',
-      ambientRain: true,
+      ambientRain: false,
       hasLava: false,
       platforms: [
-        { x: 80, y: 450, w: 1040, h: 42, type: 'catacomb_stone' },
-        { x: 120, y: 350, w: 180, h: 22, type: 'catacomb_stone' },
-        { x: 900, y: 350, w: 180, h: 22, type: 'catacomb_stone' },
-        { x: 380, y: 300, w: 200, h: 22, type: 'catacomb_stone' },
-        { x: 620, y: 300, w: 200, h: 22, type: 'catacomb_stone' }
+        { x: 80, y: 450, w: 1040, h: 42, type: 'glacial_ice' },
+        { x: 100, y: 340, w: 180, h: 22, type: 'glacial_ice' },
+        { x: 920, y: 340, w: 180, h: 22, type: 'glacial_ice' },
+        { x: 360, y: 290, w: 220, h: 22, type: 'glacial_ice' },
+        { x: 640, y: 290, w: 220, h: 22, type: 'glacial_ice' }
       ],
       ladders: [],
       movingPlatforms: [],
@@ -558,34 +552,40 @@ class LevelManager {
       torches: [
         { x: 180, y: 420, blue: true },
         { x: 1020, y: 420, blue: true },
-        { x: 600, y: 270, blue: true }
+        { x: 600, y: 260, blue: true }
       ],
       boss: {
-        type: 'flegias',
-        name: 'Flegias, Barquero del Abismo Hundido',
+        type: 'frost_guardian',
+        name: 'Guardián de Hielo, Centinela Glaciar',
         x: 860,
-        y: 382,
-        maxHp: 1250,
-        hp: 1250,
-        armor: 0.20,
-        dialogueKey: 'flegias_intro',
+        y: 372,
+        maxHp: 1600,
+        hp: 1600,
+        armor: 0.22,
+        dialogueKey: 'frost_guardian_intro',
         nextLevel: 'tower3'
       },
       enemies: [],
       urns: [
-        { x: 140, y: 424, value: 40 },
-        { x: 1020, y: 424, value: 40 }
+        { x: 140, y: 424, value: 45 },
+        { x: 1020, y: 424, value: 45 }
       ],
       chests: []
     };
   }
+  createBossFlegiasLevel() {
+    return this.createBossFrostGuardianLevel();
+  }
+  createBossGlaciorLevel() {
+    return this.createBossFrostGuardianLevel();
+  }
 
-  // ─── 5. TOWER 3: PISO 3 — LAS MURALLAS CARMESÍ (FORTALEZA DE HIERRO) ───
+  // ─── 5. TOWER 3: PISO 3 — EL NÚCLEO DEL AVERNO (ALMENAS CARMESÍ) ───
   createTower3Level() {
     return this.generateProceduralTower({
       id: 'tower3',
-      name: 'Piso 3: Las Murallas Carmesí — Fortaleza de Hierro',
-      danteCircle: 'Piso 3: Murallas Carmesí — Fortaleza de Hierro',
+      name: 'Piso 3: El Núcleo del Averno — Almenas Carmesí',
+      danteCircle: 'Piso 3: Núcleo del Averno — Fortaleza del Fuego',
       biome: 'abyss',
       width: 960,
       height: 4000,
@@ -594,22 +594,22 @@ class LevelManager {
       hasLava: true,
       basePlatformType: 'crimson_iron',
       tiers: [
-        { name: 'Bastión de Hierro', minY: 2600, maxY: 4000, platformType: 'crimson_iron', mageChance: 0.3, enemyHp: 65, enemySkin: 'blood', batTypes: ['gargoyle', 'blood'] },
-        { name: 'Torreón Carmesí', minY: 1400, maxY: 2600, platformType: 'crimson_iron', mageChance: 0.4, enemyHp: 75, enemySkin: 'blood', batTypes: ['blood', 'gargoyle'] },
-        { name: 'Almenas de Fuego', minY: 300, maxY: 1400, platformType: 'crimson_iron', mageChance: 0.5, enemyHp: 85, enemySkin: 'blood', batTypes: ['gargoyle', 'blood'] }
+        { name: 'Bastión de Hierro', minY: 2600, maxY: 4000, platformType: 'crimson_iron', mageChance: 0.35, enemyHp: 75, enemySkin: 'blood', batTypes: ['gargoyle', 'blood'] },
+        { name: 'Torreón Carmesí', minY: 1400, maxY: 2600, platformType: 'crimson_iron', mageChance: 0.45, enemyHp: 85, enemySkin: 'blood', batTypes: ['blood', 'gargoyle'] },
+        { name: 'Almenas de Fuego', minY: 300, maxY: 1400, platformType: 'crimson_iron', mageChance: 0.55, enemyHp: 95, enemySkin: 'blood', batTypes: ['gargoyle', 'blood'] }
       ],
       wind: { force: 0.5, activeMinY: 800, activeMaxY: 2400 },
-      portalTarget: 'boss_azgalor',
-      portalLabel: 'Fortaleza del Fuego — Azgalor'
+      portalTarget: 'boss_demon_slime',
+      portalLabel: 'Cámara del Averno — Demonio de Fuego'
     });
   }
 
-  // ─── 6. BOSS 3: AZGALOR (SEÑOR DEL FUEGO CARMESÍ) ───
-  createBossAzgalorLevel() {
+  // ─── 6. BOSS 3: DEMONIO DE FUEGO (SEÑOR DEL AVERNO - FINAL BOSS) ───
+  createBossDemonSlimeLevel() {
     return {
-      id: 'boss_azgalor',
-      name: 'Fortaleza del Fuego — Azgalor, el Abrasador',
-      danteCircle: 'Piso 3: Fortaleza del Fuego — Azgalor',
+      id: 'boss_demon_slime',
+      name: 'Cámara del Averno — Demonio de Fuego',
+      danteCircle: 'Piso 3: Cámara del Averno — Demonio de Fuego',
       biome: 'abyss',
       width: 1200,
       height: 540,
@@ -636,23 +636,29 @@ class LevelManager {
         { x: 600, y: 280, blue: false }
       ],
       boss: {
-        type: 'azgalor',
-        name: 'Azgalor, el Abrasador de la Fortaleza',
+        type: 'demon_slime',
+        name: 'Demonio de Fuego, Señor del Averno',
         x: 860,
-        y: 382,
-        maxHp: 1750,
-        hp: 1750,
-        armor: 0.25,
-        dialogueKey: 'azgalor_intro',
-        nextLevel: 'tower4'
+        y: 364,
+        maxHp: 2200,
+        hp: 2200,
+        armor: 0.28,
+        dialogueKey: 'demon_slime_intro',
+        nextLevel: 'victory'
       },
       enemies: [],
       urns: [
-        { x: 140, y: 424, value: 50 },
-        { x: 1020, y: 424, value: 50 }
+        { x: 140, y: 424, value: 60 },
+        { x: 1020, y: 424, value: 60 }
       ],
       chests: []
     };
+  }
+  createBossAzgalorLevel() {
+    return this.createBossDemonSlimeLevel();
+  }
+  createBossMalacodaLevel() {
+    return this.createBossDemonSlimeLevel();
   }
 
   // ─── 7. TOWER 4: PISO 4 — LAS AGUJAS GLACIARES (EL GRAN FRÍO) ───

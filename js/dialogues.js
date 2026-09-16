@@ -53,6 +53,60 @@ class DialogueManager {
         }
       ],
 
+      minotaur_intro: [
+        {
+          speaker: 'Narrador',
+          portrait: 'Kael',
+          text: 'En el umbral superior del Foso Abisal, los muros de basalto retumban con la pisada de una bestia milenaria...'
+        },
+        {
+          speaker: 'Minotauro',
+          portrait: 'Minotauro',
+          text: '¡MUUUUGH! ¡Intruso de carne frágil! ¡Nadie escapa vivo de mis dominios de piedra!'
+        },
+        {
+          speaker: 'Kael',
+          portrait: 'Kael',
+          text: 'Tu hacha y tus cuernos no detendrán mi ascenso. ¡Aparta de mi camino o caerás aquí!'
+        }
+      ],
+
+      frost_guardian_intro: [
+        {
+          speaker: 'Narrador',
+          portrait: 'Kael',
+          text: 'En las cumbres congeladas del Piso 2, el viento ártico esculpe la figura imponente del Guardián...'
+        },
+        {
+          speaker: 'Guardián de Hielo',
+          portrait: 'FrostGuardian',
+          text: 'Penitente... el frío eterno congela las almas indignas. Tu fuego se extinguirá en este glaciar.'
+        },
+        {
+          speaker: 'Kael',
+          portrait: 'Kael',
+          text: 'He dejado atrás el foso más profundo. ¡Ninguna ventisca detendrá mi marcha a la superficie!'
+        }
+      ],
+
+      demon_slime_intro: [
+        {
+          speaker: 'Narrador',
+          portrait: 'Kael',
+          text: 'En el corazón ardiente del Piso 3, los mares de magma hierven anunciando la llegada del Demonio de Fuego...'
+        },
+        {
+          speaker: 'Demonio de Fuego',
+          portrait: 'DemonSlime',
+          text: '¡JAJAJAJA! ¡Has llegado al último escalón de tu vana esperanza, miserable! ¡Yo soy el Señor del Averno, y de aquí nadie cruza al Mundo de los Vivos!'
+        },
+        {
+          speaker: 'Kael',
+          portrait: 'Kael',
+          text: '¡Eres el último verdugo que me separa del sol! ¡Hoy pagarás por todos los caídos!'
+        }
+      ],
+
       minos_intro: [
         {
           speaker: 'Narrador',
@@ -268,4 +322,7 @@ class DialogueManager {
   }
 }
 
-window.dialogueManager = new DialogueManager();
+if (typeof window !== 'undefined') {
+  window.DialogueManager = DialogueManager;
+  window.dialogueManager = new DialogueManager();
+}

@@ -114,6 +114,7 @@ class SpriteManager {
     this.generateEnvironmentSprites();
     await this.loadFireFx();
     await this.loadTilesetProps();
+    await this.loadBossSprites();
     this.generateInfernalBackgrounds();
     this.generatePortraits();
 
@@ -1847,6 +1848,99 @@ class SpriteManager {
     if (bB) {
       this.sprites.props.ornatePedestal = slice(bB, 0, 96, 96, 96);
       this.sprites.props.gargoyleFrieze = slice(bB, 0, 0, 96, 64);
+    }
+  }
+
+  // ─── 3 OFFICIAL BOSSES: MINOTAUR, FROST GUARDIAN, DEMON SLIME ───
+  async loadBossSprites() {
+    this.sprites.bosses = {
+      minotaur: { idle: [], walk: [], attack: [], hurt: [], death: [] },
+      frost_guardian: { idle: [], walk: [], attack: [], hurt: [], death: [] },
+      demon_slime: { idle: [], walk: [], attack: [], hurt: [], death: [] }
+    };
+
+    const loadCategory = (bossKey, animKey, count) => {
+      const promises = [];
+      for (let i = 1; i <= count; i++) {
+        promises.push(new Promise((resolve) => {
+          const img = new Image();
+          img.src = `assets/bosses/${bossKey}/${animKey}/frame_${i}.png`;
+          img.onload = () => resolve(img);
+          img.onerror = () => {
+            console.warn(`[SpriteManager] Could not load ${bossKey}/${animKey}/frame_${i}.png`);
+            resolve(null);
+          };
+        }));
+      }
+      return Promise.all(promises).then(frames => {
+        this.sprites.bosses[bossKey][animKey] = frames.filter(Boolean);
+      });
+    };
+
+    await Promise.all([
+      // 1. Minotaur (Piso 1)
+      loadCategory('minotaur', 'idle', 16),
+      loadCategory('minotaur', 'walk', 12),
+      loadCategory('minotaur', 'attack', 16),
+
+      // 2. Frost Guardian (Piso 2)
+      loadCategory('frost_guardian', 'idle', 6),
+      loadCategory('frost_guardian', 'walk', 10),
+      loadCategory('frost_guardian', 'attack', 14),
+      loadCategory('frost_guardian', 'hurt', 7),
+      loadCategory('frost_guardian', 'death', 16),
+
+      // 3. Demon Slime (Piso 3)
+      loadCategory('demon_slime', 'idle', 6),
+      loadCategory('demon_slime', 'walk', 12),
+      loadCategory('demon_slime', 'attack', 15),
+      loadCategory('demon_slime', 'hurt', 5),
+      loadCategory('demon_slime', 'death', 22)
+    ]);
+
+    // Backward & direct aliases
+    this.sprites.minotaur = this.sprites.bosses.minotaur;
+    this.sprites.frost_guardian = this.sprites.bosses.frost_guardian;
+    this.sprites.demon_slime = this.sprites.bosses.demon_slime;
+
+    this.sprites.minos = this.sprites.minotaur;
+    this.sprites.glacior = this.sprites.frost_guardian;
+    this.sprites.azgalor = this.sprites.demon_slime;
+    this.sprites.flegias = this.sprites.frost_guardian;
+    this.sprites.malacoda = this.sprites.demon_slime;
+
+    // Create portraits for dialogue
+    this.createBossPortraits();
+  }
+
+  createBossPortraits() {
+    this.portraits = this.portraits || {};
+
+    // 1. Minotaur Portrait
+    const minoIdle0 = this.sprites.bosses?.minotaur?.idle?.[0];
+    if (minoIdle0) {
+      const { canvas, ctx } = this.createCanvas(96, 96);
+      ctx.drawImage(minoIdle0, 120, 46, 56, 56, 0, 0, 96, 96);
+      this.portraits.Minotauro = canvas;
+      this.portraits.Minos = canvas;
+    }
+
+    // 2. Frost Guardian Portrait
+    const frostIdle0 = this.sprites.bosses?.frost_guardian?.idle?.[0];
+    if (frostIdle0) {
+      const { canvas, ctx } = this.createCanvas(96, 96);
+      ctx.drawImage(frostIdle0, 68, 22, 54, 54, 0, 0, 96, 96);
+      this.portraits.FrostGuardian = canvas;
+      this.portraits.Glacior = canvas;
+    }
+
+    // 3. Demon Slime Portrait
+    const demonIdle0 = this.sprites.bosses?.demon_slime?.idle?.[0];
+    if (demonIdle0) {
+      const { canvas, ctx } = this.createCanvas(96, 96);
+      ctx.drawImage(demonIdle0, 118, 58, 58, 58, 0, 0, 96, 96);
+      this.portraits.DemonSlime = canvas;
+      this.portraits.Azgalor = canvas;
     }
   }
 
