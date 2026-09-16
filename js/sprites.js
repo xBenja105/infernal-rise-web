@@ -88,13 +88,21 @@ class SpriteManager {
     }
     this.backgrounds = await Promise.all(bgPromises);
 
-    // 2. Load Skeleton Sheets
+    // 2. Load Skeleton Sheets (Awaited with Promises for instant readiness)
     const skelNames = ['Attack', 'Dead', 'Hit', 'Idle', 'React', 'Walk'];
-    for (const name of skelNames) {
+    const skelPromises = skelNames.map(name => new Promise((resolve) => {
       const img = new Image();
       img.src = `assets/sprites/Skeleton ${name}.png`;
-      this.skeletonSprites[name] = img;
-    }
+      img.onload = () => {
+        this.skeletonSprites[name] = img;
+        resolve(img);
+      };
+      img.onerror = () => {
+        console.warn(`Could not load assets/sprites/Skeleton ${name}.png`);
+        resolve(null);
+      };
+    }));
+    await Promise.all(skelPromises);
 
     // 3. Load Player Sprites (FreeKnight 120x80 Colour2 Outline) & Generate Procedural Assets
     await this.loadPlayerSprites();

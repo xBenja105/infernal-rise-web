@@ -1198,8 +1198,9 @@ class SkeletonEnemy {
   constructor(data) {
     this.x = data.x;
     this.y = data.y;
-    this.isElite = !!data.isElite;
-    this.scaleMultiplier = data.scaleMultiplier || (this.isElite ? 1.45 : 1.0);
+    this.isElite = !!data.isElite || !!data.isChallenge;
+    this.isChallenge = !!data.isChallenge;
+    this.scaleMultiplier = data.scaleMultiplier || (this.isChallenge ? 1.72 : (this.isElite ? 1.62 : 1.0));
     this.skin = data.skin || 'abyss';
     this.variant = data.variant !== undefined ? data.variant : Math.floor(Math.random() * 4);
 
@@ -1258,56 +1259,70 @@ class SkeletonEnemy {
         return {
           tint: 'rgba(255, 235, 120, 0.45)',
           eyeColor: '#ffd700',
-          eyeGlow: 'rgba(255, 215, 0, 0.9)',
-          auraColor: 'rgba(255, 215, 0, 0.35)',
+          eyeGlow: 'rgba(255, 215, 0, 0.95)',
+          auraColor: 'rgba(255, 215, 0, 0.42)',
+          auraGlow: 'rgba(255, 215, 0, 0.85)',
+          lightCore: '#ffffff',
           name: 'Centinela del Umbral Terrenal'
         };
       case 'gold':
         return {
           tint: 'rgba(255, 215, 0, 0.38)',
           eyeColor: '#ffb703',
-          eyeGlow: 'rgba(255, 183, 3, 0.8)',
-          auraColor: 'rgba(255, 215, 0, 0.28)',
+          eyeGlow: 'rgba(255, 183, 3, 0.9)',
+          auraColor: 'rgba(255, 183, 3, 0.38)',
+          auraGlow: 'rgba(255, 183, 3, 0.85)',
+          lightCore: '#ffea75',
           name: 'Guardia Avaro de la Torre'
         };
       case 'mud':
         return {
           tint: 'rgba(60, 85, 40, 0.42)',
           eyeColor: '#70e000',
-          eyeGlow: 'rgba(112, 224, 0, 0.8)',
-          auraColor: 'rgba(112, 224, 0, 0.28)',
+          eyeGlow: 'rgba(112, 224, 0, 0.9)',
+          auraColor: 'rgba(112, 224, 0, 0.38)',
+          auraGlow: 'rgba(112, 224, 0, 0.85)',
+          lightCore: '#ccff33',
           name: 'Caminante de las Catacumbas'
         };
       case 'obsidian':
         return {
           tint: 'rgba(20, 12, 16, 0.65)',
           eyeColor: '#ff3c00',
-          eyeGlow: 'rgba(255, 60, 0, 0.85)',
-          auraColor: 'rgba(255, 60, 0, 0.32)',
+          eyeGlow: 'rgba(255, 60, 0, 0.95)',
+          auraColor: 'rgba(255, 60, 0, 0.45)',
+          auraGlow: 'rgba(255, 60, 0, 0.9)',
+          lightCore: '#ffaa00',
           name: 'Esqueleto de Obsidiana Ígnea'
         };
       case 'blood':
         return {
           tint: 'rgba(130, 12, 30, 0.45)',
           eyeColor: '#ff0054',
-          eyeGlow: 'rgba(255, 0, 84, 0.85)',
-          auraColor: 'rgba(255, 0, 84, 0.32)',
+          eyeGlow: 'rgba(255, 0, 84, 0.95)',
+          auraColor: 'rgba(255, 0, 84, 0.45)',
+          auraGlow: 'rgba(255, 0, 84, 0.9)',
+          lightCore: '#ff4d6d',
           name: 'Guardia Óseo de la Fortaleza'
         };
       case 'ice':
         return {
           tint: 'rgba(160, 225, 255, 0.38)',
           eyeColor: '#00b4d8',
-          eyeGlow: 'rgba(0, 180, 216, 0.85)',
-          auraColor: 'rgba(0, 180, 216, 0.32)',
+          eyeGlow: 'rgba(0, 229, 255, 0.95)',
+          auraColor: 'rgba(0, 180, 216, 0.42)',
+          auraGlow: 'rgba(0, 229, 255, 0.85)',
+          lightCore: '#e0f7fa',
           name: 'Espectro de las Agujas Heladas'
         };
       case 'ashen':
         return {
           tint: 'rgba(190, 195, 205, 0.22)',
-          eyeColor: '#90e0ef',
-          eyeGlow: 'rgba(144, 224, 239, 0.75)',
-          auraColor: 'rgba(144, 224, 239, 0.2)',
+          eyeColor: '#c084fc',
+          eyeGlow: 'rgba(192, 132, 252, 0.95)',
+          auraColor: 'rgba(192, 132, 252, 0.42)',
+          auraGlow: 'rgba(192, 132, 252, 0.85)',
+          lightCore: '#f3e8ff',
           name: 'Centinela de Ceniza'
         };
       case 'abyss':
@@ -1315,8 +1330,10 @@ class SkeletonEnemy {
         return {
           tint: 'rgba(160, 185, 205, 0.18)',
           eyeColor: '#00f5d4',
-          eyeGlow: 'rgba(0, 245, 212, 0.75)',
-          auraColor: 'rgba(0, 245, 212, 0.2)',
+          eyeGlow: 'rgba(0, 245, 212, 0.95)',
+          auraColor: 'rgba(0, 245, 212, 0.38)',
+          auraGlow: 'rgba(0, 245, 212, 0.85)',
+          lightCore: '#ccfbf1',
           name: 'Esqueleto del Foso Abisal'
         };
     }
@@ -1761,13 +1778,66 @@ class SkeletonEnemy {
     ctx.rotate(this.wobbleAngle);
     ctx.translate(-13, -34); // Center at standard frame reference base
 
-    // Elite Ground Ring Aura
+    // ─── SPECIAL / ELITE RUNIC SUMMONING SEAL ON GROUND ───
     if (this.isElite) {
       ctx.save();
-      ctx.fillStyle = skinData.auraColor;
+      ctx.translate(13, 34);
+      ctx.scale(1.0, 0.35); // Isometric perspective
+      const sealPulse = 0.65 + Math.sin(Date.now() * 0.005) * 0.25;
+      ctx.globalAlpha = sealPulse;
+      ctx.strokeStyle = skinData.eyeGlow || '#ff3c00';
+      ctx.shadowColor = skinData.eyeGlow || '#ff3c00';
+      ctx.shadowBlur = 10;
+      // Concentric runes
+      ctx.lineWidth = 1.6;
       ctx.beginPath();
-      ctx.ellipse(13, 34, 18, 5, 0, 0, Math.PI * 2);
+      ctx.arc(0, 0, 24, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.lineWidth = 1.0;
+      ctx.beginPath();
+      ctx.arc(0, 0, 16, 0, Math.PI * 2);
+      ctx.stroke();
+      // Rotating cardinal tick runes
+      const rAng = Date.now() * 0.0025;
+      for (let i = 0; i < 4; i++) {
+        const ang = rAng + (i * Math.PI / 2);
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(ang) * 16, Math.sin(ang) * 16);
+        ctx.lineTo(Math.cos(ang) * 24, Math.sin(ang) * 24);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // ─── SPECIAL / ELITE RADIANT LIGHT AURA & CORONA BEAMS ───
+    if (this.isElite) {
+      ctx.save();
+      const auraPulse = 0.55 + Math.sin(Date.now() * 0.004) * 0.25;
+      const grad = ctx.createRadialGradient(13, 17, 4, 13, 17, 30 + Math.sin(Date.now() * 0.006) * 4);
+      grad.addColorStop(0, skinData.auraGlow || 'rgba(255, 60, 0, 0.7)');
+      grad.addColorStop(0.5, skinData.auraColor || 'rgba(255, 30, 0, 0.35)');
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = grad;
+      ctx.globalAlpha = auraPulse;
+      ctx.beginPath();
+      ctx.arc(13, 17, 32, 0, Math.PI * 2);
       ctx.fill();
+
+      // Coronal rotating light rays
+      const beamTime = Date.now() * 0.002;
+      ctx.strokeStyle = skinData.eyeGlow || '#ff3c00';
+      ctx.lineWidth = 1.2;
+      ctx.shadowColor = skinData.eyeGlow || '#ff3c00';
+      ctx.shadowBlur = 8;
+      ctx.globalAlpha = auraPulse * 0.6;
+      for (let i = 0; i < 6; i++) {
+        const bAng = beamTime + (i * Math.PI / 3);
+        const len = 14 + Math.sin(beamTime * 3 + i) * 6;
+        ctx.beginPath();
+        ctx.moveTo(13 + Math.cos(bAng) * 9, 17 + Math.sin(bAng) * 9);
+        ctx.lineTo(13 + Math.cos(bAng) * (9 + len), 17 + Math.sin(bAng) * (9 + len));
+        ctx.stroke();
+      }
       ctx.restore();
     }
 
@@ -1812,15 +1882,65 @@ class SkeletonEnemy {
       }
     }
 
-    // Glowing Eyes matching Zone Skin
+    // Glowing Eyes & Flare Streaks
     ctx.save();
     ctx.fillStyle = skinData.eyeColor;
     ctx.shadowColor = skinData.eyeGlow;
-    ctx.shadowBlur = this.isElite ? 8 : 4;
+    ctx.shadowBlur = this.isElite ? 12 : 4;
     ctx.fillRect(15, 8, 2, 2);
     ctx.fillRect(19, 8, 2, 2);
+    if (this.isElite) {
+      ctx.fillStyle = skinData.eyeColor;
+      ctx.globalAlpha = 0.7 + Math.sin(Date.now() * 0.009) * 0.25;
+      ctx.fillRect(20, 8.5, 5, 1);
+      ctx.fillRect(12, 8.5, 3, 1);
+    }
     ctx.shadowBlur = 0;
     ctx.restore();
+
+    // ─── SPECIAL / ELITE HORNED CROWN DIADEM ───
+    if (this.isElite && this.state !== 'dead') {
+      ctx.save();
+      const crownBob = Math.sin(Date.now() * 0.006) * 1.5;
+      ctx.fillStyle = '#ffd700';
+      ctx.shadowColor = skinData.eyeGlow || '#ffd700';
+      ctx.shadowBlur = 8;
+      // 3 Golden Jagged Spikes
+      ctx.beginPath();
+      ctx.moveTo(8, 2 + crownBob);
+      ctx.lineTo(10, -3 + crownBob);
+      ctx.lineTo(12, 0 + crownBob);
+      ctx.lineTo(13.5, -6 + crownBob);
+      ctx.lineTo(15, 0 + crownBob);
+      ctx.lineTo(17, -3 + crownBob);
+      ctx.lineTo(19, 2 + crownBob);
+      ctx.closePath();
+      ctx.fill();
+      // Center jewel
+      ctx.fillStyle = skinData.eyeColor;
+      ctx.fillRect(12.5, 0 + crownBob, 2, 2);
+      ctx.restore();
+    }
+
+    // ─── SPECIAL / ELITE ORBITING AURA LIGHT WISPS ───
+    if (this.isElite && this.state !== 'dead') {
+      ctx.save();
+      const orbTime = Date.now() * 0.004;
+      for (let i = 0; i < 3; i++) {
+        const ang = orbTime + (i * (Math.PI * 2 / 3));
+        const ox = 13 + Math.cos(ang) * 20;
+        const oy = 17 + Math.sin(ang) * 8;
+        ctx.fillStyle = skinData.lightCore || skinData.eyeColor;
+        ctx.shadowColor = skinData.eyeGlow;
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(ox, oy, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(ox - 0.75, oy - 0.75, 1.5, 1.5);
+      }
+      ctx.restore();
+    }
 
     // ─── FLOOR-EXCLUSIVE ORIGINAL ENEMY SPRITE OVERLAYS (100% UNIQUE PER FLOOR) ───
     if (this.state !== 'dead') {
