@@ -71,6 +71,8 @@ class Player {
     this.attackTimer = 0;
     this.invulnerableTimer = 0;
     this.attackHitTargets = new Set();
+    this.attackComboStep = 1;
+    this.comboResetTimer = 0;
 
     // Animations
     this.animState = 'idle';
@@ -141,6 +143,8 @@ class Player {
     this.isFrozen = false;
     this.invulnerableTimer = 0;
     this.lastActivatedCheckpoint = null;
+    this.attackComboStep = 1;
+    this.comboResetTimer = 0;
     if (this.attackHitTargets) this.attackHitTargets.clear();
   }
 
@@ -231,14 +235,24 @@ class Player {
 
     if (this.jumpBufferTimer > 0) this.jumpBufferTimer -= dt;
 
-    // ─── ATTACK SYSTEM (FAST BASIC DAGGER STAB) ───
+    // Combo reset timer
+    if (this.comboResetTimer > 0) {
+      this.comboResetTimer -= dt;
+      if (this.comboResetTimer <= 0) {
+        this.attackComboStep = 1;
+      }
+    }
+
+    // ─── ATTACK SYSTEM (FREEKNIGHT SWORD COMBOS) ───
     if (this.attackCooldown > 0) this.attackCooldown -= dt;
 
     if (input.attack && !this.isAttacking && this.attackCooldown <= 0) {
       this.isAttacking = true;
       this.attackFrame = 0;
       this.attackTimer = 0;
-      this.attackCooldown = 0.24;
+      this.attackComboStep = (this.attackComboStep === 1) ? 2 : 1;
+      this.comboResetTimer = 0.55;
+      this.attackCooldown = this.attackComboStep === 2 ? 0.28 : 0.22;
       if (this.attackHitTargets) this.attackHitTargets.clear();
       if (soundEng) soundEng.playSwordSlash();
 
@@ -252,8 +266,10 @@ class Player {
 
     if (this.isAttacking) {
       this.attackTimer += dt;
-      this.attackFrame = Math.floor(this.attackTimer / 0.045);
-      if (this.attackFrame >= 6) {
+      const maxFrames = this.attackComboStep === 2 ? 6 : 4;
+      const frameDur = this.attackComboStep === 2 ? 0.045 : 0.055;
+      this.attackFrame = Math.floor(this.attackTimer / frameDur);
+      if (this.attackFrame >= maxFrames) {
         this.isAttacking = false;
         this.attackFrame = 0;
         if (this.attackHitTargets) this.attackHitTargets.clear();
@@ -616,14 +632,20 @@ class Player {
     const targetTilt = this.isGrounded ? (this.vx * 0.024) : (this.vx * 0.016);
     this.bodyTilt += (targetTilt - this.bodyTilt) * Math.min(1.0, dt * 7.5);
 
-    // Natural human breathing & walk step bob
+    // Natural human breathing & walk step bob (handled directly by FreeKnight pixel art frames)
     this.breathTimer += dt;
-    this.breathY = (this.isGrounded && Math.abs(this.vx) < 0.2) ? Math.sin(this.breathTimer * 2.8) * 1.2 : 0;
-    this.walkBobY = (this.isGrounded && Math.abs(this.vx) >= 0.2) ? Math.abs(Math.sin(this.stepTimer * Math.PI / 0.3)) * 1.6 : 0;
+    this.breathY = 0;
+    this.walkBobY = 0;
 
     // Elastic squash & stretch recovery
     this.scaleX += (1.0 - this.scaleX) * Math.min(1.0, dt * 12.0);
     this.scaleY += (1.0 - this.scaleY) * Math.min(1.0, dt * 12.0);
+
+    if (this.isDashing) {
+      this.animState = 'dash';
+      this.animFrame = Math.floor((this.dashDuration - this.dashTimer) / (this.dashDuration / 2)) % 2;
+      return;
+    }
 
     if (this.isAttacking) {
       this.animState = 'attack';
@@ -632,28 +654,26 @@ class Player {
 
     if (this.invulnerableTimer > 0.45) {
       this.animState = 'hurt';
-      this.animFrame = Math.min(2, Math.floor((0.8 - this.invulnerableTimer) / 0.12));
+      this.animFrame = 0;
       return;
     }
 
     if (this.isClimbing) {
       this.animState = 'climb';
-      this.animFrame = Math.floor(this.climbTimer) % 6;
+      this.animFrame = Math.floor(this.climbTimer * 6) % 7;
       return;
     }
 
     if (!this.isGrounded) {
-      this.animState = this.vy < 0 ? 'jump' : 'fall';
-      if (this.vy < -6.0) {
-        this.animFrame = 1; // Stretch launch
-      } else if (this.vy < -1.5) {
-        this.animFrame = 2; // Ascent tuck
-      } else if (Math.abs(this.vy) <= 1.5) {
-        this.animFrame = 3; // Apex float
-      } else if (this.vy < 7.0) {
-        this.animFrame = 4; // Descent ready
+      if (this.vy < -2.5) {
+        this.animState = 'jump';
+        this.animFrame = this.vy < -6.0 ? 0 : (this.vy < -4.0 ? 1 : 2);
+      } else if (Math.abs(this.vy) <= 2.5) {
+        this.animState = 'apex';
+        this.animFrame = this.vy < 0 ? 0 : 1;
       } else {
-        this.animFrame = 5; // Rapid fall
+        this.animState = 'fall';
+        this.animFrame = this.vy < 5.0 ? 0 : (this.vy < 8.0 ? 1 : 2);
       }
       return;
     }
@@ -661,17 +681,19 @@ class Player {
     if (Math.abs(this.vx) > 0.3) {
       this.animState = 'run';
       this.animTimer += dt;
-      this.animFrame = Math.floor(this.animTimer / 0.08) % 10;
+      this.animFrame = Math.floor(this.animTimer / 0.075) % 10;
     } else {
       this.animState = 'idle';
       this.animTimer += dt;
-      this.animFrame = Math.floor(this.animTimer / 0.15) % 8;
+      this.animFrame = Math.floor(this.animTimer / 0.12) % 10;
     }
   }
 
   draw(ctx, camX, camY) {
     // ─── DASH ETHEREAL SHADOW TRAIL ───
     if (this.dashTrail && this.dashTrail.length > 0) {
+      const sm = window.spriteManager;
+      const ghostFrame = (sm && sm.sprites.kael && sm.sprites.kael.dash) ? sm.sprites.kael.dash[0] : null;
       for (const ghost of this.dashTrail) {
         if (ghost.alpha <= 0.02) continue;
         const gx = Math.round(ghost.x - camX);
@@ -681,12 +703,12 @@ class Player {
         ctx.translate(gx + this.w / 2, gy + this.h);
         ctx.scale(ghost.facing, 1.0);
         ctx.translate(-this.w / 2, -this.h);
-        ctx.fillStyle = '#38bdf8';
-        ctx.fillRect(4, 6, 16, 26);
-        ctx.fillStyle = '#818cf8';
-        ctx.fillRect(6, 0, 12, 10);
-        ctx.fillStyle = '#c084fc';
-        ctx.fillRect(8, 20, 8, 16);
+        if (ghostFrame) {
+          ctx.drawImage(ghostFrame, -42, -41, 120, 80);
+        } else {
+          ctx.fillStyle = '#38bdf8';
+          ctx.fillRect(4, 6, 16, 26);
+        }
         ctx.restore();
       }
     }
@@ -855,29 +877,50 @@ class Player {
       ctx.restore();
     }
 
-    const kaelSprites = window.spriteManager.sprites.kael;
+    const sm = window.spriteManager;
+    const kaelSprites = sm ? sm.sprites.kael : null;
     let frameCanvas = null;
 
-    if (this.animState === 'attack' && kaelSprites && kaelSprites.attack) {
-      frameCanvas = kaelSprites.attack[this.attackFrame] || kaelSprites.attack[0];
+    if (this.animState === 'dash' && kaelSprites && kaelSprites.dash) {
+      const fIdx = Math.min(kaelSprites.dash.length - 1, this.animFrame || 0);
+      frameCanvas = sm.getTintedKaelFrame ? sm.getTintedKaelFrame('dash', fIdx, activeSkin) : kaelSprites.dash[fIdx];
+    } else if (this.animState === 'attack' && kaelSprites) {
+      const act = (this.attackComboStep === 2 && kaelSprites.attack2) ? 'attack2' : 'attack';
+      const maxF = kaelSprites[act] ? kaelSprites[act].length - 1 : 3;
+      const fIdx = Math.max(0, Math.min(maxF, this.attackFrame || 0));
+      frameCanvas = sm.getTintedKaelFrame ? sm.getTintedKaelFrame(act, fIdx, activeSkin) : (kaelSprites[act] ? kaelSprites[act][fIdx] : null);
     } else if (this.animState === 'hurt' && kaelSprites && kaelSprites.hurt) {
-      frameCanvas = kaelSprites.hurt[this.animFrame] || kaelSprites.hurt[0];
+      frameCanvas = sm.getTintedKaelFrame ? sm.getTintedKaelFrame('hurt', 0, activeSkin) : kaelSprites.hurt[0];
     } else if (this.animState === 'climb' && kaelSprites && kaelSprites.climb) {
-      frameCanvas = kaelSprites.climb[this.animFrame] || kaelSprites.climb[0];
-    } else if ((this.animState === 'jump' || this.animState === 'fall') && kaelSprites && kaelSprites.jump) {
-      frameCanvas = kaelSprites.jump[this.animFrame] || kaelSprites.jump[0];
+      const fIdx = (this.animFrame || 0) % kaelSprites.climb.length;
+      frameCanvas = sm.getTintedKaelFrame ? sm.getTintedKaelFrame('climb', fIdx, activeSkin) : kaelSprites.climb[fIdx];
+    } else if (this.animState === 'jump' && kaelSprites && kaelSprites.jump) {
+      const fIdx = Math.min(kaelSprites.jump.length - 1, this.animFrame || 0);
+      frameCanvas = sm.getTintedKaelFrame ? sm.getTintedKaelFrame('jump', fIdx, activeSkin) : kaelSprites.jump[fIdx];
+    } else if (this.animState === 'apex' && kaelSprites && kaelSprites.jumpFall) {
+      const fIdx = Math.min(kaelSprites.jumpFall.length - 1, this.animFrame || 0);
+      frameCanvas = sm.getTintedKaelFrame ? sm.getTintedKaelFrame('jumpFall', fIdx, activeSkin) : kaelSprites.jumpFall[fIdx];
+    } else if (this.animState === 'fall' && kaelSprites && kaelSprites.fall) {
+      const fIdx = Math.min(kaelSprites.fall.length - 1, this.animFrame || 0);
+      frameCanvas = sm.getTintedKaelFrame ? sm.getTintedKaelFrame('fall', fIdx, activeSkin) : kaelSprites.fall[fIdx];
     } else if (this.animState === 'run' && kaelSprites && kaelSprites.run) {
-      frameCanvas = kaelSprites.run[this.animFrame] || kaelSprites.run[0];
-    } else if (kaelSprites && kaelSprites.idle) {
-      frameCanvas = kaelSprites.idle[this.animFrame] || kaelSprites.idle[0];
+      const fIdx = (this.animFrame || 0) % kaelSprites.run.length;
+      frameCanvas = sm.getTintedKaelFrame ? sm.getTintedKaelFrame('run', fIdx, activeSkin) : kaelSprites.run[fIdx];
+    } else if (kaelSprites && kaelSprites.idle && kaelSprites.idle.length > 0) {
+      const fIdx = (this.animFrame || 0) % kaelSprites.idle.length;
+      frameCanvas = sm.getTintedKaelFrame ? sm.getTintedKaelFrame('idle', fIdx, activeSkin) : kaelSprites.idle[fIdx];
     }
 
     if (frameCanvas) {
-      const dw = frameCanvas.width / 2;
-      const dh = frameCanvas.height / 2;
-      const ox = this.animState === 'attack' ? -10 : -6;
-      const oy = -3;
-      ctx.drawImage(frameCanvas, ox, oy, dw, dh);
+      if (frameCanvas.width === 120) {
+        ctx.drawImage(frameCanvas, -42, -41, 120, 80);
+      } else {
+        const dw = frameCanvas.width / 2;
+        const dh = frameCanvas.height / 2;
+        const ox = this.animState === 'attack' ? -10 : -6;
+        const oy = -3;
+        ctx.drawImage(frameCanvas, ox, oy, dw, dh);
+      }
     }
 
     // ── DYNAMIC PASSIVE EQUIPMENT: FRONT LAYERS ──

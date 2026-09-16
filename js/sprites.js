@@ -96,8 +96,8 @@ class SpriteManager {
       this.skeletonSprites[name] = img;
     }
 
-    // 3. Generate Procedural Pixel Art Spritesheets
-    this.generateKaelSprites();
+    // 3. Load Player Sprites (FreeKnight 120x80 Colour2 Outline) & Generate Procedural Assets
+    await this.loadPlayerSprites();
     this.generateSkeletonSprites();
     this.generateBatSprites();
     this.generateSkullProjectileSprites();
@@ -139,664 +139,128 @@ class SpriteManager {
     return { canvas: c, ctx };
   }
 
-  // ─── KAEL (THE FALLEN KNIGHT) ───
-  // ─── KAEL (THE FALLEN KNIGHT) — HIGH-DENSITY ARTICULATED PIXEL ART ───
-  generateKaelSprites() {
+  // ─── FREEKNIGHT PLAYER SPRITES (120x80 Colour2 Outline SpriteSheets) ───
+  async loadPlayerSprites() {
     this.sprites.kael = {
       idle: [],
       run: [],
-      charge: [],
       jump: [],
-      climb: [],
+      jumpFall: [],
+      fall: [],
       attack: [],
-      hurt: []
+      attack2: [],
+      attackCombo: [],
+      dash: [],
+      roll: [],
+      hurt: [],
+      death: [],
+      climb: [],
+      crouch: null,
+      turnAround: []
     };
+    this.tintedKaelCache = {};
 
-    const w = 72, h = 88;
+    const sheetDefs = [
+      { key: 'idle', file: '_Idle.png', frames: 10 },
+      { key: 'run', file: '_Run.png', frames: 10 },
+      { key: 'jump', file: '_Jump.png', frames: 3 },
+      { key: 'jumpFall', file: '_JumpFallInbetween.png', frames: 2 },
+      { key: 'fall', file: '_Fall.png', frames: 3 },
+      { key: 'attack', file: '_AttackNoMovement.png', frames: 4 },
+      { key: 'attack2', file: '_Attack2NoMovement.png', frames: 6 },
+      { key: 'attackCombo', file: '_AttackComboNoMovement.png', frames: 10 },
+      { key: 'dash', file: '_Dash.png', frames: 2 },
+      { key: 'roll', file: '_Roll.png', frames: 12 },
+      { key: 'hurt', file: '_Hit.png', frames: 1 },
+      { key: 'death', file: '_DeathNoMovement.png', frames: 10 },
+      { key: 'climb', file: '_WallClimbNoMovement.png', frames: 7 },
+      { key: 'crouch', file: '_Crouch.png', frames: 1 },
+      { key: 'turnAround', file: '_TurnAround.png', frames: 3 }
+    ];
 
-    // Helper to draw segmented armored limb between (x1, y1) and (x2, y2)
-    const drawSegment = (ctx, x1, y1, x2, y2, thickness, cBody, cMid, cHigh, cEdge) => {
-      const dx = x2 - x1;
-      const dy = y2 - y1;
-      const len = Math.hypot(dx, dy);
-      if (len < 0.5) return;
-      ctx.save();
-      const ang = Math.atan2(dy, dx);
-      ctx.translate(x1, y1);
-      ctx.rotate(ang);
-      const half = thickness / 2;
-      // Outer shadow/contour
-      ctx.fillStyle = cEdge || '#080a0e';
-      ctx.fillRect(0, -half - 1, len, thickness + 2);
-      // Main armor plate body
-      ctx.fillStyle = cBody;
-      ctx.fillRect(0, -half, len, thickness);
-      // Mid-tone plate
-      if (cMid && thickness >= 3) {
-        ctx.fillStyle = cMid;
-        ctx.fillRect(1, -half + 1, len - 2, thickness - 2);
-      }
-      // Specular highlight line
-      if (cHigh && thickness >= 4) {
-        ctx.fillStyle = cHigh;
-        ctx.fillRect(2, -half + 1, len - 4, 1.5);
-      }
-      ctx.restore();
-    };
+    const frameW = 120;
+    const frameH = 80;
 
-    // Master renderer for multi-joint articulated Kael
-    const renderArticulatedKael = (cw, ch, opt) => {
-      const { canvas, ctx } = this.createCanvas(cw, ch);
-      const bob = opt.bob || 0;
-      const crouch = opt.crouch || 0;
-      const torsoShift = opt.torsoShift || 0;
-      const torsoTilt = opt.torsoTilt || 0;
-      const headTilt = opt.headTilt || 0;
-      const capeFlow = opt.capeFlow || 0;
-      const capeLift = opt.capeLift || 0;
-      const swordMode = opt.swordMode || 'sheathed';
-      const eyeColor = opt.eyeColor || '#ff1e33';
-      const auraLevel = opt.auraLevel || 0;
+    const promises = sheetDefs.map(def => new Promise((resolve) => {
+      const img = new Image();
+      img.src = `assets/player/${def.file}`;
+      img.onload = () => {
+        const frameCanvases = [];
+        for (let i = 0; i < def.frames; i++) {
+          const { canvas, ctx } = this.createCanvas(frameW, frameH);
+          ctx.drawImage(img, i * frameW, 0, frameW, frameH, 0, 0, frameW, frameH);
+          frameCanvases.push(canvas);
+        }
+        if (def.key === 'crouch') {
+          this.sprites.kael.crouch = frameCanvases[0];
+        } else {
+          this.sprites.kael[def.key] = frameCanvases;
+        }
+        resolve();
+      };
+      img.onerror = () => {
+        console.warn(`[SpriteManager] No se pudo cargar assets/player/${def.file}`);
+        resolve();
+      };
+    }));
 
-      // Leg Angles (radians)
-      const tAngF = opt.tAngF || 0;
-      const kAngF = opt.kAngF || 0;
-      const fAngF = opt.fAngF || 0;
-      const tAngB = opt.tAngB || 0;
-      const kAngB = opt.kAngB || 0;
-      const fAngB = opt.fAngB || 0;
+    await Promise.all(promises);
+    console.log('[SpriteManager] FreeKnight Player Sprites (120x80 Colour2 Outline) cargados exitosamente.');
+  }
 
-      // Arm Angles (radians)
-      const aAngF = opt.aAngF || 0;
-      const eAngF = opt.eAngF || 0;
-      const aAngB = opt.aAngB || 0;
-      const eAngB = opt.eAngB || 0;
+  getTintedKaelFrame(action, frameIndex, skin = 'soldier') {
+    if (!this.sprites.kael) return null;
+    let list = this.sprites.kael[action];
+    if (!list) {
+      if (action === 'crouch') return this.sprites.kael.crouch;
+      list = this.sprites.kael.idle;
+    }
+    if (!list || list.length === 0) return null;
+    const f = Math.max(0, Math.min(list.length - 1, frameIndex || 0));
+    const baseCanvas = list[f];
+    if (!baseCanvas) return null;
+    if (!skin || skin === 'soldier') return baseCanvas;
 
-      const hipX = 36 + torsoShift;
-      const hipY = 46 + bob + crouch;
-      const shoulderX = 36 + torsoShift;
-      const shoulderY = 28 + bob + crouch;
+    if (!this.tintedKaelCache) this.tintedKaelCache = {};
+    const key = `${action}_${f}_${skin}`;
+    if (this.tintedKaelCache[key]) return this.tintedKaelCache[key];
 
-      // ── 1. BILLOWING CAPE (Back layer) ──
-      ctx.save();
-      const cx = 30 + torsoShift + capeFlow;
-      const cy = 26 + bob + crouch;
-      const cHeight = Math.max(18, 44 - crouch * 0.35 - capeLift);
+    const { canvas, ctx } = this.createCanvas(baseCanvas.width, baseCanvas.height);
+    ctx.drawImage(baseCanvas, 0, 0);
 
-      ctx.fillStyle = '#140104'; // Deepest velvet fold shadow
-      ctx.fillRect(cx - 5, cy, 18, cHeight + 2);
-      ctx.fillStyle = '#2d030b';
-      ctx.fillRect(cx - 3, cy + 2, 16, cHeight);
-      ctx.fillStyle = '#540816';
-      ctx.fillRect(cx - 1, cy + 3, 13, cHeight - 2);
-      ctx.fillStyle = '#830f24';
-      ctx.fillRect(cx + 1, cy + 4, 10, cHeight - 4);
-      // Highlights on dynamic cloth ripples
-      ctx.fillStyle = '#b91834';
-      ctx.fillRect(cx + 3, cy + 6, 4, Math.max(6, cHeight - 8));
-      ctx.fillStyle = '#e11d48';
-      ctx.fillRect(cx + 4, cy + 8, 2, Math.max(4, cHeight - 14));
-      // Tattered hem notches
-      ctx.fillStyle = '#0a0102';
-      for (let i = 0; i < 5; i++) {
-        ctx.fillRect(cx - 4 + i * 3, cy + cHeight - (i % 3) * 2, 2, 4);
-      }
-      ctx.restore();
+    let tintColor = null;
+    let alpha = 0.35;
 
-      // ── 2. BACK ARM (Far layer) ──
-      const sBx = shoulderX - 4;
-      const sBy = shoulderY + 2;
-      const L_arm1 = 11, L_arm2 = 10;
-      const eBx = sBx + Math.sin(aAngB) * L_arm1;
-      const eBy = sBy + Math.cos(aAngB) * L_arm1;
-      const wBx = eBx + Math.sin(aAngB + eAngB) * L_arm2;
-      const wBy = eBy + Math.cos(aAngB + eAngB) * L_arm2;
-
-      drawSegment(ctx, sBx, sBy, eBx, eBy, 6, '#0f1217', '#1a202a', '#2d3748', '#080a0e');
-      ctx.fillStyle = '#1a202a';
-      ctx.fillRect(eBx - 3, eBy - 3, 6, 6);
-      ctx.fillStyle = '#ffd700';
-      ctx.fillRect(eBx - 1, eBy - 1, 2, 2);
-      drawSegment(ctx, eBx, eBy, wBx, wBy, 5, '#0f1217', '#1a202a', '#2d3748', '#080a0e');
-      ctx.fillStyle = '#141820';
-      ctx.fillRect(wBx - 3, wBy - 3, 6, 6);
-      ctx.fillStyle = '#2d3748';
-      ctx.fillRect(wBx - 2, wBy - 2, 4, 4);
-
-      // ── 3. BACK LEG (Far layer, behind torso) ──
-      const hBx = hipX - 3;
-      const hBy = hipY;
-      const L_thigh = 13, L_shin = 13;
-      const kBx = hBx + Math.sin(tAngB) * L_thigh;
-      const kBy = hBy + Math.cos(tAngB) * L_thigh;
-      const aBx = kBx + Math.sin(tAngB + kAngB) * L_shin;
-      const aBy = kBy + Math.cos(tAngB + kAngB) * L_shin;
-
-      drawSegment(ctx, hBx, hBy, kBx, kBy, 8, '#0b0e12', '#161a22', '#283140', '#06080a');
-      ctx.fillStyle = '#161a22';
-      ctx.fillRect(kBx - 3.5, kBy - 3.5, 7, 7);
-      ctx.fillStyle = '#b45309';
-      ctx.fillRect(kBx - 1, kBy - 1, 2, 2);
-      drawSegment(ctx, kBx, kBy, aBx, aBy, 7, '#0b0e12', '#161a22', '#283140', '#06080a');
-      ctx.save();
-      ctx.translate(aBx, aBy);
-      ctx.rotate(fAngB);
-      ctx.fillStyle = '#080a0e';
-      ctx.fillRect(-3, -1, 13, 6);
-      ctx.fillStyle = '#161a22';
-      ctx.fillRect(-2, 0, 11, 4);
-      ctx.fillStyle = '#2d3748';
-      ctx.fillRect(-1, 0, 6, 2);
-      ctx.restore();
-
-      // ── 4. SHEATHED BASIC DAGGER (at left hip when not stabbing) ──
-      if (swordMode === 'sheathed') {
-        const sx = hipX - 10, sy = hipY - 6;
-        // Dagger leather sheath
-        ctx.fillStyle = '#1e1410';
-        ctx.fillRect(sx, sy + 6, 4, 14);
-        ctx.fillStyle = '#3a2318';
-        ctx.fillRect(sx + 1, sy + 7, 2, 11);
-        // Bronze/iron sheath tip
-        ctx.fillStyle = '#64748b';
-        ctx.fillRect(sx, sy + 18, 4, 3);
-        ctx.fillStyle = '#94a3b8';
-        ctx.fillRect(sx + 1, sy + 19, 2, 2);
-        // Dagger guard / hilt
-        ctx.fillStyle = '#475569';
-        ctx.fillRect(sx - 3, sy + 4, 10, 2);
-        ctx.fillStyle = '#cbd5e1';
-        ctx.fillRect(sx - 2, sy + 4, 8, 1);
-        // Grip & pommel
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(sx + 1, sy - 2, 2, 6);
-        ctx.fillStyle = '#94a3b8';
-        ctx.fillRect(sx, sy - 4, 4, 2);
-      }
-
-      // ── 5. GAUNT UNDEAD TORSO & PENITENT WRAPPINGS (Middle layer) ──
-      const ty = shoulderY - 4;
-      ctx.save();
-      ctx.translate(hipX, hipY);
-      ctx.rotate(torsoTilt);
-      ctx.translate(-hipX, -hipY);
-
-      // Dark undertunic / shadowed ribs
-      ctx.fillStyle = '#0a0d14';
-      ctx.fillRect(hipX - 12, ty, 24, 26);
-      ctx.fillStyle = '#171c26';
-      ctx.fillRect(hipX - 10, ty + 2, 20, 22);
-
-      // Tattered linen burial wrappings & exposed gaunt ribs
-      ctx.fillStyle = '#283141';
-      ctx.fillRect(hipX - 9, ty + 3, 18, 5);
-      ctx.fillStyle = '#475569';
-      ctx.fillRect(hipX - 8, ty + 4, 16, 2);
-      ctx.fillStyle = '#8d99ae'; // Ashen flesh peeking
-      ctx.fillRect(hipX - 4, ty + 7, 8, 2);
-
-      // Criss-cross ragged bandages
-      ctx.fillStyle = '#334155';
-      ctx.fillRect(hipX - 9, ty + 9, 18, 3);
-      ctx.fillStyle = '#64748b';
-      ctx.fillRect(hipX - 8, ty + 10, 16, 1);
-      ctx.fillStyle = '#1e293b';
-      ctx.fillRect(hipX - 9, ty + 13, 18, 4);
-      ctx.fillStyle = '#475569';
-      ctx.fillRect(hipX - 7, ty + 14, 14, 2);
-
-      // Penitent worn leather belt & rusted iron buckle
-      ctx.fillStyle = '#18120e';
-      ctx.fillRect(hipX - 11, hipY - 5, 22, 6);
-      ctx.fillStyle = '#3a251a';
-      ctx.fillRect(hipX - 10, hipY - 4, 20, 4);
-      ctx.fillStyle = '#64748b';
-      ctx.fillRect(hipX - 3, hipY - 4, 6, 4);
-      ctx.fillStyle = '#94a3b8';
-      ctx.fillRect(hipX - 2, hipY - 3, 4, 2);
-
-      // Frayed ragged cloth tassets hanging over thighs
-      ctx.fillStyle = '#0f141d';
-      ctx.fillRect(hipX - 10, hipY + 1, 6, 6);
-      ctx.fillRect(hipX + 4, hipY + 1, 6, 6);
-      ctx.fillStyle = '#202736';
-      ctx.fillRect(hipX - 9, hipY + 1, 4, 4);
-      ctx.fillRect(hipX + 5, hipY + 1, 4, 4);
-      ctx.restore();
-
-      // ── 6. FRONT LEG (Near layer, fully illuminated) ──
-      const hFx = hipX + 3;
-      const hFy = hipY;
-      const kFx = hFx + Math.sin(tAngF) * L_thigh;
-      const kFy = hFy + Math.cos(tAngF) * L_thigh;
-      const aFx = kFx + Math.sin(tAngF + kAngF) * L_shin;
-      const aFy = kFy + Math.cos(tAngF + kAngF) * L_shin;
-
-      drawSegment(ctx, hFx, hFy, kFx, kFy, 8, '#0f131a', '#1e2633', '#334155', '#080a0e');
-      ctx.fillStyle = '#1e2633';
-      ctx.fillRect(kFx - 3.5, kFy - 3.5, 7, 7);
-      ctx.fillStyle = '#334155';
-      ctx.fillRect(kFx - 2.5, kFy - 2.5, 5, 5);
-      ctx.fillStyle = '#64748b';
-      ctx.fillRect(kFx - 1, kFy - 1, 2, 2);
-      drawSegment(ctx, kFx, kFy, aFx, aFy, 7, '#0f131a', '#1e2633', '#334155', '#080a0e');
-
-      ctx.save();
-      const sAng = Math.atan2(aFy - kFy, aFx - kFx);
-      ctx.translate(kFx, kFy);
-      ctx.rotate(sAng);
-      ctx.fillStyle = '#64748b';
-      ctx.fillRect(2, -1, Math.max(1, L_shin - 4), 1.5);
-      ctx.restore();
-
-      ctx.save();
-      ctx.translate(aFx, aFy);
-      ctx.rotate(fAngF);
-      ctx.fillStyle = '#080a0e';
-      ctx.fillRect(-3, -1, 13, 6);
-      ctx.fillStyle = '#1a202c';
-      ctx.fillRect(-2, 0, 11, 4);
-      ctx.fillStyle = '#334155';
-      ctx.fillRect(-1, 0, 7, 2);
-      ctx.restore();
-
-      // ── 7. SEMI-UNDEAD HUMAN HEAD & TATTERED PENITENT HOOD ──
-      const hy = 8 + bob + crouch;
-      const hx = 36 + torsoShift;
-      ctx.save();
-      ctx.translate(hx, hy + 12);
-      ctx.rotate(headTilt);
-      ctx.translate(-hx, -(hy + 12));
-
-      // Tattered Hood Cowl (Outer silhouette)
-      ctx.fillStyle = '#0d1117';
-      ctx.fillRect(hx - 12, hy - 1, 24, 24);
-      ctx.fillStyle = '#1b222d';
-      ctx.fillRect(hx - 10, hy, 20, 20);
-      ctx.fillStyle = '#2d3748';
-      ctx.fillRect(hx - 9, hy + 1, 18, 6);
-
-      // Matted, disheveled dark hair strands peeking under cowl
-      ctx.fillStyle = '#070a0f';
-      ctx.fillRect(hx - 8, hy + 6, 16, 5);
-      ctx.fillRect(hx - 9, hy + 8, 3, 6);
-      ctx.fillRect(hx + 6, hy + 8, 3, 6);
-
-      // Ashen, gaunt undead face
-      ctx.fillStyle = '#8d99ae'; // Pale necrotic flesh
-      ctx.fillRect(hx - 7, hy + 8, 14, 12);
-      ctx.fillStyle = '#a0aec0'; // Brow highlight
-      ctx.fillRect(hx - 6, hy + 8, 12, 2);
-
-      // Sunken, dark hollow eye sockets
-      ctx.fillStyle = '#05070a';
-      ctx.fillRect(hx - 6, hy + 11, 12, 4);
-      ctx.fillStyle = '#090d16';
-      ctx.fillRect(hx - 5, hy + 11, 4, 3);
-      ctx.fillRect(hx + 1, hy + 11, 4, 3);
-
-      // Glowing Spectral Soul Pupils (Necrotic / Soul flame glow)
-      const pupilColor = opt.eyeColor || '#00f5d4';
-      ctx.fillStyle = pupilColor;
-      ctx.fillRect(hx - 4, hy + 12, 2, 2);
-      ctx.fillRect(hx + 2, hy + 12, 2, 2);
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(hx - 3, hy + 12, 1, 1);
-      ctx.fillRect(hx + 3, hy + 12, 1, 1);
-
-      // Hollow gaunt cheeks & grim mouth / exposed teeth contour
-      ctx.fillStyle = '#64748b'; // Cheek shadow
-      ctx.fillRect(hx - 6, hy + 15, 3, 3);
-      ctx.fillRect(hx + 3, hy + 15, 3, 3);
-      ctx.fillStyle = '#334155'; // Grim mouth line
-      ctx.fillRect(hx - 4, hy + 17, 8, 1);
-      ctx.fillStyle = '#cbd5e1'; // Teeth glint
-      ctx.fillRect(hx - 3, hy + 18, 2, 1);
-      ctx.fillRect(hx + 1, hy + 18, 2, 1);
-
-      // Necrotic Jaw contour & neck wrappings
-      ctx.fillStyle = '#475569';
-      ctx.fillRect(hx - 5, hy + 19, 10, 2);
-      ctx.fillStyle = '#171f2b'; // Cowl folds around neck
-      ctx.fillRect(hx - 8, hy + 20, 16, 4);
-      ctx.fillStyle = '#2d3748';
-      ctx.fillRect(hx - 6, hy + 21, 12, 2);
-      ctx.restore();
-
-      // ── 8. FRONT ARM (Near layer, gaunt undead & wrappings) ──
-      const sFx = shoulderX + 4;
-      const sFy = shoulderY + 1;
-      const eFx = sFx + Math.sin(aAngF) * L_arm1;
-      const eFy = sFy + Math.cos(aAngF) * L_arm1;
-      const wFx = eFx + Math.sin(aAngF + eAngF) * L_arm2;
-      const wFy = eFy + Math.cos(aAngF + eAngF) * L_arm2;
-
-      // Weathered iron shoulder guard & wrappings
-      ctx.fillStyle = '#0f131a';
-      ctx.fillRect(sFx - 5, sFy - 4, 10, 11);
-      ctx.fillStyle = '#1e2633';
-      ctx.fillRect(sFx - 4, sFy - 3, 8, 9);
-      ctx.fillStyle = '#475569';
-      ctx.fillRect(sFx - 3, sFy - 1, 6, 6);
-      ctx.fillStyle = '#64748b';
-      ctx.fillRect(sFx - 4, sFy - 3, 8, 2);
-
-      drawSegment(ctx, sFx, sFy + 3, eFx, eFy, 6, '#0f131a', '#1e2633', '#334155', '#080a0e');
-      ctx.fillStyle = '#1e2633';
-      ctx.fillRect(eFx - 3, eFy - 3, 6, 6);
-      ctx.fillStyle = '#475569';
-      ctx.fillRect(eFx - 1, eFy - 1, 2, 2);
-      drawSegment(ctx, eFx, eFy, wFx, wFy, 5, '#0f131a', '#1e2633', '#334155', '#080a0e');
-      // Gaunt ashen hand & fingers
-      ctx.fillStyle = '#141820';
-      ctx.fillRect(wFx - 3, wFy - 3, 6, 6);
-      ctx.fillStyle = '#8d99ae';
-      ctx.fillRect(wFx - 2, wFy - 2, 4, 4);
-      ctx.fillStyle = '#cbd5e1';
-      ctx.fillRect(wFx - 1, wFy - 1, 2, 2);
-
-      // ── 9. AURA / CHARGE SPARK PARTICLES ──
-      if (auraLevel > 0) {
-        ctx.fillStyle = auraLevel > 1 ? '#ff3300' : '#ff9900';
-        ctx.fillRect(12, 70, 3, 3);
-        ctx.fillRect(58, 66, 3, 3);
-        ctx.fillRect(16, 42, 2, 2);
-        ctx.fillRect(56, 34, 2, 2);
-        ctx.fillStyle = '#ffff66';
-        ctx.fillRect(22, 76, 2, 2);
-        ctx.fillRect(50, 74, 2, 2);
-      }
-
-      return canvas;
-    };
-
-    // ─── 1. KAEL IDLE (8 frames with fluid anatomical breathing & contrapposto) ───
-    for (let f = 0; f < 8; f++) {
-      const phase = f * Math.PI * 2 / 8;
-      const bob = Math.sin(phase) * 1.5;
-      const capeFlow = Math.sin(phase) * 1.8;
-      const tAngF = 0.08 + Math.sin(phase) * 0.04;
-      const kAngF = 0.12 - Math.sin(phase) * 0.03;
-      const tAngB = -0.06 - Math.sin(phase) * 0.04;
-      const kAngB = 0.14 + Math.sin(phase) * 0.03;
-      const aAngF = 0.10 + Math.sin(phase) * 0.05;
-      const aAngB = -0.08 - Math.sin(phase) * 0.05;
-
-      this.sprites.kael.idle.push(renderArticulatedKael(w, h, {
-        bob, capeFlow,
-        tAngF, kAngF, tAngB, kAngB,
-        aAngF, aAngB,
-        swordMode: 'sheathed'
-      }));
+    switch (skin) {
+      case 'crimson':
+        tintColor = '#ef4444';
+        alpha = 0.38;
+        break;
+      case 'specter':
+        tintColor = '#8b5cf6';
+        alpha = 0.42;
+        break;
+      case 'paladin':
+        tintColor = '#f59e0b';
+        alpha = 0.36;
+        break;
+      case 'ascended':
+        tintColor = '#38bdf8';
+        alpha = 0.32;
+        break;
     }
 
-    // ─── 2. KAEL RUN (10 frames: realistic passing gait, arm swing, & foot roll) ───
-    for (let f = 0; f < 10; f++) {
-      const p = f * Math.PI * 2 / 10;
-      const bob = Math.abs(Math.sin(p)) * 2.5 - 1.2;
-      const torsoTilt = 0.10;
-      const headTilt = -0.04;
-      const capeFlow = -Math.sin(p) * 4.5;
-      const capeLift = Math.abs(Math.cos(p)) * 6.0;
-
-      const tAngF = Math.sin(p) * 0.55;
-      const kAngF = tAngF > 0 ? Math.sin(p) * 0.70 : Math.max(0, -Math.sin(p) * 0.4);
-      const fAngF = tAngF > 0.2 ? -0.2 : 0.1;
-
-      const tAngB = Math.sin(p + Math.PI) * 0.55;
-      const kAngB = tAngB > 0 ? Math.sin(p + Math.PI) * 0.70 : Math.max(0, -Math.sin(p + Math.PI) * 0.4);
-      const fAngB = tAngB > 0.2 ? -0.2 : 0.1;
-
-      const aAngF = -Math.sin(p) * 0.45;
-      const eAngF = Math.max(0.1, Math.sin(p) * 0.4);
-      const aAngB = -Math.sin(p + Math.PI) * 0.45;
-      const eAngB = Math.max(0.1, Math.sin(p + Math.PI) * 0.4);
-
-      this.sprites.kael.run.push(renderArticulatedKael(w, h, {
-        bob, torsoTilt, headTilt, capeFlow, capeLift,
-        tAngF, kAngF, fAngF, tAngB, kAngB, fAngB,
-        aAngF, eAngF, aAngB, eAngB,
-        swordMode: 'sheathed'
-      }));
+    if (tintColor) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'source-atop';
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = tintColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.restore();
     }
 
-    // ─── 3. KAEL JUMP & AIRBORNE PHASES (6 keyframes: Launch -> Apex -> Fall) ───
-    // F0: Launch Compression
-    this.sprites.kael.jump.push(renderArticulatedKael(w, h, {
-      bob: 2, crouch: 4, torsoTilt: 0.15, headTilt: -0.1, capeLift: 2,
-      tAngF: -0.4, kAngF: 0.8, tAngB: 0.3, kAngB: 0.6,
-      aAngF: -0.3, eAngF: 0.5, aAngB: 0.3, eAngB: 0.4
-    }));
-    // F1: Ascending Stretch
-    this.sprites.kael.jump.push(renderArticulatedKael(w, h, {
-      bob: -2, crouch: -2, torsoTilt: -0.08, headTilt: 0.1, capeLift: 10,
-      tAngF: 0.2, kAngF: 0.2, tAngB: -0.1, kAngB: 0.3,
-      aAngF: 0.5, eAngF: 0.2, aAngB: -0.4, eAngB: 0.3
-    }));
-    // F2: Mid Ascent Tuck
-    this.sprites.kael.jump.push(renderArticulatedKael(w, h, {
-      bob: -1, torsoTilt: 0.05, headTilt: 0.05, capeLift: 7,
-      tAngF: -0.2, kAngF: 0.6, tAngB: 0.2, kAngB: 0.5,
-      aAngF: 0.2, eAngF: 0.4, aAngB: -0.2, eAngB: 0.4
-    }));
-    // F3: Apex Float
-    this.sprites.kael.jump.push(renderArticulatedKael(w, h, {
-      bob: 0, torsoTilt: 0, headTilt: 0, capeLift: 4,
-      tAngF: 0.05, kAngF: 0.3, tAngB: -0.05, kAngB: 0.3,
-      aAngF: 0.1, eAngF: 0.3, aAngB: -0.1, eAngB: 0.3
-    }));
-    // F4: Early Descent
-    this.sprites.kael.jump.push(renderArticulatedKael(w, h, {
-      bob: 1, torsoTilt: 0.08, headTilt: -0.05, capeLift: 8,
-      tAngF: 0.15, kAngF: 0.4, tAngB: -0.15, kAngB: 0.4,
-      aAngF: -0.2, eAngF: 0.3, aAngB: 0.2, eAngB: 0.3
-    }));
-    // F5: Fast Fall Windstream
-    this.sprites.kael.jump.push(renderArticulatedKael(w, h, {
-      bob: 1, torsoTilt: 0.12, headTilt: -0.1, capeLift: 14,
-      tAngF: 0.25, kAngF: 0.5, tAngB: -0.2, kAngB: 0.5,
-      aAngF: -0.4, eAngF: 0.2, aAngB: 0.3, eAngB: 0.2
-    }));
-
-    // ─── 4. KAEL CROUCH (Deep stealth & preparation stance) ───
-    this.sprites.kael.crouch = renderArticulatedKael(w, h, {
-      bob: 0, crouch: 8, torsoTilt: 0.22, headTilt: -0.15,
-      tAngF: -0.5, kAngF: 1.2, tAngB: 0.5, kAngB: 1.1,
-      aAngF: 0.4, eAngF: 0.8, aAngB: -0.2, eAngB: 0.6,
-      swordMode: 'sheathed'
-    });
-
-    // ─── 5. KAEL CLIMB (6 frames: alternating hand/foot ascent) ───
-    for (let f = 0; f < 6; f++) {
-      const p = f * Math.PI * 2 / 6;
-      const aAngF = Math.sin(p) * 0.6 + 0.3;
-      const aAngB = -Math.sin(p) * 0.6 + 0.3;
-      const tAngF = -Math.sin(p) * 0.4 + 0.2;
-      const tAngB = Math.sin(p) * 0.4 + 0.2;
-      this.sprites.kael.climb.push(renderArticulatedKael(w, h, {
-        bob: Math.sin(p * 2) * 1.5,
-        tAngF, kAngF: 0.6, tAngB, kAngB: 0.6,
-        aAngF, eAngF: 0.5, aAngB, eAngB: 0.5,
-        swordMode: 'sheathed'
-      }));
-    }
-
-    // ─── 6. KAEL ATTACK (6 frames: Swift Stabbing Thrusts with Basic Dagger) ───
-    for (let f = 0; f < 6; f++) {
-      const aw = 96, ah = 84;
-      const { canvas, ctx } = this.createCanvas(aw, ah);
-
-      if (f === 0) {
-        // Windup: Dagger drawn back close to hip/chest, tensed forward crouch
-        const base = renderArticulatedKael(w, h, {
-          bob: 0, torsoTilt: -0.12, headTilt: 0.08,
-          tAngF: 0.12, kAngF: 0.25, tAngB: -0.2, kAngB: 0.25,
-          aAngF: 0.9, eAngF: 1.1, aAngB: -0.3, eAngB: 0.4,
-          swordMode: 'none'
-        });
-        ctx.drawImage(base, 0, 0);
-
-        // Dagger poised at hip
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(26, 38, 4, 6);
-        ctx.fillStyle = '#475569';
-        ctx.fillRect(24, 44, 8, 2);
-        ctx.fillStyle = '#f8fafc';
-        ctx.fillRect(32, 44, 12, 3);
-        ctx.fillStyle = '#cbd5e1';
-        ctx.fillRect(42, 45, 4, 1);
-      } else if (f === 1) {
-        // Forward Lunge Initiation: Arm extending, thrusting dagger forward
-        const base = renderArticulatedKael(w, h, {
-          bob: 1, torsoTilt: 0.16, headTilt: -0.04,
-          tAngF: -0.28, kAngF: 0.5, tAngB: 0.35, kAngB: 0.2,
-          aAngF: -0.3, eAngF: 0.2, aAngB: 0.3, eAngB: 0.3,
-          swordMode: 'none'
-        });
-        ctx.drawImage(base, 0, 0);
-
-        // Dagger thrusting forward
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(38, 36, 6, 3);
-        ctx.fillStyle = '#475569';
-        ctx.fillRect(44, 34, 2, 7);
-        ctx.fillStyle = '#f8fafc';
-        ctx.fillRect(46, 36, 26, 3);
-        ctx.fillStyle = '#cbd5e1';
-        ctx.fillRect(70, 37, 4, 1);
-
-        // Swift stabbing kinetic trail
-        ctx.fillStyle = 'rgba(0, 245, 212, 0.6)';
-        ctx.fillRect(40, 37, 34, 1);
-      } else if (f === 2) {
-        // Explosive Forward Penetration Thrust & Puncturing Shockwave!
-        const base = renderArticulatedKael(w, h, {
-          bob: 2, torsoTilt: 0.24, headTilt: 0.04,
-          tAngF: -0.42, kAngF: 0.65, tAngB: 0.48, kAngB: 0.15,
-          aAngF: -0.55, eAngF: 0.05, aAngB: 0.5, eAngB: 0.2,
-          swordMode: 'none'
-        });
-        ctx.drawImage(base, 0, 0);
-
-        // Fully extended stabbing dagger
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(44, 34, 6, 3);
-        ctx.fillStyle = '#475569';
-        ctx.fillRect(50, 32, 2, 7);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(52, 34, 32, 3);
-        ctx.fillStyle = '#94a3b8';
-        ctx.fillRect(52, 34, 32, 1);
-        ctx.fillStyle = '#cbd5e1';
-        ctx.fillRect(82, 35, 4, 1);
-
-        // Piercing stab shockwave & puncturing sparks
-        ctx.save();
-        ctx.strokeStyle = '#00f5d4';
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        ctx.moveTo(82, 35);
-        ctx.lineTo(94, 35);
-        ctx.stroke();
-
-        // Puncture impact star
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(86, 30);
-        ctx.lineTo(86, 40);
-        ctx.moveTo(82, 32);
-        ctx.lineTo(90, 38);
-        ctx.moveTo(82, 38);
-        ctx.lineTo(90, 32);
-        ctx.stroke();
-        ctx.restore();
-
-        // Piercing sparks
-        ctx.fillStyle = '#ff1e38';
-        ctx.fillRect(84, 28, 2, 2);
-        ctx.fillRect(88, 42, 2, 2);
-        ctx.fillStyle = '#00f5d4';
-        ctx.fillRect(92, 34, 3, 2);
-        ctx.fillRect(80, 26, 2, 2);
-      } else if (f === 3) {
-        // Penetration Depth Apex & Blade Twist
-        const base = renderArticulatedKael(w, h, {
-          bob: 1, torsoTilt: 0.20, headTilt: 0.02,
-          tAngF: -0.38, kAngF: 0.55, tAngB: 0.42, kAngB: 0.18,
-          aAngF: -0.5, eAngF: 0.1, aAngB: 0.4, eAngB: 0.3,
-          swordMode: 'none'
-        });
-        ctx.drawImage(base, 0, 0);
-
-        // Dagger in twist position
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(44, 35, 6, 3);
-        ctx.fillStyle = '#475569';
-        ctx.fillRect(50, 33, 2, 7);
-        ctx.fillStyle = '#f8fafc';
-        ctx.fillRect(52, 35, 28, 3);
-        ctx.fillStyle = '#ff2a3b';
-        ctx.fillRect(54, 36, 24, 1);
-
-        // Lingering puncture trail
-        ctx.save();
-        ctx.strokeStyle = 'rgba(0, 245, 212, 0.4)';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(46, 36);
-        ctx.lineTo(84, 36);
-        ctx.stroke();
-        ctx.restore();
-      } else if (f === 4) {
-        // Swift Retraction / Pull-back
-        const base = renderArticulatedKael(w, h, {
-          bob: 1, torsoTilt: 0.08, headTilt: 0,
-          tAngF: -0.2, kAngF: 0.35, tAngB: 0.2, kAngB: 0.25,
-          aAngF: -0.2, eAngF: 0.35, aAngB: 0.2, eAngB: 0.35,
-          swordMode: 'none'
-        });
-        ctx.drawImage(base, 0, 0);
-
-        // Dagger pulled back
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(38, 38, 5, 3);
-        ctx.fillStyle = '#475569';
-        ctx.fillRect(43, 36, 2, 6);
-        ctx.fillStyle = '#cbd5e1';
-        ctx.fillRect(45, 38, 20, 3);
-      } else {
-        // Recovery to poised ready stance
-        const base = renderArticulatedKael(w, h, {
-          bob: 0, torsoTilt: 0, headTilt: 0,
-          tAngF: 0.08, tAngB: -0.06,
-          swordMode: 'sheathed'
-        });
-        ctx.drawImage(base, 0, 0);
-      }
-
-      this.sprites.kael.attack.push(canvas);
-    }
-
-    // ─── 7. KAEL HURT (3 frames: impact recoil & stagger) ───
-    for (let f = 0; f < 3; f++) {
-      const torsoTilt = f === 0 ? -0.25 : (f === 1 ? -0.15 : -0.05);
-      const headTilt = f === 0 ? -0.2 : (f === 1 ? -0.1 : 0);
-      const aAngF = f === 0 ? -0.4 : -0.2;
-      const aAngB = f === 0 ? 0.4 : 0.2;
-      const tAngF = f === 0 ? 0.3 : 0.15;
-      const kAngF = f === 0 ? 0.4 : 0.2;
-      const tAngB = f === 0 ? -0.3 : -0.15;
-      const kAngB = f === 0 ? 0.4 : 0.2;
-      this.sprites.kael.hurt.push(renderArticulatedKael(w, h, {
-        bob: f === 0 ? -2 : 1,
-        torsoTilt, headTilt,
-        aAngF, aAngB,
-        tAngF, kAngF, tAngB, kAngB,
-        eyeColor: '#ffffff',
-        swordMode: 'sheathed'
-      }));
-    }
+    this.tintedKaelCache[key] = canvas;
+    return canvas;
   }
 
   // ─── ARTICULATED PROCEDURAL SKELETON (HIGH-DENSITY BONE FALLBACK) ───
@@ -3102,26 +2566,37 @@ class SpriteManager {
     const { canvas: kc, ctx: kctx } = this.createCanvas(96, 96);
     kctx.fillStyle = '#0d0912';
     kctx.fillRect(0, 0, 96, 96);
-    // Horned Greathelm
-    kctx.fillStyle = '#2c313d';
-    kctx.fillRect(20, 16, 56, 54);
-    kctx.fillStyle = '#3e4554';
-    kctx.fillRect(28, 20, 40, 24);
-    // Horns
-    kctx.fillStyle = '#1a1c22';
-    kctx.fillRect(14, 8, 10, 20);
-    kctx.fillRect(72, 8, 10, 20);
-    // Visor with crimson fiery eye glow
-    kctx.fillStyle = '#0a0a0e';
-    kctx.fillRect(26, 42, 44, 12);
-    kctx.fillStyle = '#ff2a3b';
-    kctx.fillRect(32, 46, 12, 4);
-    kctx.fillRect(52, 46, 12, 4);
-    // Gorget / Armor neck
-    kctx.fillStyle = '#1e2129';
-    kctx.fillRect(22, 70, 52, 22);
-    kctx.fillStyle = '#d4af37'; // Gold trim
-    kctx.fillRect(44, 76, 8, 14);
+
+    const grad = kctx.createRadialGradient(48, 48, 8, 48, 48, 54);
+    grad.addColorStop(0, '#2d1020');
+    grad.addColorStop(1, '#09040c');
+    kctx.fillStyle = grad;
+    kctx.fillRect(0, 0, 96, 96);
+
+    const idle0 = (this.sprites.kael && this.sprites.kael.idle && this.sprites.kael.idle[0])
+      ? this.sprites.kael.idle[0]
+      : null;
+
+    if (idle0) {
+      kctx.imageSmoothingEnabled = false;
+      kctx.drawImage(idle0, 42, 41, 25, 25, 10, 10, 76, 76);
+    } else {
+      kctx.fillStyle = '#2c313d';
+      kctx.fillRect(20, 16, 56, 54);
+      kctx.fillStyle = '#3e4554';
+      kctx.fillRect(28, 20, 40, 24);
+      kctx.fillStyle = '#ff2a3b';
+      kctx.fillRect(32, 46, 12, 4);
+      kctx.fillRect(52, 46, 12, 4);
+    }
+
+    // Gothic gold ornamental border
+    kctx.strokeStyle = '#d4af37';
+    kctx.lineWidth = 2;
+    kctx.strokeRect(2, 2, 92, 92);
+    kctx.strokeStyle = '#701a75';
+    kctx.lineWidth = 1;
+    kctx.strokeRect(4, 4, 88, 88);
     this.portraits.Kael = kc;
 
     // 2. Soldado Portrait
