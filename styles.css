@@ -491,10 +491,11 @@ body.cursor-hidden *,
   width: 86%;
   max-width: 860px;
   background: var(--panel);
-  border: 2px solid #5a1e28;
-  border-radius: 8px;
-  box-shadow: 0 0 35px rgba(0,0,0,0.95), inset 0 0 15px rgba(230, 57, 70, 0.2);
-  padding: 16px 20px;
+  border: 14px solid transparent;
+  border-image: url('assets/ui/frame_dialog.png') 16 fill stretch;
+  image-rendering: pixelated;
+  box-shadow: 0 0 35px rgba(0,0,0,0.95), 0 0 15px rgba(230, 57, 70, 0.2);
+  padding: 10px 14px;
   z-index: 50;
   pointer-events: auto;
 }
@@ -509,8 +510,9 @@ body.cursor-hidden *,
   width: 90px;
   height: 90px;
   min-width: 90px;
-  border: 2px solid var(--gold);
-  border-radius: 6px;
+  border: 8px solid transparent;
+  border-image: url('assets/ui/frame_card.png') 10 fill stretch;
+  image-rendering: pixelated;
   background: #180d1e;
   overflow: hidden;
   box-shadow: 0 0 15px rgba(244, 208, 111, 0.3);
@@ -703,13 +705,14 @@ body.cursor-hidden *,
 
 .btn-infernal {
   background: rgba(22, 10, 16, 0.9);
-  border: 2px solid #5a1820;
-  border-radius: 6px;
+  border: 6px solid transparent;
+  border-image: url('assets/ui/frame_button.png') 5 fill stretch;
+  image-rendering: pixelated;
   color: #d8c8b8;
   font-family: 'Cinzel', serif;
   font-size: 18px;
   font-weight: 800;
-  padding: 12px 22px;
+  padding: 8px 18px;
   cursor: pointer;
   letter-spacing: 2px;
   transition: all 0.2s ease;
@@ -1828,9 +1831,10 @@ body.in-menu #virtual-controls {
 
 .boon-card {
   background: linear-gradient(180deg, rgba(28, 14, 34, 0.95), rgba(12, 6, 16, 0.95));
-  border: 2px solid #5c2751;
-  border-radius: 8px;
-  padding: 18px 14px;
+  border: 8px solid transparent;
+  border-image: url('assets/ui/frame_card.png') 10 fill stretch;
+  image-rendering: pixelated;
+  padding: 14px 12px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -2123,10 +2127,11 @@ body.in-menu #virtual-controls {
 
 .hud-xp-track {
   width: 120px;
-  height: 10px;
+  height: 12px;
   background: #12091c;
-  border: 1px solid #4a1e6d;
-  border-radius: 3px;
+  border: 2px solid transparent;
+  border-image: url('assets/ui/frame_bar.png') 3 fill stretch;
+  image-rendering: pixelated;
   overflow: hidden;
   position: relative;
 }

@@ -2205,6 +2205,9 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
     if (!this.level) return;
 
+    // 1b. Draw Backdrop Gothic Architecture & Cathedral Arches
+    this.drawBackdropArchitecture(finalCamX, finalCamY);
+
     // 2. Draw Level Platforms & Tiles
     this.drawLevelPlatforms(finalCamX, finalCamY);
 
@@ -2779,6 +2782,50 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     }
   }
 
+  drawBackdropArchitecture(camX, camY) {
+    const props = window.spriteManager && window.spriteManager.sprites ? window.spriteManager.sprites.props : null;
+    if (!props || !props.gothicArch || !this.level) return;
+
+    const levelH = this.level.height || 3600;
+    const ctx = this.ctx;
+
+    ctx.save();
+    // Atmospheric tinting and depth
+    ctx.globalAlpha = 0.32;
+
+    const archInterval = 680;
+    const startY = Math.floor((camY - 200) / archInterval) * archInterval;
+    const endY = camY + this.vHeight + 200;
+    const midX = (this.level.width || 960) / 2;
+
+    for (let archY = startY; archY <= endY; archY += archInterval) {
+      if (archY < 120 || archY > levelH - 120) continue;
+
+      const rx = Math.round(midX - camX);
+      const ry = Math.round(archY - camY);
+
+      if (ry < -250 || ry > this.vHeight + 250) continue;
+
+      const archW = 160;
+      const archH = 160;
+      const archX = rx - archW / 2;
+
+      // Central Cathedral Archway
+      ctx.drawImage(props.gothicArch, 0, 0, 192, 192, archX, ry, archW, archH);
+
+      // Flanking Cathedral Columns
+      if (props.pillarShaft) {
+        ctx.drawImage(props.pillarShaft, 0, 0, 64, 96, archX - 22, ry + 36, 22, 160);
+        ctx.drawImage(props.pillarShaft, 0, 0, 64, 96, archX + archW, ry + 36, 22, 160);
+      }
+      if (props.gargoyleFrieze) {
+        ctx.drawImage(props.gargoyleFrieze, 0, 0, 96, 64, archX + archW / 2 - 32, ry - 14, 64, 28);
+      }
+    }
+
+    ctx.restore();
+  }
+
   drawLevelPlatforms(camX, camY) {
     const props = window.spriteManager.sprites.props;
     if (!props || !this.level.platforms) return;
@@ -2854,6 +2901,24 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
         this.drawCorbelBracket(rx + p.w - 18, ry + p.h, style.corbel, style.dark, true);
         if (p.w >= 280) {
           this.drawCorbelBracket(rx + Math.floor(p.w / 2) - 6, ry + p.h, style.corbel, style.dark, false);
+        }
+      }
+
+      // 1b. Real Gothic Pillars & Column Shafts under large floating platforms
+      if (!hasSupportBelow && p.w >= 140 && props.pillarCapital && props.pillarShaft) {
+        const shaftH = Math.min(80, Math.max(32, Math.floor(p.w * 0.35)));
+        this.ctx.drawImage(props.pillarCapital, 0, 0, 64, 64, rx + 10, ry + p.h, 20, 20);
+        this.ctx.drawImage(props.pillarShaft, 0, 0, 64, 96, rx + 11, ry + p.h + 20, 18, shaftH);
+        this.ctx.drawImage(props.pillarCapital, 0, 0, 64, 64, rx + p.w - 30, ry + p.h, 20, 20);
+        this.ctx.drawImage(props.pillarShaft, 0, 0, 64, 96, rx + p.w - 29, ry + p.h + 20, 18, shaftH);
+      }
+
+      // 1c. Gothic Stone Balustrade / Railing on Haven and Summit platforms
+      if ((p.isHaven || p.isSummit) && props.stoneBalustrade) {
+        const railW = 48;
+        const numRails = Math.floor(p.w / railW);
+        for (let ri = 0; ri < numRails; ri++) {
+          this.ctx.drawImage(props.stoneBalustrade, 0, 0, 128, 48, rx + ri * railW, ry - 16, railW, 18);
         }
       }
 
@@ -3010,27 +3075,74 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
   }
 
   drawTorches(camX, camY) {
+    const fireFx = window.spriteManager && window.spriteManager.sprites && window.spriteManager.sprites.fx ? window.spriteManager.sprites.fx.fire : null;
     const props = window.spriteManager && window.spriteManager.sprites ? window.spriteManager.sprites.props : null;
-    if (!props || !this.level.torches) return;
+    if (!this.level || !this.level.torches) return;
 
-    const frameIdx = Math.floor(Date.now() / 150) % 4;
+    // Biome default torch color
+    let defaultColor = 'orange';
+    const biome = this.level.biome || '';
+    if (biome === 'sunken_necropolis' || this.level.id === 'tower2' || this.level.id === 'boss_pestilence') {
+      defaultColor = 'green';
+    } else if (biome === 'frozen_peaks' || this.level.id === 'tower4' || this.level.id === 'boss_glacior') {
+      defaultColor = 'blue';
+    } else if (biome === 'void_sanctum' || this.level.id === 'tower5' || this.level.id === 'boss_valgoth') {
+      defaultColor = 'purple';
+    } else if (biome === 'surface_threshold' || this.level.id === 'tower6' || this.level.id === 'sanctuary') {
+      defaultColor = 'white';
+    }
+
+    const haloColors = {
+      orange: { inner: 'rgba(255, 140, 30, 0.32)', mid: 'rgba(255, 70, 10, 0.12)' },
+      green: { inner: 'rgba(74, 222, 128, 0.32)', mid: 'rgba(22, 101, 52, 0.12)' },
+      blue: { inner: 'rgba(56, 189, 248, 0.32)', mid: 'rgba(14, 116, 144, 0.12)' },
+      purple: { inner: 'rgba(192, 132, 252, 0.32)', mid: 'rgba(107, 33, 168, 0.12)' },
+      white: { inner: 'rgba(254, 243, 199, 0.35)', mid: 'rgba(245, 158, 11, 0.12)' }
+    };
+
+    const animIdx = Math.floor(Date.now() / 110) % 6;
 
     for (const t of this.level.torches) {
       const rx = Math.round(t.x - camX);
       const ry = Math.round(t.y - camY);
 
-      const torchArr = t.blue ? props.blueTorch : props.torch;
-      if (torchArr && torchArr[frameIdx]) {
-        this.ctx.drawImage(torchArr[frameIdx], rx - 8, ry - 12);
+      // Frustum culling
+      if (rx < -80 || rx > this.vWidth + 80 || ry < -80 || ry > this.vHeight + 80) continue;
+
+      const tColor = t.color || (t.blue ? 'blue' : defaultColor);
+      const frames = fireFx && fireFx[tColor] && fireFx[tColor].length > 0
+        ? fireFx[tColor]
+        : (t.blue ? props?.blueTorch : props?.torch);
+
+      // 1. Gothic Wall Sconce Bracket (Wrought iron backplate and ring)
+      this.ctx.fillStyle = '#110d14';
+      this.ctx.fillRect(rx - 4, ry + 12, 8, 14);
+      this.ctx.fillStyle = '#261f2e';
+      this.ctx.fillRect(rx - 3, ry + 13, 6, 4);
+      this.ctx.fillStyle = '#473d52';
+      this.ctx.fillRect(rx - 5, ry + 11, 10, 2);
+      this.ctx.fillStyle = '#0a080c';
+      this.ctx.fillRect(rx - 1, ry + 26, 2, 6);
+
+      // 2. Animated Fire FX Flame (32x32 loop centered over sconce)
+      if (frames && frames.length > 0) {
+        const frame = frames[animIdx % frames.length];
+        this.ctx.drawImage(frame, rx - 16, ry - 14);
       }
 
-      // 2D Lighting Halo
-      const grad = this.ctx.createRadialGradient(rx, ry - 4, 4, rx, ry - 4, 90);
-      grad.addColorStop(0, t.blue ? 'rgba(0, 180, 255, 0.25)' : 'rgba(255, 120, 0, 0.28)');
+      // 3. Dynamic Radial Light Halo with subtle flickering
+      const flicker = (Math.sin(Date.now() * 0.008 + rx * 0.1) * 3 + Math.cos(Date.now() * 0.013 + ry * 0.1) * 2);
+      const haloRadius = 85 + flicker;
+      const hColor = haloColors[tColor] || haloColors.orange;
+
+      const grad = this.ctx.createRadialGradient(rx, ry + 2, 4, rx, ry + 2, haloRadius);
+      grad.addColorStop(0, hColor.inner);
+      grad.addColorStop(0.4, hColor.mid);
       grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
       this.ctx.fillStyle = grad;
       this.ctx.beginPath();
-      this.ctx.arc(rx, ry - 4, 90, 0, Math.PI * 2);
+      this.ctx.arc(rx, ry + 2, haloRadius, 0, Math.PI * 2);
       this.ctx.fill();
     }
   }
@@ -3081,6 +3193,15 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     this.ctx.strokeRect(rx + 4, ry + 16, 12, h - 66);
     this.ctx.fillRect(rx + w - 16, ry + 16, 12, h - 66);
     this.ctx.strokeRect(rx + w - 16, ry + 16, 12, h - 66);
+
+    // Twin Celestial Brazier Flames atop pillars
+    const fireFrames = (window.spriteManager && window.spriteManager.sprites?.fx?.fire?.purple) ||
+                       (window.spriteManager && window.spriteManager.sprites?.fx?.fire?.white);
+    if (fireFrames && fireFrames.length > 0) {
+      const fIdx = Math.floor(Date.now() / 110) % fireFrames.length;
+      this.ctx.drawImage(fireFrames[fIdx], rx + 4 - 5, ry + 16 - 20, 22, 22);
+      this.ctx.drawImage(fireFrames[fIdx], rx + w - 16 - 5, ry + 16 - 20, 22, 22);
+    }
 
     // Glowing Engraved Runes on pillars and plinth
     const runeGlow = 0.5 + Math.sin(time * 1.5) * 0.4;
@@ -3351,6 +3472,24 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     ctx.arc(rx + 25, ry + 24 + bob, 22, 0, Math.PI * 2);
     ctx.fill();
 
+    // Animated Haven Campfire beside Hermit
+    const campFireFrames = window.spriteManager && window.spriteManager.sprites?.fx?.fire?.orange;
+    if (campFireFrames && campFireFrames.length > 0) {
+      const cIdx = Math.floor(Date.now() / 100) % campFireFrames.length;
+      ctx.fillStyle = '#292524';
+      ctx.fillRect(rx - 22, ry + 32, 18, 6);
+      ctx.fillStyle = '#44403c';
+      ctx.fillRect(rx - 20, ry + 31, 14, 2);
+      ctx.drawImage(campFireFrames[cIdx], rx - 25, ry + 12, 24, 24);
+      const campGlow = ctx.createRadialGradient(rx - 13, ry + 24, 2, rx - 13, ry + 24, 38);
+      campGlow.addColorStop(0, 'rgba(255, 140, 20, 0.28)');
+      campGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = campGlow;
+      ctx.beginPath();
+      ctx.arc(rx - 13, ry + 24, 38, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
     // Overhead title
     ctx.font = 'bold 9px Cinzel, serif';
     ctx.textAlign = 'center';
@@ -3392,6 +3531,14 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     ctx.beginPath();
     ctx.arc(rx + 16, ry + 2 + orbBob, 5, 0, Math.PI * 2);
     ctx.fill();
+
+    // Cursed brazier fire on the shrine
+    const shrineFire = (window.spriteManager && window.spriteManager.sprites?.fx?.fire?.purple) ||
+                       (window.spriteManager && window.spriteManager.sprites?.fx?.fire?.orange);
+    if (shrineFire && shrineFire.length > 0 && !cs.completed) {
+      const sIdx = Math.floor(Date.now() / 110) % shrineFire.length;
+      ctx.drawImage(shrineFire[sIdx], rx + 6, ry - 14 + orbBob, 20, 20);
+    }
 
     // Glowing aura
     ctx.fillStyle = cs.active ? 'rgba(239, 68, 68, 0.3)' : 'rgba(245, 158, 11, 0.25)';

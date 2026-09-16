@@ -112,6 +112,8 @@ class SpriteManager {
     this.generateBossSprites();
     this.generateNpcSprites();
     this.generateEnvironmentSprites();
+    await this.loadFireFx();
+    await this.loadTilesetProps();
     this.generateInfernalBackgrounds();
     this.generatePortraits();
 
@@ -1729,6 +1731,123 @@ class SpriteManager {
     f6p.fillStyle = '#ffffff';
     f6p.fillRect(0, 0, 32, 1);
     this.sprites.props.terrenalSanctuaryTile = f6c;
+  }
+
+  // ─── ANIMATED FIRE FX (DESKTOP FIRE_FX PACK: 5 BIOME COLORS) ───
+  async loadFireFx() {
+    this.sprites.fx = this.sprites.fx || {};
+    this.sprites.fx.fire = {
+      orange: [],
+      green: [],
+      blue: [],
+      purple: [],
+      white: []
+    };
+
+    const colors = ['orange', 'green', 'blue', 'purple', 'white'];
+    const promises = colors.map(color => new Promise((resolve) => {
+      const img = new Image();
+      img.src = `assets/fx/fire/${color}/loops/burning_loop_1.png`;
+      img.onload = () => {
+        const frames = [];
+        for (let i = 0; i < 6; i++) {
+          const { canvas, ctx } = this.createCanvas(32, 32);
+          ctx.drawImage(img, i * 32, 0, 32, 32, 0, 0, 32, 32);
+          frames.push(canvas);
+        }
+        this.sprites.fx.fire[color] = frames;
+        resolve();
+      };
+      img.onerror = () => {
+        console.warn(`[SpriteManager] Could not load fire fx for ${color}`);
+        resolve();
+      };
+    }));
+
+    await Promise.all(promises);
+
+    // If loaded, update default torch arrays with sliced high-res fire frames
+    if (this.sprites.fx.fire.orange && this.sprites.fx.fire.orange.length > 0) {
+      this.sprites.props.torch = this.sprites.fx.fire.orange;
+    }
+    if (this.sprites.fx.fire.blue && this.sprites.fx.fire.blue.length > 0) {
+      this.sprites.props.blueTorch = this.sprites.fx.fire.blue;
+    }
+  }
+
+  // ─── GOTHIC PLATFORMS & ARCHITECTURAL PROPS (MAIN_LEV_BUILD TILESETS) ───
+  async loadTilesetProps() {
+    this.sprites.tilesets = {};
+    const tilesetDefs = [
+      { key: 'build', file: 'assets/tilesets/main_lev_build.png' },
+      { key: 'buildA', file: 'assets/tilesets/main_lev_buildA.png' },
+      { key: 'buildB', file: 'assets/tilesets/main_lev_buildB.png' }
+    ];
+
+    const promises = tilesetDefs.map(def => new Promise((resolve) => {
+      const img = new Image();
+      img.src = def.file;
+      img.onload = () => {
+        this.sprites.tilesets[def.key] = img;
+        resolve(img);
+      };
+      img.onerror = () => {
+        console.warn(`[SpriteManager] Could not load tileset ${def.file}`);
+        resolve(null);
+      };
+    }));
+
+    await Promise.all(promises);
+
+    const b = this.sprites.tilesets.build;
+    const bA = this.sprites.tilesets.buildA;
+    const bB = this.sprites.tilesets.buildB;
+
+    const slice = (img, sx, sy, sw, sh) => {
+      if (!img) return null;
+      const { canvas, ctx } = this.createCanvas(sw, sh);
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+      return canvas;
+    };
+
+    if (!this.sprites.props) this.sprites.props = {};
+
+    // Slices from main_lev_build.png (High Cathedral Architecture)
+    if (b) {
+      // Core Platform Stone & Basalt Masonry (64x64)
+      const st = slice(b, 32, 64, 64, 64);
+      if (st) this.sprites.props.stoneTile = st;
+
+      const ba = slice(b, 32, 832, 64, 64);
+      if (ba) this.sprites.props.basaltAbyssTile = ba;
+
+      // Cathedral Architectural Accents
+      this.sprites.props.gothicArch = slice(b, 1088, 32, 192, 192);
+      this.sprites.props.pillarCapital = slice(b, 1088, 224, 64, 64);
+      this.sprites.props.pillarShaft = slice(b, 1088, 288, 64, 96);
+      this.sprites.props.stoneBalustrade = slice(b, 672, 32, 128, 48);
+    }
+
+    // Slices from main_lev_buildA.png (3 Biome Masonry Sets)
+    if (bA) {
+      // Mossy Catacomb stone
+      const cat = slice(bA, 32, 32, 64, 64);
+      if (cat) this.sprites.props.catacombStoneTile = cat;
+
+      // Crimson Iron Fortress steel
+      const crim = slice(bA, 32, 448, 64, 64);
+      if (crim) this.sprites.props.crimsonIronTile = crim;
+
+      // Glacial Ice Permafrost masonry
+      const glac = slice(bA, 32, 896, 64, 64);
+      if (glac) this.sprites.props.glacialIceTile = glac;
+    }
+
+    // Slices from main_lev_buildB.png (Pedestals, Capitals, Relics)
+    if (bB) {
+      this.sprites.props.ornatePedestal = slice(bB, 0, 96, 96, 96);
+      this.sprites.props.gargoyleFrieze = slice(bB, 0, 0, 96, 64);
+    }
   }
 
   // ─── PROCEDURAL MULTI-BIOME NEXUS PARALLAX BACKGROUNDS ───
