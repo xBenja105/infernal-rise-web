@@ -21,3 +21,6 @@ dist/
 dist-electron/
 *.exe
 *.zip
+*.rar
+*.psd
+
