@@ -66,6 +66,10 @@ class Game {
     // Vampire Survivors style Passive Auto-Attacking Weapons
     this.passiveWeaponsManager = new window.PassiveWeaponsManager(this);
 
+    // Cinematic Cutscenes Manager (Awakening, Boss Intros, Surface Ending)
+    this.cutsceneManager = window.CutsceneManager ? new window.CutsceneManager(this) : null;
+    window.cutsceneManager = this.cutsceneManager;
+
     // Meteors timer
     this.meteorTimer = 0;
 
@@ -405,6 +409,16 @@ class Game {
       if (this.isActionKey('up', e.code)) this.input.up = true;
       if (this.isActionKey('down', e.code)) this.input.down = true;
 
+      // Cutscene skipping
+      if (this.state === 'CUTSCENE') {
+        if (e.code === 'Space' || e.code === 'Enter' || e.code === 'Escape' || this.isActionKey('jump', e.code) || this.isActionKey('interact', e.code) || this.isActionKey('attack', e.code)) {
+          if (this.cutsceneManager) {
+            this.cutsceneManager.skip();
+            return;
+          }
+        }
+      }
+
       if (e.code === 'Enter') {
         if (this.state === 'VICTORY') {
           const btn = document.getElementById('btn-victory-next');
@@ -498,9 +512,12 @@ class Game {
       this.input.interact = false;
     });
 
-    // Canvas click attacks in combat mode
+    // Canvas click attacks in combat mode / skip cutscenes
     this.canvas.addEventListener('mousedown', () => {
       if (this.state === 'PLAYING') this.input.attack = true;
+      if (this.state === 'CUTSCENE' && this.cutsceneManager) {
+        this.cutsceneManager.skip();
+      }
     });
     this.canvas.addEventListener('mouseup', () => {
       this.input.attack = false;
@@ -514,6 +531,12 @@ class Game {
       const handlePress = (e) => {
         if (e && e.cancelable) e.preventDefault();
         if (window.soundEngine) window.soundEngine.resume();
+
+        if (this.state === 'CUTSCENE' && this.cutsceneManager) {
+          this.cutsceneManager.skip();
+          return;
+        }
+
         this.input[key] = true;
         btn.classList.add('pressed');
 
@@ -1084,6 +1107,9 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     this.loadLevel('prologue');
     this.hideAllScreens();
     this.state = 'PLAYING';
+    if (this.cutsceneManager) {
+      this.cutsceneManager.startAwakening();
+    }
   }
 
   spawnBossProjectile(projData) {
@@ -1358,6 +1384,9 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     // Return to the Lobby (prologue)
     this.loadLevel('prologue');
     this.state = 'PLAYING';
+    if (this.cutsceneManager) {
+      this.cutsceneManager.startAwakening();
+    }
   }
 
   triggerBossDefeat() {
@@ -1732,6 +1761,13 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
     if (this.state === 'PLAYING') {
       this.update(simDt);
+    } else if (this.state === 'CUTSCENE') {
+      if (this.cutsceneManager) {
+        this.cutsceneManager.update(simDt);
+      }
+      if (window.particleSystem) {
+        window.particleSystem.update(simDt);
+      }
     }
 
     this.render();
@@ -1808,12 +1844,23 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       if (this.player.x + this.player.w > p.x && this.player.x < p.x + p.w &&
           this.player.y + this.player.h > p.y && this.player.y < p.y + p.h) {
         if (p.isFinalPortal || !p.targetLevel || p.targetLevel === 'victory') {
-          this.state = 'VICTORY';
-          if (this.ui.victoryMessage) {
-            this.ui.victoryMessage.textContent = `¡Has conquistado la Gran Torre del Inframundo y cruzado el Umbral Terrenal hacia el Mundo de los Vivos! Tu alma renace bajo la luz del sol.`;
+          if (this.cutsceneManager) {
+            this.cutsceneManager.startEnding(() => {
+              this.state = 'VICTORY';
+              if (this.ui.victoryMessage) {
+                this.ui.victoryMessage.textContent = `¡Has conquistado la Gran Torre del Inframundo y cruzado el Umbral Terrenal hacia el Mundo de los Vivos! Tu alma renace bajo la luz del sol.`;
+              }
+              this.renderEndRunSummary(true);
+              if (this.ui.victoryScreen) this.ui.victoryScreen.classList.remove('hidden');
+            });
+          } else {
+            this.state = 'VICTORY';
+            if (this.ui.victoryMessage) {
+              this.ui.victoryMessage.textContent = `¡Has conquistado la Gran Torre del Inframundo y cruzado el Umbral Terrenal hacia el Mundo de los Vivos! Tu alma renace bajo la luz del sol.`;
+            }
+            this.renderEndRunSummary(true);
+            if (this.ui.victoryScreen) this.ui.victoryScreen.classList.remove('hidden');
           }
-          this.renderEndRunSummary(true);
-          if (this.ui.victoryScreen) this.ui.victoryScreen.classList.remove('hidden');
         } else {
           this.loadLevel(p.targetLevel);
         }
@@ -1827,12 +1874,23 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
         // Trigger Boss Dialogue on first encounter
         if (!this.hasTriggeredBossDialogue && this.boss.dialogueKey) {
           this.hasTriggeredBossDialogue = true;
-          this.state = 'DIALOGUE';
-          this.player.isFrozen = true;
-          window.dialogueManager.startDialogue(this.boss.dialogueKey, () => {
-            this.state = 'PLAYING';
-            this.player.isFrozen = false;
-          });
+          if (this.cutsceneManager) {
+            this.cutsceneManager.startBossIntro(this.boss, () => {
+              this.state = 'DIALOGUE';
+              this.player.isFrozen = true;
+              window.dialogueManager.startDialogue(this.boss.dialogueKey, () => {
+                this.state = 'PLAYING';
+                this.player.isFrozen = false;
+              });
+            });
+          } else {
+            this.state = 'DIALOGUE';
+            this.player.isFrozen = true;
+            window.dialogueManager.startDialogue(this.boss.dialogueKey, () => {
+              this.state = 'PLAYING';
+              this.player.isFrozen = false;
+            });
+          }
         }
 
         this.boss.update(dt, this.player, window.soundEngine, window.particleSystem);
@@ -2365,6 +2423,11 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       this.ctx.fillRect(0, 0, this.vWidth, this.vHeight);
       this.ctx.restore();
     }
+
+    // 17. Draw Active Cinematic Cutscenes (Awakening, Boss Intros, Surface Ending)
+    if (this.cutsceneManager) {
+      this.cutsceneManager.draw(this.ctx, this.vWidth, this.vHeight, finalCamX, finalCamY);
+    }
   }
 
   drawWindStreaks(camX, camY) {
@@ -2628,22 +2691,44 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     const rx = Math.round(-camX);
     const ry = Math.round(-camY);
 
-    // 1. Fill entire canvas to prevent any black margins
-    this.ctx.fillStyle = '#0a0912';
+    // 1. Fill entire canvas with pitch-black abyss
+    this.ctx.fillStyle = '#020104';
     this.ctx.fillRect(0, 0, this.vWidth, this.vHeight);
 
-    // 2. If screen is wider than 960 (e.g. mobile landscape or ultrawide):
-    // Fill horizontal margins with matching cathedral stone wall
+    // 2. Lateral margin fill for ultrawide / mobile landscape
     if (rx > 0 || rx + 960 < this.vWidth) {
-      this.ctx.fillStyle = '#11101d';
+      this.ctx.fillStyle = '#050308';
       this.ctx.fillRect(0, 0, this.vWidth, this.vHeight);
     }
 
-    // 3. Draw the master Cathedral Hall locked 1:1 to world coordinates
-    const hallImg = bg ? (bg.cathedralHall || bg.skySpires) : null;
+    // 3. Draw the master Cavern Hall locked 1:1 to world coordinates
+    const hallImg = bg ? (bg.cavernHall || bg.cathedralHall || bg.skySpires) : null;
     if (hallImg) {
       this.ctx.drawImage(hallImg, rx, ry, 960, 540);
     }
+
+    // 4. Dark Cavern Atmospheric Darkness Vignette & Torch Glow Pools
+    this.ctx.save();
+    this.ctx.fillStyle = 'rgba(2, 1, 5, 0.2)';
+    this.ctx.fillRect(0, 0, this.vWidth, this.vHeight);
+
+    if (this.level && this.level.torches) {
+      const time = Date.now() * 0.005;
+      for (const t of this.level.torches) {
+        const tx = Math.round(t.x - camX);
+        const ty = Math.round(t.y - camY);
+        const radius = 95 + Math.sin(time + t.x) * 6;
+        const torchAura = this.ctx.createRadialGradient(tx, ty, 6, tx, ty, radius);
+        torchAura.addColorStop(0, 'rgba(168, 85, 247, 0.18)');
+        torchAura.addColorStop(0.5, 'rgba(139, 92, 246, 0.07)');
+        torchAura.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        this.ctx.fillStyle = torchAura;
+        this.ctx.beginPath();
+        this.ctx.arc(tx, ty, radius, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+    }
+    this.ctx.restore();
   }
 
   drawAtmosphericParticles() {

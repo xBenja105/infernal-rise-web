@@ -881,7 +881,20 @@ class Player {
     const kaelSprites = sm ? sm.sprites.kael : null;
     let frameCanvas = null;
 
-    if (this.animState === 'dash' && kaelSprites && kaelSprites.dash) {
+    if (this.cutscenePose && kaelSprites) {
+      if (this.cutscenePose === 'lying') {
+        const deathList = kaelSprites.death;
+        frameCanvas = (deathList && deathList.length > 0) ? deathList[deathList.length - 1] : (kaelSprites.crouch || (kaelSprites.idle ? kaelSprites.idle[0] : null));
+      } else if (this.cutscenePose === 'stirring') {
+        const deathList = kaelSprites.death;
+        const sIdx = Math.max(0, (deathList ? deathList.length - 3 : 0));
+        frameCanvas = (deathList && deathList[sIdx]) ? deathList[sIdx] : (kaelSprites.crouch || (kaelSprites.idle ? kaelSprites.idle[0] : null));
+      } else if (this.cutscenePose === 'crouching') {
+        frameCanvas = kaelSprites.crouch || (kaelSprites.death ? kaelSprites.death[4] : (kaelSprites.idle ? kaelSprites.idle[0] : null));
+      } else if (this.cutscenePose === 'standing') {
+        frameCanvas = (kaelSprites.idle && kaelSprites.idle.length > 0) ? kaelSprites.idle[0] : null;
+      }
+    } else if (this.animState === 'dash' && kaelSprites && kaelSprites.dash) {
       const fIdx = Math.min(kaelSprites.dash.length - 1, this.animFrame || 0);
       frameCanvas = sm.getTintedKaelFrame ? sm.getTintedKaelFrame('dash', fIdx, activeSkin) : kaelSprites.dash[fIdx];
     } else if (this.animState === 'attack' && kaelSprites) {

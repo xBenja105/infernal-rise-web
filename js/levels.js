@@ -34,12 +34,12 @@ class LevelManager {
     return this.currentLevel;
   }
 
-  // ─── 0. PROLOGUE: CASTLE RUINS & REFUGE LOBBY (COMPACT GOTHIC SANCTUARY) ───
+  // ─── 0. PROLOGUE: UNDERWORLD CAVERNS REFUGE & HUB (DARK CAVERN SANCTUARY) ───
   createPrologueLevel() {
     return {
       id: 'prologue',
-      name: 'Refugio del Inframundo — El Santuario de los Caídos',
-      danteCircle: 'El Santuario de los Caídos — Falda de la Gran Torre',
+      name: 'Refugio del Inframundo — Cavernas Tenebrosas',
+      danteCircle: 'Cavernas Profundas — Base de la Gran Torre',
       biome: 'prologue',
       width: 960,
       height: 540,
@@ -49,24 +49,24 @@ class LevelManager {
       ambientRain: false,
       hasLava: false,
       platforms: [
-        // Grand Cathedral Stone Foundation
-        { x: 0, y: 480, w: 960, h: 60, type: 'stone' },
-        // Sanctuary Boundary Enclosure Columns
-        { x: 0, y: 0, w: 24, h: 480, type: 'stone' },
-        { x: 936, y: 0, w: 24, h: 480, type: 'stone' },
-        // Ceiling Cornice Beam
-        { x: 0, y: 0, w: 960, h: 22, type: 'stone' },
+        // Cavern Basalt Foundation
+        { x: 0, y: 480, w: 960, h: 60, type: 'cavern_stone' },
+        // Cavern Natural Stone Boundary Walls
+        { x: 0, y: 0, w: 24, h: 480, type: 'cavern_stone' },
+        { x: 936, y: 0, w: 24, h: 480, type: 'cavern_stone' },
+        // Ceiling Hanging Rock Beam
+        { x: 0, y: 0, w: 960, h: 22, type: 'cavern_stone' },
 
-        // 1. Ruleta de las Armas — Left Dais
-        { x: 160, y: 460, w: 140, h: 20, type: 'stone' },
+        // 1. Ruleta de las Armas — Left Rock Dais
+        { x: 160, y: 460, w: 140, h: 20, type: 'cavern_stone' },
 
-        // 2. Santuario de Almas — Grand Center 3-Tier Sacred Dais
-        { x: 330, y: 460, w: 300, h: 20, type: 'stone' },
-        { x: 370, y: 440, w: 220, h: 20, type: 'stone' },
-        { x: 410, y: 420, w: 140, h: 20, type: 'stone' },
+        // 2. Santuario de Almas — Grand Center 3-Tier Cavern Dais
+        { x: 330, y: 460, w: 300, h: 20, type: 'cavern_stone' },
+        { x: 370, y: 440, w: 220, h: 20, type: 'cavern_stone' },
+        { x: 410, y: 420, w: 140, h: 20, type: 'cavern_stone' },
 
-        // 3. Portal a la Torre — Right Dais
-        { x: 730, y: 460, w: 150, h: 20, type: 'stone' }
+        // 3. Portal a la Torre — Right Rock Dais
+        { x: 730, y: 460, w: 150, h: 20, type: 'cavern_stone' }
       ],
       // In-World Sanctuary Altar (Upgrade Shop) — Center Stage
       sanctuary: {
@@ -90,7 +90,7 @@ class LevelManager {
       crumblingPlatforms: [],
       spikes: [],
       torches: [
-        // Cathedral Sanctum Violet Wall Sconces
+        // Cavern Eerie Violet Wall Sconces
         { x: 45, y: 420, color: 'purple' },
         { x: 150, y: 425, color: 'purple' },
         { x: 310, y: 425, color: 'purple' },
