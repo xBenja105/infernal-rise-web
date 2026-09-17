@@ -204,14 +204,18 @@ class LevelManager {
         continue;
       }
 
-      // Procedural platform patterns
+      // Procedural platform patterns (8 Diverse Architectural Archetypes)
       // 0: Dual flanking platforms
-      // 1: Wide center platform
+      // 1: Wide center platform with stepping ledge
       // 2: Solid platform + moving platform bridge
       // 3: Solid platform + crumbling stone
-      let pattern = Math.floor(Math.random() * 4);
+      // 4: Vertical Ruined Tower Buttress & Shaft (Vertical structure with wall ledges)
+      // 5: Collapsed Gothic Arch & Ruined Lintel (Multi-height broken arch slabs)
+      // 6: Ruined Column Shafts with Capitals (Stepping stone pillars over gap)
+      // 7: Fortress Parapet & Crenelated Stone Platform
+      let pattern = Math.floor(Math.random() * 8);
       if (pattern === lastPattern) {
-        pattern = (pattern + 1) % 4;
+        pattern = (pattern + 1) % 8;
       }
       lastPattern = pattern;
 
@@ -241,15 +245,23 @@ class LevelManager {
           });
         }
       } else if (pattern === 1) {
-        // Center platform
+        // Wide Center platform with adjacent stepping ledge
         const cw = 260 + Math.floor(Math.random() * 70);
         const cx = Math.floor((width - cw) / 2) + Math.floor((Math.random() - 0.5) * 80);
         const platC = { x: cx, y: currY, w: cw, h: 22, type: pType };
         platforms.push(platC);
         layerPlatforms.push(platC);
 
+        // Adjacent stepping stone on the wider gap side
+        const stepOnLeft = cx > (width / 2);
+        const stepW = 100 + Math.floor(Math.random() * 30);
+        const stepX = stepOnLeft ? (80 + Math.floor(Math.random() * 30)) : (width - stepW - 80 - Math.floor(Math.random() * 30));
+        const platStep = { x: stepX, y: currY - 24, w: stepW, h: 20, type: pType, isRuined: true };
+        platforms.push(platStep);
+        layerPlatforms.push(platStep);
+
         // Occasional small spike hazard on outer edge
-        if (Math.random() < 0.28) {
+        if (Math.random() < 0.25) {
           spikes.push({
             x: Math.random() < 0.5 ? cx + 10 : cx + cw - 70,
             y: currY - 20,
@@ -281,7 +293,7 @@ class LevelManager {
             type: pType
           });
         }
-      } else {
+      } else if (pattern === 3) {
         // Solid platform + crumbling stepping stone
         const sw = 220 + Math.floor(Math.random() * 40);
         const sx = Math.random() < 0.5 ? 90 : 650;
@@ -296,6 +308,87 @@ class LevelManager {
           w: 100,
           h: 20
         });
+      } else if (pattern === 4) {
+        // ── PATRÓN 4: CONTRAFUERTE / MURO VERTICAL EN RUINAS ──
+        // Estructura vertical que divide el nivel con repisas a ambos lados para plataformeo vertical
+        const buttressX = Math.floor(width / 2) - 24 + Math.floor((Math.random() - 0.5) * 60);
+        const buttressH = 150 + Math.floor(Math.random() * 35);
+        const platVert = {
+          x: buttressX,
+          y: currY - 30,
+          w: 48,
+          h: buttressH,
+          type: pType,
+          isVerticalStructure: true
+        };
+
+        const sideL = {
+          x: Math.max(80, buttressX - 170 - Math.floor(Math.random() * 30)),
+          y: currY + 28,
+          w: 160,
+          h: 22,
+          type: pType,
+          isRuined: true
+        };
+        const sideR = {
+          x: Math.min(width - 240, buttressX + 48 + 20 + Math.floor(Math.random() * 30)),
+          y: currY - 26,
+          w: 160,
+          h: 22,
+          type: pType,
+          isRuined: true
+        };
+
+        platforms.push(platVert, sideL, sideR);
+        layerPlatforms.push(sideL, sideR);
+
+        // Ladder to scale the vertical buttress
+        if (Math.random() < 0.55) {
+          ladders.push({
+            x: buttressX + 12,
+            y: currY - 26,
+            w: 24,
+            h: 90,
+            type: pType === 'gold' ? 'gold' : 'iron'
+          });
+        }
+      } else if (pattern === 5) {
+        // ── PATRÓN 5: ARCO GÓTICO COLAPSADO / DINTEL QUEBRADO ──
+        // Losas de piedra fracturada a 3 niveles escalonados que forman los restos de un gran arco
+        const archBaseX = Math.floor((width - 480) / 2) + Math.floor((Math.random() - 0.5) * 60);
+        const slab1 = { x: archBaseX, y: currY + 24, w: 140, h: 22, type: pType, isRuined: true };
+        const slab2 = { x: archBaseX + 160, y: currY - 20, w: 160, h: 24, type: pType, isArch: true };
+        const slab3 = { x: archBaseX + 340, y: currY + 18, w: 140, h: 22, type: pType, isRuined: true };
+
+        platforms.push(slab1, slab2, slab3);
+        layerPlatforms.push(slab1, slab2, slab3);
+      } else if (pattern === 6) {
+        // ── PATRÓN 6: PILARES TRUNCADOS Y CAPITELES DE SALTO ──
+        // Columnas quebradas rematadas por capiteles de piedra que sirven de peldaño sobre el vacío
+        const col1X = 140 + Math.floor(Math.random() * 80);
+        const col2X = width - 280 - Math.floor(Math.random() * 80);
+        const col1 = { x: col1X, y: currY, w: 120, h: 26, type: pType, isPillarRemnant: true };
+        const col2 = { x: col2X, y: currY - 26, w: 120, h: 26, type: pType, isPillarRemnant: true };
+        const midX = Math.floor((col1X + col2X) / 2) - 45;
+        const midStep = { x: midX, y: currY - 52, w: 90, h: 20, type: pType, isRuined: true };
+
+        platforms.push(col1, col2, midStep);
+        layerPlatforms.push(col1, col2, midStep);
+      } else {
+        // ── PATRÓN 7: BALUARTE ALMENADO Y REPISA VOLADIZA ──
+        // Plataforma defensiva ancha con almenas y losa voladiza
+        const parapetW = 320 + Math.floor(Math.random() * 50);
+        const parapetX = Math.floor((width - parapetW) / 2) + Math.floor((Math.random() - 0.5) * 60);
+        const platParapet = { x: parapetX, y: currY, w: parapetW, h: 26, type: pType, isParapet: true };
+
+        const sideX = parapetX > (width / 2) ? (parapetX - 160) : (parapetX + parapetW + 30);
+        const platSide = { x: Math.max(80, Math.min(width - 200, sideX)), y: currY - 36, w: 120, h: 22, type: pType, isRuined: true };
+
+        platforms.push(platParapet, platSide);
+        layerPlatforms.push(platParapet, platSide);
+
+        torches.push({ x: parapetX + 24, y: currY - 30, blue: isBlueTorch });
+        torches.push({ x: parapetX + parapetW - 24, y: currY - 30, blue: isBlueTorch });
       }
 
       // Spawn patrolling enemies and urns
@@ -404,7 +497,7 @@ class LevelManager {
       risingLava: config.risingLava !== undefined ? config.risingLava : true,
       lavaY: height + 80,
       lavaSpeed: config.lavaSpeed !== undefined ? config.lavaSpeed : 21,
-      lavaTheme: config.lavaTheme || (config.id === 'tower3' ? 'blood' : config.id === 'tower2' ? 'acid' : 'spectral'),
+      lavaTheme: config.lavaTheme || (config.id === 'tower3' ? 'blood' : config.id === 'tower2' ? 'acid' : (config.id === 'tower1' ? 'infernal' : 'infernal')),
       wind: config.wind || null,
       platforms,
       ladders,
@@ -435,6 +528,8 @@ class LevelManager {
       musicTrack: 'tower',
       ambientRain: true,
       hasLava: true,
+      lavaTheme: 'infernal',
+      lavaSpeed: 28,
       basePlatformType: 'basalt_abyss',
       tiers: [
         { name: 'Foso Profundo', minY: 2500, maxY: 3600, platformType: 'basalt_abyss', mageChance: 0.0, enemyHp: 35, enemySkin: 'abyss', batTypes: ['abyss'] },

@@ -1971,7 +1971,19 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       if (this.levelGraceTimer > 0) {
         this.levelGraceTimer -= dt;
       } else {
-        const speed = this.level.lavaSpeed || 21;
+        const baseSpeed = this.level.lavaSpeed || 28;
+        let speed = baseSpeed;
+
+        // Dynamic relentless pursuit: If player climbs far ahead, lava accelerates dynamically so it never gets abandoned!
+        if (this.player) {
+          const screenBottom = this.camY + this.vHeight;
+          const lagDist = this.level.lavaY - screenBottom;
+          if (lagDist > 140) {
+            const catchupMult = Math.min(3.4, 1.0 + (lagDist - 140) / 320);
+            speed = baseSpeed * catchupMult;
+          }
+        }
+
         this.level.lavaY -= speed * dt;
         if (this.level.id === 'infernal') {
           this.level.lavaSpeed += 0.4 * dt;
@@ -3000,6 +3012,56 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       this.ctx.fillStyle = style.corbel;
       this.ctx.fillRect(rx, ry, 2, p.h);
       this.ctx.fillRect(rx + p.w - 2, ry, 2, p.h);
+
+      // 6. Architectural Features for Ruined, Vertical, and Parapet Platforms
+      if (p.isVerticalStructure) {
+        // Vertical Buttress Capital & Side Quoins
+        if (props.pillarCapital) {
+          this.ctx.drawImage(props.pillarCapital, 0, 0, 64, 64, rx - 6, ry - 12, p.w + 12, 16);
+        } else {
+          this.ctx.fillStyle = style.hi;
+          this.ctx.fillRect(rx - 4, ry - 4, p.w + 8, 5);
+        }
+        // Vertical decorative stone blocks
+        this.ctx.fillStyle = style.hi;
+        for (let qy = ry + 24; qy < ry + p.h - 12; qy += 32) {
+          this.ctx.fillRect(rx, qy, 6, 2);
+          this.ctx.fillRect(rx + p.w - 6, qy + 16, 6, 2);
+        }
+      } else if (p.isPillarRemnant) {
+        // Ruined Pillar Capital Platform
+        if (props.pillarCapital) {
+          this.ctx.drawImage(props.pillarCapital, 0, 0, 64, 64, rx - 4, ry - 8, p.w + 8, 14);
+        }
+        this.ctx.fillStyle = style.hi;
+        this.ctx.fillRect(rx + 8, ry + 4, p.w - 16, 2);
+      } else if (p.isParapet) {
+        // Crenels on top of fortress battlements
+        this.ctx.fillStyle = style.corbel;
+        const crenelW = 20;
+        const crenelGap = 16;
+        for (let cx = rx + 6; cx < rx + p.w - 20; cx += crenelW + crenelGap) {
+          this.ctx.fillRect(cx, ry - 8, crenelW, 8);
+          this.ctx.fillStyle = style.rim;
+          this.ctx.fillRect(cx, ry - 8, crenelW, 2);
+          this.ctx.fillStyle = style.corbel;
+        }
+      } else if (p.isRuined) {
+        // Jagged stone crack / fracture on outer edge of ruined lintel
+        this.ctx.fillStyle = style.dark;
+        this.ctx.beginPath();
+        this.ctx.moveTo(rx, ry + p.h);
+        this.ctx.lineTo(rx + 8, ry + p.h - 8);
+        this.ctx.lineTo(rx + 14, ry + p.h);
+        this.ctx.closePath();
+        this.ctx.fill();
+        this.ctx.beginPath();
+        this.ctx.moveTo(rx + p.w - 14, ry + p.h);
+        this.ctx.lineTo(rx + p.w - 6, ry + p.h - 7);
+        this.ctx.lineTo(rx + p.w, ry + p.h);
+        this.ctx.closePath();
+        this.ctx.fill();
+      }
     }
   }
 
@@ -3802,7 +3864,17 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     const theme = this.level ? this.level.lavaTheme : null;
     const levelId = this.level ? this.level.id : '';
 
-    if (theme === 'spectral' || levelId === 'tower1' || levelId === 'tower') {
+    // Floor 1: El Foso Abisal (Porous Volcanic Basalt & Flaming Molten Orange Lava)
+    if (theme === 'infernal' || levelId === 'tower1' || levelId === 'tower') {
+      return {
+        topColor: '#ff6200',      // Brilliant blazing molten orange
+        midColor: '#ff2200',      // Intense burning flame red
+        bottomColor: '#7a0000',   // Deep volcanic magma foundation
+        waveColor: '#ffe600',     // Bright solar crest flares
+        glowColor: 'rgba(255, 98, 0, 0.65)',
+        bubbleColor: '#ffdd55'
+      };
+    } else if (theme === 'spectral') {
       return {
         topColor: '#00f5d4',
         midColor: '#0077b6',
@@ -3833,20 +3905,48 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
     // Default / Infernal Hellfire
     return {
-      topColor: '#ff4500',
+      topColor: '#ff6200',
       midColor: '#ff1a00',
       bottomColor: '#660000',
       waveColor: '#ffcc00',
-      glowColor: 'rgba(255, 69, 0, 0.45)',
+      glowColor: 'rgba(255, 98, 0, 0.55)',
       bubbleColor: '#ffe066'
     };
   }
 
   drawLava(lavaY, camX, camY) {
     const ry = Math.round(lavaY - camY);
-    if (ry > this.vHeight + 50) return;
-
     const palette = this.getLavaPalette();
+
+    // When lava is below the screen, show a bottom screen proximity threat indicator
+    if (ry > this.vHeight) {
+      const distancePx = ry - this.vHeight;
+      if (distancePx < 1800 && this.level.risingLava && !this.level.isCombatScene) {
+        this.ctx.save();
+        const distM = Math.max(1, Math.round(distancePx / 32));
+        const pulse = 0.55 + Math.sin(Date.now() * 0.008) * 0.35;
+        this.ctx.globalAlpha = Math.min(0.9, pulse);
+
+        // Warning bottom gradient strip
+        const barH = 26;
+        const grad = this.ctx.createLinearGradient(0, this.vHeight - barH, 0, this.vHeight);
+        grad.addColorStop(0, 'rgba(0,0,0,0)');
+        grad.addColorStop(1, palette.glowColor);
+        this.ctx.fillStyle = grad;
+        this.ctx.fillRect(0, this.vHeight - barH, this.vWidth, barH);
+
+        // Warning badge text
+        this.ctx.font = 'bold 12px MedievalSharp, sans-serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillStyle = palette.waveColor;
+        this.ctx.shadowColor = palette.topColor;
+        this.ctx.shadowBlur = 8;
+        this.ctx.fillText(`▲ LAVA ASCENDIENDO: ${distM}m ▲`, this.vWidth / 2, this.vHeight - 8);
+        this.ctx.restore();
+      }
+      return;
+    }
+
     this.ctx.save();
 
     // Ambient glow above the lava surface
