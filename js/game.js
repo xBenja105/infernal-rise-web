@@ -2523,6 +2523,14 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       frostGrad.addColorStop(1, 'rgba(56, 189, 248, 0.24)');
       this.ctx.fillStyle = frostGrad;
       this.ctx.fillRect(0, this.vHeight - 160, this.vWidth, 160);
+    } else if (biomeKey === 'rocky_caverns') {
+      // Warm amber/sunlight filtering down from the ceiling fissures
+      const cavernSunGrad = this.ctx.createLinearGradient(0, 0, 0, 220);
+      cavernSunGrad.addColorStop(0, 'rgba(254, 240, 138, 0.22)');
+      cavernSunGrad.addColorStop(0.5, 'rgba(251, 191, 36, 0.10)');
+      cavernSunGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      this.ctx.fillStyle = cavernSunGrad;
+      this.ctx.fillRect(0, 0, this.vWidth, 220);
     } else if (surfaceBlend > 0) {
       const dawnGlow = this.ctx.createLinearGradient(0, this.vHeight - 190, 0, this.vHeight);
       dawnGlow.addColorStop(0, 'rgba(251, 191, 36, 0)');
@@ -2538,6 +2546,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       if (surfaceBlend >= 0.85 || biomeKey === 'surface_threshold') bg = biomes.surface;
       else if (biomeKey === 'sunken_necropolis') bg = biomes.sunken;
       else if (biomeKey === 'frozen_peaks') bg = biomes.frozen;
+      else if (biomeKey === 'rocky_caverns') bg = biomes.rocky_caverns;
       else if (biomeKey === 'prologue') bg = biomes.prologue;
       else bg = biomes.abyss;
     }
@@ -2645,7 +2654,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     const levelId = this.level ? this.level.id : '';
     const isSpectral = (biomeKey === 'sunken_necropolis' || levelId === 'tower2' || levelId === 'boss_flegias');
     const isGlacial = (biomeKey === 'frozen_peaks' || levelId === 'tower4' || levelId === 'boss_malacoda');
-    const isCelestial = (biomeKey === 'surface_threshold' || levelId === 'tower5' || levelId === 'boss_glacior' || levelId === 'tower6' || levelId === 'victory');
+    const isCelestial = (biomeKey === 'surface_threshold' || biomeKey === 'rocky_caverns' || levelId === 'tower3' || levelId === 'boss_minotaur' || levelId === 'tower5' || levelId === 'boss_glacior' || levelId === 'tower6' || levelId === 'victory');
 
     // 1. Dynamic Spectral Fog Waves in Level 2 / Abismo
     if (isSpectral) {
@@ -2875,7 +2884,9 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       crimson_iron: props.crimsonIronTile || props.stoneTile,
       glacial_ice: props.glacialIceTile || props.iceTile,
       gold_vault: props.goldVaultTile || props.goldTile,
-      terrenal_sanctuary: props.terrenalSanctuaryTile || props.runicTile
+      terrenal_sanctuary: props.terrenalSanctuaryTile || props.runicTile,
+      cavern_stone: props.cavernStoneTile || props.stoneTile,
+      rocky_ruins: props.rockyRuinsTile || props.stoneTile
     };
 
     const styleMap = {
@@ -2890,7 +2901,10 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       basalt_abyss: { rim: '#ff4400', hi: '#fde047', corbel: '#220a16', dark: '#0a0206' },
       // FLOOR 2: Las Catacumbas Hundidas (Decayed Emerald Crypt Masonry & Moss)
       catacomb_stone: { rim: '#40916c', hi: '#74c69d', corbel: '#0f241c', dark: '#06120e' },
-      // FLOOR 3: Las Murallas Carmesí (Heavy Crimson War Steel & Iron Rivets)
+      // FLOOR 3: Las Cavernas Rocosas (Craggy Subterranean Slate with Daylight Rim)
+      cavern_stone: { rim: '#64748b', hi: '#f8fafc', corbel: '#1e293b', dark: '#0f172a' },
+      rocky_ruins: { rim: '#78716c', hi: '#fef08a', corbel: '#292524', dark: '#1c1917' },
+      // FLOOR 3 (Legacy): Las Murallas Carmesí (Heavy Crimson War Steel & Iron Rivets)
       crimson_iron: { rim: '#dc2626', hi: '#fca5a5', corbel: '#380a10', dark: '#160205' },
       // FLOOR 4: Las Agujas Glaciares (Pure Electric-Cyan Permafrost & Snow)
       glacial_ice: { rim: '#00b4d8', hi: '#ffffff', corbel: '#062842', dark: '#02101c' },
@@ -3075,7 +3089,23 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       this.ctx.fillRect(x + width - 26, y + 11, 3, 2);
       this.ctx.fillStyle = '#dc2626';
       this.ctx.fillRect(x + 19, y + 13, 1, 3);
-      this.ctx.fillRect(x + width - 25, y + 15, 1, 3);
+    } else if (type === 'cavern_stone' || type === 'rocky_ruins') {
+      // Natural jagged cavern stalactites and clinging surface roots
+      this.ctx.fillStyle = '#0f172a';
+      this.ctx.fillRect(x + 14, y, 4, 15);
+      this.ctx.fillRect(x + 24, y, 2, 8);
+      this.ctx.fillRect(x + width - 28, y, 4, 17);
+      this.ctx.fillRect(x + width - 16, y, 2, 9);
+      this.ctx.fillStyle = '#334155';
+      this.ctx.fillRect(x + 15, y, 2, 12);
+      this.ctx.fillRect(x + width - 27, y, 2, 14);
+      this.ctx.fillStyle = '#94a3b8';
+      this.ctx.fillRect(x + 15, y + 10, 1, 3);
+      this.ctx.fillRect(x + width - 27, y + 12, 1, 3);
+      // Small root tendril reaching from surface
+      this.ctx.fillStyle = '#65a30d';
+      this.ctx.fillRect(x + 20, y, 1, 10);
+      this.ctx.fillRect(x + width - 20, y, 1, 11);
     } else if (type === 'glacial_ice' || type === 'ice') {
       // Sharp crystalline icicles with frost gleams
       this.ctx.fillStyle = '#0077b6';

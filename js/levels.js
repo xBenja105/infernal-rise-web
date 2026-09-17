@@ -16,16 +16,16 @@ class LevelManager {
       this.currentLevel = this.createPrologueLevel();
     } else if (levelId === 'tower' || levelId === 'tower1') {
       this.currentLevel = this.createTower1Level();
-    } else if (levelId === 'boss1' || levelId === 'boss_minotaur' || levelId === 'boss_minos') {
-      this.currentLevel = this.createBossMinotaurLevel();
+    } else if (levelId === 'boss1' || levelId === 'boss_demon_slime' || levelId === 'boss_azgalor') {
+      this.currentLevel = this.createBossDemonSlimeLevel();
     } else if (levelId === 'tower2') {
       this.currentLevel = this.createTower2Level();
     } else if (levelId === 'boss2' || levelId === 'boss_frost_guardian' || levelId === 'boss_flegias' || levelId === 'boss_glacior') {
       this.currentLevel = this.createBossFrostGuardianLevel();
     } else if (levelId === 'tower3') {
       this.currentLevel = this.createTower3Level();
-    } else if (levelId === 'boss3' || levelId === 'boss_demon_slime' || levelId === 'boss_azgalor' || levelId === 'boss_malacoda') {
-      this.currentLevel = this.createBossDemonSlimeLevel();
+    } else if (levelId === 'boss3' || levelId === 'boss_minotaur' || levelId === 'boss_minos') {
+      this.currentLevel = this.createBossMinotaurLevel();
     } else if (levelId === 'infernal') {
       this.currentLevel = this.createInfernalModeLevel();
     } else {
@@ -585,17 +585,17 @@ class LevelManager {
         { name: 'Cimientos de Basalto', minY: 300, maxY: 1450, platformType: 'basalt_abyss', mageChance: 0.35, enemyHp: 55, enemySkin: 'abyss', batTypes: ['abyss'] }
       ],
       wind: { force: 0.65, activeMinY: 1500, activeMaxY: 2500 },
-      portalTarget: 'boss_minotaur',
-      portalLabel: 'Cámara de Combate — El Minotauro'
+      portalTarget: 'boss_demon_slime',
+      portalLabel: 'Cámara del Abismo — Demonio de Fuego'
     });
   }
 
-  // ─── 2. BOSS 1: MINOTAURO (TITÁN ASTADO DE LAS FOSAS) ───
-  createBossMinotaurLevel() {
+  // ─── 2. BOSS 1: DEMONIO DE FUEGO (SEÑOR DEL FOSO ABISAL) ───
+  createBossDemonSlimeLevel() {
     return {
-      id: 'boss_minotaur',
-      name: 'Cámara de Combate — Minotauro, Titán Astado',
-      danteCircle: 'Piso 1: Cámara de Combate — Minotauro',
+      id: 'boss_demon_slime',
+      name: 'Cámara del Abismo — Demonio de Fuego',
+      danteCircle: 'Piso 1: Cámara del Abismo — Demonio de Fuego',
       biome: 'abyss',
       width: 1200,
       height: 540,
@@ -603,7 +603,8 @@ class LevelManager {
       isCombatScene: true,
       musicTrack: 'boss',
       ambientRain: false,
-      hasLava: false,
+      hasLava: true,
+      lavaY: 515,
       platforms: [
         { x: 80, y: 450, w: 1040, h: 42, type: 'basalt_abyss' },
         { x: 120, y: 350, w: 180, h: 22, type: 'basalt_abyss' },
@@ -616,19 +617,20 @@ class LevelManager {
       crumblingPlatforms: [],
       spikes: [],
       torches: [
-        { x: 180, y: 420, blue: false },
-        { x: 1020, y: 420, blue: false },
-        { x: 600, y: 270, blue: false }
+        { x: 180, y: 420, color: 'orange' },
+        { x: 1020, y: 420, color: 'orange' },
+        { x: 600, y: 270, color: 'orange' }
       ],
       boss: {
-        type: 'minotaur',
-        name: 'Minotauro, Titán Astado',
+        type: 'demon_slime',
+        name: 'Demonio de Fuego, Azote del Foso',
         x: 860,
-        y: 366,
-        maxHp: 1100,
-        hp: 1100,
+        y: 364,
+        maxHp: 1200,
+        hp: 1200,
         armor: 0.15,
-        dialogueKey: 'minotaur_intro',
+        touchDamage: 38,
+        dialogueKey: 'demon_slime_intro',
         nextLevel: 'tower2'
       },
       enemies: [],
@@ -639,8 +641,8 @@ class LevelManager {
       chests: []
     };
   }
-  createBossMinosLevel() {
-    return this.createBossMinotaurLevel();
+  createBossAzgalorLevel() {
+    return this.createBossDemonSlimeLevel();
   }
 
   // ─── 3. TOWER 2: PISO 2 — LAS AGUJAS GLACIARES (EL GRAN FRÍO) ───
@@ -723,70 +725,71 @@ class LevelManager {
     return this.createBossFrostGuardianLevel();
   }
 
-  // ─── 5. TOWER 3: PISO 3 — EL NÚCLEO DEL AVERNO (ALMENAS CARMESÍ) ───
+  // ─── 5. TOWER 3: PISO 3 — LAS CAVERNAS ROCOSAS (RUINAS DEL UMBRAL TERRENAL) ───
   createTower3Level() {
     return this.generateProceduralTower({
       id: 'tower3',
-      name: 'Piso 3: El Núcleo del Averno — Almenas Carmesí',
-      danteCircle: 'Piso 3: Núcleo del Averno — Fortaleza del Fuego',
-      biome: 'abyss',
+      name: 'Piso 3: Las Cavernas Rocosas — Ruinas del Umbral Terrenal',
+      danteCircle: 'Piso 3: Grutas de Piedra y Ruinas del Alba',
+      biome: 'rocky_caverns',
       width: 960,
       height: 4000,
       musicTrack: 'tower',
       ambientRain: false,
-      hasLava: true,
-      basePlatformType: 'crimson_iron',
+      hasLava: false,
+      risingLava: false,
+      basePlatformType: 'cavern_stone',
       tiers: [
-        { name: 'Bastión de Hierro', minY: 2600, maxY: 4000, platformType: 'crimson_iron', mageChance: 0.35, enemyHp: 75, enemySkin: 'blood', batTypes: ['gargoyle', 'blood'] },
-        { name: 'Torreón Carmesí', minY: 1400, maxY: 2600, platformType: 'crimson_iron', mageChance: 0.45, enemyHp: 85, enemySkin: 'blood', batTypes: ['blood', 'gargoyle'] },
-        { name: 'Almenas de Fuego', minY: 300, maxY: 1400, platformType: 'crimson_iron', mageChance: 0.55, enemyHp: 95, enemySkin: 'blood', batTypes: ['gargoyle', 'blood'] }
+        { name: 'Fosas Rocosas y Cimientos Quebrados', minY: 2600, maxY: 4000, platformType: 'cavern_stone', mageChance: 0.35, enemyHp: 65, enemySkin: 'abyss', batTypes: ['gargoyle', 'toxic'] },
+        { name: 'Galerías de Escombros y Baluartes', minY: 1400, maxY: 2600, platformType: 'cavern_stone', mageChance: 0.45, enemyHp: 75, enemySkin: 'specter', batTypes: ['gargoyle', 'blood'] },
+        { name: 'Bóvedas del Alba y Umbral Solar', minY: 300, maxY: 1400, platformType: 'cavern_stone', mageChance: 0.55, enemyHp: 85, enemySkin: 'ascended', batTypes: ['gargoyle', 'celestial'] }
       ],
-      wind: { force: 0.5, activeMinY: 800, activeMaxY: 2400 },
-      portalTarget: 'boss_demon_slime',
-      portalLabel: 'Cámara del Averno — Demonio de Fuego'
+      wind: { force: 0.45, activeMinY: 800, activeMaxY: 2400 },
+      portalTarget: 'boss_minotaur',
+      portalLabel: 'Cámara Ancestral — El Minotauro, Titán de las Cavernas'
     });
   }
 
-  // ─── 6. BOSS 3: DEMONIO DE FUEGO (SEÑOR DEL AVERNO - FINAL BOSS) ───
-  createBossDemonSlimeLevel() {
+  // ─── 6. BOSS 3: MINOTAURO (TITÁN DE LAS CAVERNAS - FINAL BOSS) ───
+  createBossMinotaurLevel() {
     return {
-      id: 'boss_demon_slime',
-      name: 'Cámara del Averno — Demonio de Fuego',
-      danteCircle: 'Piso 3: Cámara del Averno — Demonio de Fuego',
-      biome: 'abyss',
+      id: 'boss_minotaur',
+      name: 'Cámara Ancestral — Minotauro, Titán de las Cavernas',
+      danteCircle: 'Piso 3: Cámara Ancestral — Minotauro',
+      biome: 'rocky_caverns',
       width: 1200,
       height: 540,
       spawn: { x: 220, y: 412 },
       isCombatScene: true,
       musicTrack: 'boss',
       ambientRain: false,
-      hasLava: true,
-      lavaY: 515,
+      hasLava: false,
       platforms: [
-        { x: 80, y: 450, w: 1040, h: 42, type: 'crimson_iron' },
-        { x: 100, y: 360, w: 180, h: 22, type: 'crimson_iron' },
-        { x: 920, y: 360, w: 180, h: 22, type: 'crimson_iron' },
-        { x: 380, y: 310, w: 200, h: 22, type: 'crimson_iron' },
-        { x: 620, y: 310, w: 200, h: 22, type: 'crimson_iron' }
+        { x: 80, y: 450, w: 1040, h: 42, type: 'cavern_stone' },
+        { x: 120, y: 350, w: 180, h: 22, type: 'cavern_stone' },
+        { x: 900, y: 350, w: 180, h: 22, type: 'cavern_stone' },
+        { x: 380, y: 300, w: 200, h: 22, type: 'cavern_stone' },
+        { x: 620, y: 300, w: 200, h: 22, type: 'cavern_stone' }
       ],
       ladders: [],
       movingPlatforms: [],
       crumblingPlatforms: [],
       spikes: [],
       torches: [
-        { x: 180, y: 420, blue: false },
-        { x: 1020, y: 420, blue: false },
-        { x: 600, y: 280, blue: false }
+        { x: 180, y: 420, color: 'orange' },
+        { x: 1020, y: 420, color: 'orange' },
+        { x: 600, y: 270, color: 'orange' }
       ],
       boss: {
-        type: 'demon_slime',
-        name: 'Demonio de Fuego, Señor del Averno',
+        type: 'minotaur',
+        name: 'Minotauro, Titán de las Cavernas',
         x: 860,
-        y: 364,
-        maxHp: 2200,
-        hp: 2200,
+        y: 366,
+        maxHp: 2400,
+        hp: 2400,
         armor: 0.28,
-        dialogueKey: 'demon_slime_intro',
+        touchDamage: 60,
+        dialogueKey: 'minotaur_intro',
         nextLevel: 'victory'
       },
       enemies: [],
@@ -797,11 +800,8 @@ class LevelManager {
       chests: []
     };
   }
-  createBossAzgalorLevel() {
-    return this.createBossDemonSlimeLevel();
-  }
-  createBossMalacodaLevel() {
-    return this.createBossDemonSlimeLevel();
+  createBossMinosLevel() {
+    return this.createBossMinotaurLevel();
   }
 
   // ─── 7. TOWER 4: PISO 4 — LAS AGUJAS GLACIARES (EL GRAN FRÍO) ───

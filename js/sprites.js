@@ -1768,6 +1768,35 @@ class SpriteManager {
     f6p.fillStyle = '#ffffff';
     f6p.fillRect(0, 0, 32, 1);
     this.sprites.props.terrenalSanctuaryTile = f6c;
+
+    // Floor 3 Tile: Cavern Stone / Rocky Ruins (Craggy Subterranean Slate with Ancient Masonry & Daylight Highlight)
+    const { canvas: f3c_rock, ctx: f3p_rock } = this.createCanvas(32, 32);
+    f3p_rock.fillStyle = '#0f172a';
+    f3p_rock.fillRect(0, 0, 32, 32);
+    f3p_rock.fillStyle = '#1e293b';
+    f3p_rock.fillRect(2, 2, 28, 28);
+    // Craggy rock blocks with stone fissures
+    f3p_rock.fillStyle = '#334155';
+    f3p_rock.fillRect(3, 3, 12, 11);
+    f3p_rock.fillRect(17, 3, 12, 11);
+    f3p_rock.fillRect(4, 16, 24, 12);
+    // Rough mineral grain & fissures
+    f3p_rock.fillStyle = '#475569';
+    f3p_rock.fillRect(5, 5, 8, 7);
+    f3p_rock.fillRect(19, 5, 8, 7);
+    f3p_rock.fillRect(6, 18, 20, 8);
+    // Stone highlights & surface moss/lichen specks
+    f3p_rock.fillStyle = '#94a3b8';
+    f3p_rock.fillRect(4, 4, 6, 1);
+    f3p_rock.fillRect(18, 4, 6, 1);
+    f3p_rock.fillRect(5, 17, 10, 1);
+    // Top Rugged Cavern Rock Rim with subtle daylight warmth
+    f3p_rock.fillStyle = '#64748b';
+    f3p_rock.fillRect(0, 0, 32, 3);
+    f3p_rock.fillStyle = '#e2e8f0';
+    f3p_rock.fillRect(0, 0, 32, 1);
+    this.sprites.props.cavernStoneTile = f3c_rock;
+    this.sprites.props.rockyRuinsTile = f3c_rock;
   }
 
   // ─── ANIMATED FIRE FX (DESKTOP FIRE_FX PACK: 5 BIOME COLORS) ───
@@ -1838,7 +1867,14 @@ class SpriteManager {
       const glac = slice(b, 1184, 864, 64, 64);
       if (glac) this.sprites.props.glacialIceTile = glac;
 
-      // Floor 3: El Núcleo del Averno (Dark crimson war-steel / iron fortress masonry)
+      // Floor 3: Las Cavernas Rocosas (Subterranean craggy rock and ruined castle masonry)
+      const cav = slice(b, 1184, 96, 64, 64);
+      if (cav) {
+        this.sprites.props.cavernStoneTile = cav;
+        this.sprites.props.rockyRuinsTile = cav;
+      }
+
+      // Legacy Floor 3: El Núcleo del Averno (Dark crimson war-steel / iron fortress masonry)
       const crim = slice(b, 1080, 1056, 64, 64);
       if (crim) this.sprites.props.crimsonIronTile = crim;
 
@@ -1980,6 +2016,7 @@ class SpriteManager {
       abyss: this.generateAbyssBg(),
       sunken: this.generateSunkenBg(),
       frozen: this.generateFrozenBg(),
+      rocky_caverns: this.generateRockyCavernsBg(),
       surface: this.generateSurfaceBg(),
       prologue: this.generatePrologueBg()
     };
@@ -2496,7 +2533,174 @@ class SpriteManager {
     return { skySpires: sc, magmaPeaks: mc, towerArch: tc };
   }
 
-  // 5. BIOME: PROLOGUE (Santuario de los Caídos — Catedral Gótica y Forja de Almas)
+  // 5. BIOME: ROCKY CAVERNS & RUINS (Torre 3 & Boss 3 — Grutas Subterráneas, Ruinas del Alba y Grietas Solares)
+  generateRockyCavernsBg() {
+    // Layer 1: High Craggy Cavern Vaults Opening to Daybreak Skies (960 x 540, Seamless X)
+    const { canvas: sc, ctx: sctx } = this.createCanvas(960, 540);
+
+    // Subterranean dark slate base
+    sctx.fillStyle = '#090d16';
+    sctx.fillRect(0, 0, 960, 540);
+
+    // Cavern sky aperture (Great vertical fissure in the ceiling looking out at the morning sky)
+    const skyGrad = sctx.createLinearGradient(0, 40, 0, 360);
+    skyGrad.addColorStop(0, '#38bdf8');
+    skyGrad.addColorStop(0.35, '#bae6fd');
+    skyGrad.addColorStop(0.65, '#fef08a');
+    skyGrad.addColorStop(1, '#f59e0b');
+    sctx.fillStyle = skyGrad;
+    sctx.beginPath();
+    sctx.moveTo(340, 0);
+    sctx.bezierCurveTo(390, 80, 370, 220, 420, 340);
+    sctx.lineTo(540, 340);
+    sctx.bezierCurveTo(590, 220, 570, 80, 620, 0);
+    sctx.closePath();
+    sctx.fill();
+
+    // Radiant morning sun shining right through the aperture
+    const sunX = 480, sunY = 160, sunR = 48;
+    const sunGlow = sctx.createRadialGradient(sunX, sunY, sunR - 10, sunX, sunY, sunR + 80);
+    sunGlow.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+    sunGlow.addColorStop(0.3, 'rgba(254, 240, 138, 0.7)');
+    sunGlow.addColorStop(0.7, 'rgba(251, 191, 36, 0.25)');
+    sunGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    sctx.fillStyle = sunGlow;
+    sctx.beginPath();
+    sctx.arc(sunX, sunY, sunR + 80, 0, Math.PI * 2);
+    sctx.fill();
+
+    // Crepuscular Rays (God rays) radiating down into the cavern
+    sctx.save();
+    sctx.fillStyle = 'rgba(254, 240, 138, 0.16)';
+    for (let angle = -0.7; angle <= 0.7; angle += 0.22) {
+      sctx.beginPath();
+      sctx.moveTo(sunX, sunY);
+      sctx.lineTo(sunX + Math.sin(angle - 0.07) * 440, sunY + Math.cos(angle - 0.07) * 440);
+      sctx.lineTo(sunX + Math.sin(angle + 0.07) * 440, sunY + Math.cos(angle + 0.07) * 440);
+      sctx.closePath();
+      sctx.fill();
+    }
+    sctx.restore();
+
+    // Distant mountain ridge visible through the aperture
+    sctx.fillStyle = '#1e293b';
+    sctx.beginPath();
+    sctx.moveTo(380, 340);
+    sctx.lineTo(440, 260);
+    sctx.lineTo(480, 290);
+    sctx.lineTo(520, 240);
+    sctx.lineTo(560, 340);
+    sctx.closePath();
+    sctx.fill();
+
+    // Craggy Cavern Rock Roof & Stalactites around aperture (Seamless X: ends at 380)
+    sctx.fillStyle = '#0f172a';
+    sctx.beginPath();
+    sctx.moveTo(0, 540);
+    const caveCeiling = [
+      [0, 380], [70, 300], [150, 390], [230, 270], [320, 370],
+      [400, 340], [480, 350], [560, 340], [640, 370], [730, 270],
+      [810, 390], [890, 300], [960, 380]
+    ];
+    sctx.lineTo(caveCeiling[0][0], caveCeiling[0][1]);
+    for (let p = 1; p < caveCeiling.length; p++) sctx.lineTo(caveCeiling[p][0], caveCeiling[p][1]);
+    sctx.lineTo(960, 540);
+    sctx.closePath();
+    sctx.fill();
+
+    // Hanging stalactites from the roof
+    sctx.fillStyle = '#1e293b';
+    const stalactites = [
+      { x: 110, y: 0, w: 24, h: 90 }, { x: 250, y: 0, w: 20, h: 70 },
+      { x: 710, y: 0, w: 22, h: 75 }, { x: 850, y: 0, w: 26, h: 95 }
+    ];
+    for (const st of stalactites) {
+      sctx.beginPath();
+      sctx.moveTo(st.x - st.w / 2, 0);
+      sctx.lineTo(st.x + st.w / 2, 0);
+      sctx.lineTo(st.x, st.h);
+      sctx.closePath();
+      sctx.fill();
+    }
+
+    // Layer 2: Midground Crags & Ruined Castle Battlements (960 x 540)
+    const { canvas: mc, ctx: mctx } = this.createCanvas(960, 540);
+    mctx.fillStyle = '#1e293b';
+    mctx.beginPath();
+    mctx.moveTo(0, 540);
+    const crags = [
+      [0, 400], [80, 320], [170, 380], [260, 300], [350, 390],
+      [440, 310], [530, 400], [620, 310], [710, 385], [800, 315],
+      [890, 375], [960, 400]
+    ];
+    mctx.lineTo(crags[0][0], crags[0][1]);
+    for (let p = 1; p < crags.length; p++) mctx.lineTo(crags[p][0], crags[p][1]);
+    mctx.lineTo(960, 540);
+    mctx.closePath();
+    mctx.fill();
+
+    // Ruined fortress towers and broken columns protruding from the rocks
+    const ruins = [
+      { x: 80, y: 320, w: 30, h: 50 }, { x: 260, y: 300, w: 34, h: 54 },
+      { x: 620, y: 310, w: 32, h: 52 }, { x: 800, y: 315, w: 30, h: 48 }
+    ];
+    for (const rw of ruins) {
+      mctx.fillStyle = '#0f172a';
+      mctx.fillRect(rw.x - rw.w / 2, rw.y - rw.h, rw.w, rw.h);
+      // Broken jagged parapet
+      mctx.fillRect(rw.x - rw.w / 2 - 2, rw.y - rw.h - 6, 8, 6);
+      mctx.fillRect(rw.x + rw.w / 2 - 6, rw.y - rw.h - 4, 8, 4);
+      // Wild moss & ivy creeping up the ruined stone
+      mctx.fillStyle = '#15803d';
+      mctx.fillRect(rw.x - rw.w / 2 + 2, rw.y - 18, 5, 14);
+      mctx.fillRect(rw.x + rw.w / 2 - 7, rw.y - 24, 6, 18);
+      // Warm daylight highlight on the stone corner
+      mctx.fillStyle = '#fde68a';
+      mctx.fillRect(rw.x - rw.w / 2, rw.y - rw.h, 2, rw.h);
+    }
+
+    // Layer 3: Grand Carved Stone Pillars & Ancient Arches (480 x 540)
+    const { canvas: tc, ctx: tctx } = this.createCanvas(480, 540);
+    tctx.fillStyle = '#0f172a';
+    tctx.fillRect(0, 0, 46, 540); tctx.fillRect(434, 0, 46, 540);
+    tctx.fillStyle = '#1e293b';
+    tctx.fillRect(10, 0, 26, 540); tctx.fillRect(444, 0, 26, 540);
+    tctx.fillStyle = '#334155';
+    tctx.fillRect(18, 0, 10, 540); tctx.fillRect(452, 0, 10, 540);
+
+    // Subtle daylight highlight on column edges facing center
+    tctx.fillStyle = '#fde68a';
+    tctx.fillRect(44, 0, 2, 540); tctx.fillRect(434, 0, 2, 540);
+
+    // Archway
+    tctx.fillStyle = '#0f172a';
+    tctx.beginPath();
+    tctx.moveTo(46, 210); tctx.quadraticCurveTo(120, 85, 240, 65); tctx.lineTo(240, 25); tctx.quadraticCurveTo(100, 45, 46, 170);
+    tctx.closePath(); tctx.fill();
+    tctx.beginPath();
+    tctx.moveTo(434, 210); tctx.quadraticCurveTo(360, 85, 240, 65); tctx.lineTo(240, 25); tctx.quadraticCurveTo(380, 45, 434, 170);
+    tctx.closePath(); tctx.fill();
+    tctx.strokeStyle = '#e2e8f0'; tctx.lineWidth = 1.5;
+    tctx.beginPath();
+    tctx.moveTo(46, 170); tctx.quadraticCurveTo(100, 45, 240, 25); tctx.quadraticCurveTo(380, 45, 434, 170);
+    tctx.stroke();
+
+    // Climbing ivy on the arch
+    tctx.fillStyle = '#15803d';
+    tctx.fillRect(115, 90, 8, 32); tctx.fillRect(119, 120, 6, 24);
+    tctx.fillRect(345, 95, 8, 30); tctx.fillRect(349, 125, 5, 22);
+    tctx.fillStyle = '#4ade80';
+    tctx.fillRect(117, 100, 3, 4); tctx.fillRect(347, 110, 3, 4);
+
+    // Carved rock cornice
+    tctx.fillStyle = '#0f172a'; tctx.fillRect(46, 360, 388, 22);
+    tctx.fillStyle = '#1e293b'; tctx.fillRect(46, 364, 388, 6);
+    tctx.fillStyle = '#cbd5e1'; tctx.fillRect(215, 364, 50, 4); // Weathered limestone keystone
+
+    return { skySpires: sc, magmaPeaks: mc, towerArch: tc };
+  }
+
+  // 6. BIOME: PROLOGUE (Santuario de los Caídos — Catedral Gótica y Forja de Almas)
   generatePrologueBg() {
     // Single unified 960x540 master canvas for zero layer drift, perfect alignment, and crisp aesthetics
     const { canvas: ch, ctx: cctx } = this.createCanvas(960, 540);

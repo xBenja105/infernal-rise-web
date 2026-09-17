@@ -53,21 +53,21 @@ class DialogueManager {
         }
       ],
 
-      minotaur_intro: [
+      demon_slime_intro: [
         {
           speaker: 'Narrador',
           portrait: 'Kael',
-          text: 'En el umbral superior del Foso Abisal, los muros de basalto retumban con la pisada de una bestia milenaria...'
+          text: 'En las profundidades incandescentes del Foso Abisal, los mares de magma hierven anunciando la llegada del Demonio de Fuego...'
         },
         {
-          speaker: 'Minotauro',
-          portrait: 'Minotauro',
-          text: '¡MUUUUGH! ¡Intruso de carne frágil! ¡Nadie escapa vivo de mis dominios de piedra!'
+          speaker: 'Demonio de Fuego',
+          portrait: 'DemonSlime',
+          text: '¡JAJAJAJA! ¿Una pobre alma intentando escapar del foso? ¡Yo soy el Señor de las Fosas, y tus cenizas alimentarán este fuego eterno!'
         },
         {
           speaker: 'Kael',
           portrait: 'Kael',
-          text: 'Tu hacha y tus cuernos no detendrán mi ascenso. ¡Aparta de mi camino o caerás aquí!'
+          text: '¡No me detendrás en el primer peldaño! ¡Aparta de mi camino hacia las alturas!'
         }
       ],
 
@@ -89,21 +89,21 @@ class DialogueManager {
         }
       ],
 
-      demon_slime_intro: [
+      minotaur_intro: [
         {
           speaker: 'Narrador',
           portrait: 'Kael',
-          text: 'En el corazón ardiente del Piso 3, los mares de magma hierven anunciando la llegada del Demonio de Fuego...'
+          text: 'En las cavernas rocosas del Piso 3, donde la luz del amanecer terrenal se filtra entre las ruinas de piedra, retumba la pisada colosal del Minotauro...'
         },
         {
-          speaker: 'Demonio de Fuego',
-          portrait: 'DemonSlime',
-          text: '¡JAJAJAJA! ¡Has llegado al último escalón de tu vana esperanza, miserable! ¡Yo soy el Señor del Averno, y de aquí nadie cruza al Mundo de los Vivos!'
+          speaker: 'Minotauro',
+          portrait: 'Minotauro',
+          text: '¡MUUUUGH! ¡Has escalado desde las fosas, pero el laberinto de piedra es mi templo! ¡Nadie cruza hacia la superficie con vida!'
         },
         {
           speaker: 'Kael',
           portrait: 'Kael',
-          text: '¡Eres el último verdugo que me separa del sol! ¡Hoy pagarás por todos los caídos!'
+          text: '¡Puedo ver la luz del sol entre las grietas de esta cueva! ¡Eres el último titán que me separa del Mundo de los Vivos!'
         }
       ],
 
