@@ -2814,82 +2814,13 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
     ctx.save();
 
-    // 1. Prologue Sanctuary has its own dedicated master architectural renderer (drawPrologueSanctuary)
-    if (this.level.id === 'prologue') {
+    // 1. Prologue Sanctuary and Boss Combat Arenas have dedicated clean backdrops rendered by drawParallaxBackgrounds / drawPrologueSanctuary
+    if (this.level.id === 'prologue' || this.level.isCombatScene) {
       ctx.restore();
       return;
     }
 
-    // 2. Boss Arena Gothic Background Architecture (Fully Grounded & Structural)
-    if (this.level.isCombatScene && props.gothicArch) {
-      const arenaW = this.level.width || 1200;
-      const floorY = 450;
-      const ceilingY = 52;
-
-      // A. Heavy Gothic Architrave Beam / Ceiling Cornice across the top
-      ctx.globalAlpha = 0.40;
-      ctx.fillStyle = '#0f0c16';
-      ctx.fillRect(Math.round(80 - camX), Math.round(ceilingY - camY - 14), arenaW - 160, 18);
-      ctx.fillStyle = '#2d2538';
-      ctx.fillRect(Math.round(80 - camX), Math.round(ceilingY - camY + 4), arenaW - 160, 4);
-
-      // B. Lateral Wall Buttresses / Pilasters from Ceiling to Floor
-      ctx.fillStyle = '#14101d';
-      ctx.fillRect(Math.round(80 - camX), Math.round(ceilingY - camY), 40, floorY - ceilingY);
-      ctx.fillRect(Math.round(arenaW - 120 - camX), Math.round(ceilingY - camY), 40, floorY - ceilingY);
-      ctx.fillStyle = '#32283e';
-      ctx.fillRect(Math.round(118 - camX), Math.round(ceilingY - camY), 4, floorY - ceilingY);
-      ctx.fillRect(Math.round(arenaW - 122 - camX), Math.round(ceilingY - camY), 4, floorY - ceilingY);
-
-      // C. Cathedral Column Shafts Grounded on Arena Floor (Supporting Arches)
-      const columnXPositions = [180, 320, 520, 680, 880, 1020];
-      for (const cx of columnXPositions) {
-        const rx = Math.round(cx - camX - 16);
-        const colTopY = Math.round(310 - camY);
-        const colH = Math.round(floorY - 310);
-        ctx.globalAlpha = 0.38;
-        if (props.standingPillar) {
-          ctx.drawImage(props.standingPillar, 0, 0, 48, 128, rx, colTopY, 32, colH);
-        } else {
-          ctx.fillStyle = '#171220';
-          ctx.fillRect(rx, colTopY, 32, colH);
-          ctx.fillStyle = '#342940';
-          ctx.fillRect(rx + 2, colTopY, 4, colH);
-        }
-      }
-
-      // D. Gothic Arches Resting Firmly Atop Column Shafts
-      ctx.globalAlpha = 0.36;
-      const bArchPositions = [250, 600, 950];
-      for (const bx of bArchPositions) {
-        const rx = Math.round(bx - camX - 80);
-        const ry = Math.round(170 - camY);
-        ctx.drawImage(props.gothicArch, 0, 0, 192, 192, rx, ry, 160, 160);
-        if (props.gargoyleFrieze) {
-          ctx.drawImage(props.gargoyleFrieze, 0, 0, 96, 64, rx + 80 - 28, ry - 14, 56, 26);
-        }
-      }
-
-      // E. Central Keystones & Wall Crests (Mounted onto Arch Centers, Never Floating in Void)
-      if (props.stoneCrest) {
-        ctx.globalAlpha = 0.55;
-        ctx.drawImage(props.stoneCrest, 0, 0, 48, 48, Math.round(600 - camX - 22), Math.round(155 - camY), 44, 44);
-      }
-
-      // F. Heavy Iron Chains Hanging Directly from the Ceiling Beam
-      if (props.hangingChains) {
-        ctx.globalAlpha = 0.45;
-        const chains = [200, 440, 760, 1000];
-        for (const cx of chains) {
-          ctx.drawImage(props.hangingChains, 0, 0, 16, 80, Math.round(cx - camX), Math.round(ceilingY + 8 - camY), 16, 80);
-        }
-      }
-
-      ctx.restore();
-      return;
-    }
-
-    // 3. Vertical Tower Levels: Cathedral Arches and Column Shafts
+    // 2. Vertical Tower Levels: Cathedral Arches and Grounded Column Shafts
     if (!props.gothicArch) {
       ctx.restore();
       return;
@@ -2920,9 +2851,6 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       if (props.pillarShaft) {
         ctx.drawImage(props.pillarShaft, 0, 0, 64, 96, archX - 22, ry + 36, 22, 160);
         ctx.drawImage(props.pillarShaft, 0, 0, 64, 96, archX + archW, ry + 36, 22, 160);
-      }
-      if (props.gargoyleFrieze) {
-        ctx.drawImage(props.gargoyleFrieze, 0, 0, 96, 64, archX + archW / 2 - 32, ry - 14, 64, 28);
       }
     }
 

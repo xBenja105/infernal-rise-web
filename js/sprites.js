@@ -1859,7 +1859,6 @@ class SpriteManager {
     // 3. Castle Environmental Props (Sanctuary, Dungeons, Relics)
     if (ceo) {
       this.sprites.props.standingPillar = slice(ceo, 208, 0, 48, 128);
-      this.sprites.props.stoneCrest = slice(ceo, 368, 304, 48, 48);
     }
 
     if (ce) {
@@ -1879,7 +1878,6 @@ class SpriteManager {
     // 4. Slices from main_lev_buildB.png (Pedestals, Capitals, Relics)
     if (bB) {
       this.sprites.props.ornatePedestal = slice(bB, 0, 96, 96, 96);
-      this.sprites.props.gargoyleFrieze = slice(bB, 0, 0, 96, 64);
     }
   }
 
