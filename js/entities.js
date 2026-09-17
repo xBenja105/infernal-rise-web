@@ -1774,7 +1774,9 @@ class SkeletonEnemy {
 
     ctx.save();
     ctx.translate(rx + this.w / 2, ry + this.h - this.stepBob);
-    ctx.scale(this.dir * this.scaleMultiplier, this.scaleMultiplier);
+    // Skeletons in Skeleton Sprite Pack naturally face LEFT by default:
+    // multiply by -this.dir so dir=1 (right) flips to right, and dir=-1 (left) keeps left
+    ctx.scale(-this.dir * this.scaleMultiplier, this.scaleMultiplier);
     ctx.rotate(this.wobbleAngle);
     ctx.translate(-13, -34); // Center at standard frame reference base
 
@@ -1865,7 +1867,10 @@ class SkeletonEnemy {
       }
     }
 
-    if (sheet && sheet.complete && sheet.naturalWidth > 0) {
+    // Accept both HTMLImageElement and tinted HTMLCanvasElement
+    const isReady = sheet && ((sheet.complete && sheet.naturalWidth > 0) || (sheet.width > 0 && sheet.height > 0));
+
+    if (isReady) {
       const frameW = Math.floor(sheet.width / totalFrames);
       const frameH = sheet.height;
       const f = Math.min(totalFrames - 1, Math.max(0, this.animFrame));
@@ -1882,18 +1887,16 @@ class SkeletonEnemy {
       }
     }
 
-    // Glowing Eyes & Flare Streaks
+    // Glowing Eyes & Flare Streaks (aligned with skull face)
     ctx.save();
     ctx.fillStyle = skinData.eyeColor;
     ctx.shadowColor = skinData.eyeGlow;
     ctx.shadowBlur = this.isElite ? 12 : 4;
-    ctx.fillRect(15, 8, 2, 2);
-    ctx.fillRect(19, 8, 2, 2);
+    ctx.fillRect(8, 10, 2, 2);
     if (this.isElite) {
       ctx.fillStyle = skinData.eyeColor;
       ctx.globalAlpha = 0.7 + Math.sin(Date.now() * 0.009) * 0.25;
-      ctx.fillRect(20, 8.5, 5, 1);
-      ctx.fillRect(12, 8.5, 3, 1);
+      ctx.fillRect(6, 10.5, 4, 1);
     }
     ctx.shadowBlur = 0;
     ctx.restore();
@@ -1942,8 +1945,8 @@ class SkeletonEnemy {
       ctx.restore();
     }
 
-    // ─── FLOOR-EXCLUSIVE ORIGINAL ENEMY SPRITE OVERLAYS (100% UNIQUE PER FLOOR) ───
-    if (this.state !== 'dead') {
+    // ─── PROCEDURAL FALLBACK OVERLAYS (ONLY IF REAL SPRITE SHEET IS NOT READY) ───
+    if (!isReady && this.state !== 'dead') {
       ctx.save();
       const s = this.skin || 'abyss';
 
@@ -2487,25 +2490,26 @@ class Boss {
 
     if (bType === 'minotaur') {
       if (dist > 220) {
-        this.attackType = Math.random() < 0.55 ? 'bull_charge' : 'earthquake_stomp';
+        this.attackType = Math.random() < 0.5 ? 'bull_charge' : 'tremor_stomp';
       } else if (dist < 150 && Math.random() < 0.6) {
         this.attackType = 'axe_slam';
       } else {
-        this.attackType = Math.random() < 0.5 ? 'axe_slam' : 'bull_charge';
+        const r = Math.random();
+        this.attackType = r < 0.4 ? 'axe_slam' : (r < 0.7 ? 'bull_charge' : 'tremor_stomp');
       }
     } else if (bType === 'frost_guardian') {
       if (dist > 200) {
-        this.attackType = Math.random() < 0.55 ? 'icicle_salvo' : 'glacial_slam';
+        this.attackType = Math.random() < 0.5 ? 'icicle_salvo' : 'frost_slam';
       } else if (Math.random() < 0.5) {
-        this.attackType = 'frost_slash';
+        this.attackType = 'frost_sweep';
       } else {
-        this.attackType = 'glacial_slam';
+        this.attackType = 'frost_slam';
       }
     } else {
       // demon_slime
       if (dist > 220) {
         const r = Math.random();
-        this.attackType = r < 0.45 ? 'flame_dash' : (r < 0.75 ? 'hellfire_cleave' : 'meteor_burst');
+        this.attackType = r < 0.4 ? 'flame_dash' : (r < 0.7 ? 'hellfire_cleave' : 'magma_burst');
       } else if (Math.random() < 0.5) {
         this.attackType = 'flame_dash';
       } else {
@@ -2522,94 +2526,138 @@ class Boss {
 
     if (bType === 'minotaur') {
       if (this.attackType === 'axe_slam') {
-        if (particleSys) particleSys.triggerScreenShake(0.42, 10);
+        // Colossal battleaxe slam: shatters earth and launches traveling ground shockwave
+        if (particleSys) particleSys.triggerScreenShake(0.50, 12);
         if (soundEng && soundEng.playSwordSlash) soundEng.playSwordSlash();
-        if (dist < 200 && Math.abs(dy) < 70) {
+        if (dist < 210 && Math.abs(dy) < 70) {
           player.takeDamage(this.isEnraged ? 64 : 54, soundEng, particleSys);
         }
-      } else if (this.attackType === 'earthquake_stomp') {
-        this.vy = -10.8;
-        this.vx = this.dir * Math.max(3.8, Math.min(7.0, dist / 24));
-        if (soundEng && soundEng.playSwordSlash) soundEng.playSwordSlash();
+        if (window.game) {
+          window.game.spawnBossProjectile(new BossProjectile({
+            x: this.x + (this.dir > 0 ? this.w : -32),
+            y: 420,
+            vx: this.dir * (this.isEnraged ? 7.2 : 5.8),
+            vy: 0,
+            w: 36,
+            h: 36,
+            type: 'earth_shockwave',
+            damage: this.isEnraged ? 56 : 46
+          }));
+        }
+      } else if (this.attackType === 'tremor_stomp') {
+        // Leaps into air and crashes down; cavern ceiling fractures into falling rocks
+        this.vy = -10.5;
+        this.vx = this.dir * Math.max(3.5, Math.min(6.5, dist / 26));
+        if (particleSys) particleSys.triggerScreenShake(0.55, 14);
+        if (soundEng && soundEng.playMeteorExplosion) soundEng.playMeteorExplosion();
+        if (window.game) {
+          const count = this.isEnraged ? 4 : 3;
+          for (let r = 0; r < count; r++) {
+            const rx = player.x + (r - 1) * 120 + (Math.random() - 0.5) * 50;
+            window.game.spawnBossProjectile(new BossProjectile({
+              x: Math.max(80, Math.min(1120, rx)),
+              y: 20,
+              vx: (Math.random() - 0.5) * 1.5,
+              vy: 4.8 + Math.random() * 1.2,
+              w: 28,
+              h: 28,
+              type: 'falling_rock',
+              damage: 48
+            }));
+          }
+        }
       } else {
-        // bull_charge
-        this.vx = this.dir * (this.isEnraged ? 8.8 : 7.2);
-        if (particleSys) particleSys.triggerScreenShake(0.35, 8);
-        if (dist < 120) player.takeDamage(56, soundEng, particleSys);
+        // bull_charge: Lowers horns and charges across arena
+        this.vx = this.dir * (this.isEnraged ? 9.2 : 7.6);
+        if (particleSys) particleSys.triggerScreenShake(0.40, 9);
+        if (dist < 130) player.takeDamage(58, soundEng, particleSys);
       }
     } else if (bType === 'frost_guardian') {
-      if (this.attackType === 'frost_slash') {
-        if (particleSys) particleSys.triggerScreenShake(0.35, 8);
+      if (this.attackType === 'frost_sweep') {
+        // Heavy frost fist sweep
+        if (particleSys) particleSys.triggerScreenShake(0.38, 9);
         if (soundEng && soundEng.playSwordSlash) soundEng.playSwordSlash();
         if (dist < 190 && Math.abs(dy) < 65) {
           player.takeDamage(this.isEnraged ? 62 : 52, soundEng, particleSys);
+          player.vx = this.dir * 8; // Frost chill knockback
         }
       } else if (this.attackType === 'icicle_salvo') {
-        const count = this.isEnraged ? 4 : 3;
+        // Ranged fan of razor frost lances
+        const count = this.isEnraged ? 5 : 4;
         for (let b = 0; b < count; b++) {
           if (window.game) {
             window.game.spawnBossProjectile(new BossProjectile({
               x: this.x + (this.dir > 0 ? this.w : -20),
-              y: this.y + 10,
-              vx: this.dir * (3.8 + b * 1.1),
-              vy: -(4.8 + b * 1.1),
+              y: this.y + 15,
+              vx: this.dir * (4.2 + b * 0.9),
+              vy: -(3.5 - b * 1.8),
+              w: 24,
+              h: 12,
               type: 'frost_lance',
               damage: 46
             }));
           }
         }
       } else {
-        // glacial_slam
-        if (particleSys) particleSys.triggerScreenShake(0.45, 12);
+        // frost_slam: Slams icy fists into ground; erupts line of crystalline ice spikes
+        if (particleSys) particleSys.triggerScreenShake(0.48, 12);
         if (soundEng && soundEng.playSwordSlash) soundEng.playSwordSlash();
         if (dist < 180 && Math.abs(dy) < 70) player.takeDamage(58, soundEng, particleSys);
         if (window.game) {
-          for (let i = 0; i < 8; i++) {
-            const a = (i / 8) * Math.PI * 2;
-            window.game.spawnBossProjectile(new BossProjectile({
-              x: this.x + this.w / 2,
-              y: this.y + this.h / 2,
-              vx: Math.cos(a) * 4.6,
-              vy: Math.sin(a) * 4.6,
-              type: 'frost_lance',
-              damage: 44
-            }));
+          for (let s = 1; s <= 4; s++) {
+            const spikeX = this.x + this.w / 2 + this.dir * (s * 62);
+            if (spikeX > 60 && spikeX < 1140) {
+              window.game.spawnBossProjectile(new BossProjectile({
+                x: spikeX,
+                y: 412,
+                w: 36,
+                h: 38,
+                type: 'ice_spike',
+                damage: 50,
+                delay: s * 0.12
+              }));
+            }
           }
         }
       }
     } else {
-      // demon_slime (or azgalor / malacoda)
+      // demon_slime
       if (this.attackType === 'flame_dash') {
-        this.vx = this.dir * (this.isEnraged ? 9.2 : 7.8);
+        this.vx = this.dir * (this.isEnraged ? 9.5 : 8.0);
         if (particleSys) particleSys.triggerScreenShake(0.40, 9);
-        if (dist < 120) player.takeDamage(62, soundEng, particleSys);
-      } else if (this.attackType === 'meteor_burst') {
+        if (dist < 130) player.takeDamage(62, soundEng, particleSys);
+      } else if (this.attackType === 'magma_burst') {
+        // Launches molten lava orbs from shoulder flames
         if (soundEng && soundEng.playMeteorExplosion) soundEng.playMeteorExplosion();
         if (window.game) {
           for (let m = 0; m < 3; m++) {
             window.game.spawnBossProjectile(new BossProjectile({
-              x: player.x + (m - 1) * 110,
-              y: 20,
-              vx: (Math.random() - 0.5) * 1.5,
-              vy: 5.2,
-              type: 'meteor',
-              damage: 55
+              x: this.x + this.w / 2 + (m - 1) * 30,
+              y: this.y + 10,
+              vx: this.dir * (3.8 + m * 1.4) + (Math.random() - 0.5) * 1.5,
+              vy: -(5.8 + Math.random() * 2.0),
+              w: 22,
+              h: 22,
+              type: 'magma_orb',
+              damage: 52
             }));
           }
         }
       } else {
-        // hellfire_cleave
-        if (particleSys) particleSys.triggerScreenShake(0.45, 11);
+        // hellfire_cleave: Slams blazing cleaver down, releasing traveling wave of infernal fire
+        if (particleSys) particleSys.triggerScreenShake(0.48, 12);
         if (soundEng && soundEng.playSwordSlash) soundEng.playSwordSlash();
-        if (dist < 200 && Math.abs(dy) < 70) player.takeDamage(64, soundEng, particleSys);
+        if (dist < 210 && Math.abs(dy) < 70) player.takeDamage(64, soundEng, particleSys);
         if (window.game) {
           window.game.spawnBossProjectile(new BossProjectile({
-            x: this.x + (this.dir > 0 ? this.w : -24),
-            y: this.y + 20,
-            vx: this.dir * (this.isEnraged ? 6.2 : 5.0),
+            x: this.x + (this.dir > 0 ? this.w : -32),
+            y: 414,
+            vx: this.dir * (this.isEnraged ? 7.0 : 5.5),
             vy: 0,
-            type: 'tornado',
-            damage: 52
+            w: 38,
+            h: 42,
+            type: 'hellfire_wave',
+            damage: 56
           }));
         }
       }
@@ -2625,71 +2673,104 @@ class Boss {
                   'demon_slime';
 
     if (bType === 'minotaur') {
-      // "Furia del Laberinto": 6 judgment lightning pillars + twin shockwave tornadoes
-      const pillars = [120, 300, 480, 660, 840, 1020];
+      // "Cataclismo del Titán": Roars with primal fury, slams axe into ground sending dual shockwaves and collapsing ceiling boulders
+      this.ultimateName = 'Cataclismo del Titán';
       if (window.game) {
-        pillars.forEach(lx => {
-          window.game.spawnBossProjectile(new BossProjectile({
-            type: 'judgment_lightning',
-            x: lx,
-            y: 0,
-            w: 36,
-            h: 460,
-            damage: 75
-          }));
-        });
         [-1, 1].forEach(d => {
-          window.game.spawnBossProjectile(new BossProjectile({
-            type: 'tornado',
-            x: this.x + this.w / 2,
-            y: this.y + 20,
-            vx: d * 5.6,
-            vy: 0,
-            damage: 48
-          }));
+          for (let i = 0; i < 2; i++) {
+            window.game.spawnBossProjectile(new BossProjectile({
+              type: 'earth_shockwave',
+              x: this.x + this.w / 2,
+              y: 420,
+              vx: d * (5.5 + i * 2.2),
+              vy: 0,
+              w: 36,
+              h: 36,
+              damage: 58
+            }));
+          }
+        });
+        const rockSpawns = [160, 320, 480, 640, 800, 960, 1080];
+        rockSpawns.forEach((rx, idx) => {
+          setTimeout(() => {
+            if (window.game) {
+              window.game.spawnBossProjectile(new BossProjectile({
+                type: 'falling_rock',
+                x: rx,
+                y: 10,
+                vx: (Math.random() - 0.5) * 1.5,
+                vy: 5.0 + Math.random() * 1.5,
+                w: 30,
+                h: 30,
+                damage: 66
+              }));
+            }
+          }, idx * 120);
         });
       }
     } else if (bType === 'frost_guardian') {
-      // "Cero Absoluto": 8 falling icicles + 8-direction frost lances
+      // "Cero Absoluto": Ice storm raining 8 heavy icicles across arena and radiating frost lances
+      this.ultimateName = 'Cero Absoluto';
       if (window.game) {
         const icicles = [140, 280, 420, 560, 700, 840, 980, 1080];
-        icicles.forEach(ix => {
-          window.game.spawnBossProjectile(new BossProjectile({
-            type: 'icicle',
-            x: ix,
-            y: 20,
-            vx: 0,
-            vy: 3.2,
-            damage: 64
-          }));
+        icicles.forEach((ix, idx) => {
+          setTimeout(() => {
+            if (window.game) {
+              window.game.spawnBossProjectile(new BossProjectile({
+                type: 'icicle',
+                x: ix,
+                y: 15,
+                vx: 0,
+                vy: 3.8,
+                damage: 64
+              }));
+            }
+          }, idx * 100);
         });
         for (let i = 0; i < 8; i++) {
           const a = (i / 8) * Math.PI * 2;
           window.game.spawnBossProjectile(new BossProjectile({
             x: this.x + this.w / 2,
             y: this.y + this.h / 2,
-            vx: Math.cos(a) * 5.2,
-            vy: Math.sin(a) * 5.2,
+            vx: Math.cos(a) * 5.0,
+            vy: Math.sin(a) * 5.0,
+            w: 24,
+            h: 12,
             type: 'frost_lance',
             damage: 48
           }));
         }
       }
     } else {
-      // "Apocalipsis Ígneo": 7 falling hellfire meteors across arena + dash
-      this.vx = this.dir * 9.5;
+      // "Apocalipsis del Averno": Demon Slime unleashes twin hellfire waves and rains 7 burning meteors
+      this.ultimateName = 'Apocalipsis del Averno';
       if (window.game) {
-        const meteors = [160, 300, 440, 580, 720, 860, 1000];
-        meteors.forEach(mx => {
+        [-1, 1].forEach(d => {
           window.game.spawnBossProjectile(new BossProjectile({
-            type: 'meteor',
-            x: mx,
-            y: 15,
-            vx: (player.x - mx) * 0.007,
-            vy: 6.0,
-            damage: 70
+            type: 'hellfire_wave',
+            x: this.x + this.w / 2,
+            y: 414,
+            vx: d * 6.0,
+            vy: 0,
+            w: 38,
+            h: 42,
+            damage: 60
           }));
         });
+        for (let m = 0; m < 7; m++) {
+          setTimeout(() => {
+            if (window.game) {
+              window.game.spawnBossProjectile(new BossProjectile({
+                type: 'meteor',
+                x: 150 + m * 140 + (Math.random() - 0.5) * 50,
+                y: 10,
+                vx: (Math.random() - 0.5) * 2.0,
+                vy: 5.5 + Math.random() * 1.5,
+                damage: 68
+              }));
+            }
+          }, 140 * m);
+        }
       }
     }
   }
@@ -2818,13 +2899,13 @@ class Boss {
       this.stateTimer -= dt;
       // Active melee hit checking throughout attack duration
       if (!this.attackHitPlayer && player.hp > 0) {
-        const isMeleeAttack = (this.attackType === 'tail_sweep' || this.attackType === 'oar_crush' ||
-                               this.attackType === 'hellfire_cleave' || this.attackType === 'frost_nova' ||
-                               this.attackType === 'glacial_slam' || this.attackType === 'axe_slam' ||
-                               this.attackType === 'frost_slash');
+        const isMeleeAttack = (this.attackType === 'axe_slam' ||
+                               this.attackType === 'frost_sweep' ||
+                               this.attackType === 'frost_slam' ||
+                               this.attackType === 'hellfire_cleave');
         if (isMeleeAttack) {
-          const reachX = (this.attackType === 'tail_sweep' || this.attackType === 'axe_slam' || this.attackType === 'hellfire_cleave') ? 220 : 180;
-          if (dist < reachX && Math.abs(dy) < 70) {
+          const reachX = (this.attackType === 'axe_slam' || this.attackType === 'hellfire_cleave') ? 220 : 190;
+          if (dist < reachX && Math.abs(dy) < 75) {
             const meleeDmg = this.isEnraged ? 64 : 56;
             player.takeDamage(meleeDmg, soundEng, particleSys);
             this.attackHitPlayer = true;
@@ -2995,8 +3076,10 @@ class Boss {
     }
 
     // Anchor transform at feet bottom-center
+    // Source boss sprites (Minotaur, Frost Guardian, Demon Slime) face LEFT by default:
+    // multiply by -this.dir so dir=1 (moving right) flips right, and dir=-1 (moving left) faces left
     ctx.translate(rx + this.w / 2, ry + this.h + breathY);
-    ctx.scale(this.dir * this.scaleX, this.scaleY);
+    ctx.scale(-this.dir * this.scaleX, this.scaleY);
 
     if (frame) {
       if (this.isEnraged) {
@@ -3809,11 +3892,20 @@ class CrumblingPlatform {
     ctx.fillStyle = '#3d2e32';
     ctx.fillRect(rx + 2, ry + 2, this.w - 4, this.h - 4);
 
-    // Cracks
-    ctx.fillStyle = this.isTriggered ? '#ff3300' : '#0f0a0c';
-    for (let fx = rx + 16; fx < rx + this.w; fx += 26) {
-      ctx.fillRect(fx, ry, 2, this.h - 4);
-      ctx.fillRect(fx - 4, ry + 8, 8, 2);
+    // Natural stone fractures & fissures
+    ctx.fillStyle = this.isTriggered ? '#ff4400' : '#140c0f';
+    const numCracks = Math.max(2, Math.floor(this.w / 34));
+    for (let c = 1; c <= numCracks; c++) {
+      const cx = rx + Math.floor((c * this.w) / (numCracks + 1));
+      ctx.fillRect(cx, ry + 2, 2, 4);
+      ctx.fillRect(cx + 1, ry + 6, 2, 5);
+      ctx.fillRect(cx - 1, ry + 11, 2, 5);
+      ctx.fillRect(cx, ry + 16, 2, Math.max(2, this.h - 18));
+      if (this.isTriggered) {
+        ctx.fillStyle = '#ffcc00';
+        ctx.fillRect(cx, ry + 3, 1, 3);
+        ctx.fillStyle = '#ff4400';
+      }
     }
 
     ctx.fillStyle = this.isTriggered ? '#ffaa00' : '#8f7773';
@@ -3835,10 +3927,11 @@ class BossProjectile {
     this.vy = data.vy || 0;
     this.w = data.w || 20;
     this.h = data.h || 20;
-    this.type = data.type; // 'tornado', 'mud_bomb', 'sulphur_spear', 'judgment_lightning', 'styx_wave', 'meteor', 'frost_lance', 'icicle'
+    this.type = data.type; // 'earth_shockwave', 'falling_rock', 'ice_spike', 'hellfire_wave', 'magma_orb', 'frost_lance', 'icicle', 'meteor', 'tornado', 'styx_wave', 'judgment_lightning'
     this.damage = data.damage || 20;
     this.life = 0;
-    this.maxLife = data.maxLife || (data.type === 'judgment_lightning' ? 1.25 : (data.type === 'styx_wave' ? 5.0 : 4.5));
+    this.delay = data.delay || 0;
+    this.maxLife = data.maxLife || (data.type === 'ice_spike' ? 1.4 : (data.type === 'earth_shockwave' || data.type === 'hellfire_wave' ? 3.5 : (data.type === 'judgment_lightning' ? 1.25 : (data.type === 'styx_wave' ? 5.0 : 4.5))));
     this.isDead = false;
     this.isPuddle = false;
     this.telegraphTime = data.telegraphTime || (data.type === 'judgment_lightning' ? 0.55 : 0);
@@ -3851,6 +3944,91 @@ class BossProjectile {
     this.life += dt;
     if (this.life > this.maxLife) {
       this.isDead = true;
+      return;
+    }
+
+    // 1. Earth Shockwave (Minotaur Axe Ground Fissure) & Hellfire Wave (Demon Slime Cleaver Wave)
+    if (this.type === 'earth_shockwave' || this.type === 'hellfire_wave') {
+      this.x += this.vx * dt * 60;
+      if (particleSys && Math.random() < 0.35) {
+        if (this.type === 'earth_shockwave') particleSys.spawnDust(this.x + this.w / 2, 448, 2);
+        else particleSys.spawnSlashSparks(this.x + this.w / 2, 436, this.vx * 0.1);
+      }
+      if (Math.abs((this.x + this.w / 2) - (player.x + player.w / 2)) < (this.w / 2 + player.w / 2) &&
+          Math.abs((this.y + this.h / 2) - (player.y + player.h / 2)) < (this.h / 2 + player.h / 2)) {
+        player.takeDamage(this.damage, soundEng, particleSys);
+        player.vx = Math.sign(this.vx) * 6.5;
+        this.isDead = true;
+      }
+      return;
+    }
+
+    // 2. Falling Cavern Rock (Minotaur Tremor Stomp / Cataclysm)
+    if (this.type === 'falling_rock') {
+      this.vy += 0.36;
+      this.y += this.vy * dt * 60;
+      this.x += this.vx * dt * 60;
+      if (this.y >= 436) {
+        if (particleSys) {
+          particleSys.triggerScreenShake(0.32, 8);
+          particleSys.spawnDust(this.x + this.w / 2, 442, 14);
+        }
+        if (soundEng && soundEng.playMeteorExplosion) soundEng.playMeteorExplosion();
+        const dist = Math.hypot((this.x + this.w / 2) - (player.x + player.w / 2), 440 - (player.y + player.h / 2));
+        if (dist < 55) {
+          player.takeDamage(this.damage, soundEng, particleSys);
+        }
+        this.isDead = true;
+      } else if (Math.abs((this.x + this.w / 2) - (player.x + player.w / 2)) < (this.w / 2 + player.w / 2) &&
+                 Math.abs((this.y + this.h / 2) - (player.y + player.h / 2)) < (this.h / 2 + player.h / 2)) {
+        player.takeDamage(this.damage, soundEng, particleSys);
+        this.isDead = true;
+      }
+      return;
+    }
+
+    // 3. Ice Spike (Frost Guardian Fists Slam)
+    if (this.type === 'ice_spike') {
+      if (this.delay && this.delay > 0) {
+        this.delay -= dt;
+        return;
+      }
+      if (!this.hasStruck) {
+        this.hasStruck = true;
+        if (particleSys) particleSys.spawnSlashSparks(this.x + this.w / 2, 440, 0);
+      }
+      if (!this.hasHit && Math.abs((this.x + this.w / 2) - (player.x + player.w / 2)) < (this.w / 2 + player.w / 2) &&
+          player.y + player.h >= 410) {
+        player.takeDamage(this.damage, soundEng, particleSys);
+        player.vy = -6.0;
+        this.hasHit = true;
+      }
+      return;
+    }
+
+    // 4. Magma Orb (Demon Slime Shoulder Flames)
+    if (this.type === 'magma_orb') {
+      if (!this.isPuddle) {
+        this.vy += 0.35;
+        this.x += this.vx * dt * 60;
+        this.y += this.vy * dt * 60;
+        if (this.y >= 440) {
+          this.isPuddle = true;
+          this.y = 444;
+          this.vx = 0;
+          this.vy = 0;
+          this.w = 50;
+          this.h = 12;
+          this.life = 0;
+          this.maxLife = 3.2;
+          if (particleSys) particleSys.spawnLavaBubble(this.x + 25, this.y);
+        }
+      }
+      if (Math.abs((this.x + this.w / 2) - (player.x + player.w / 2)) < (this.w / 2 + player.w / 2) &&
+          Math.abs((this.y + this.h / 2) - (player.y + player.h / 2)) < (this.h / 2 + player.h / 2)) {
+        player.takeDamage(this.damage, soundEng, particleSys);
+        if (!this.isPuddle) this.isDead = true;
+      }
       return;
     }
 
@@ -3970,7 +4148,242 @@ class BossProjectile {
 
     ctx.save();
 
-    if (this.type === 'judgment_lightning') {
+    if (this.type === 'earth_shockwave') {
+      // Jagged earth fissure / rock spikes moving along the floor
+      const dir = Math.sign(this.vx) || 1;
+      ctx.save();
+      ctx.translate(rx + this.w / 2, ry + this.h);
+      if (dir < 0) ctx.scale(-1, 1);
+
+      // Dark earth back
+      ctx.fillStyle = '#2d1b00';
+      ctx.beginPath();
+      ctx.moveTo(-16, 0);
+      ctx.lineTo(-8, -26);
+      ctx.lineTo(2, -34);
+      ctx.lineTo(8, -24);
+      ctx.lineTo(16, 0);
+      ctx.closePath();
+      ctx.fill();
+
+      // Sharp craggy stone slabs
+      ctx.fillStyle = '#5c4033';
+      ctx.beginPath();
+      ctx.moveTo(-12, 0);
+      ctx.lineTo(-6, -24);
+      ctx.lineTo(0, -32);
+      ctx.lineTo(6, -20);
+      ctx.lineTo(12, 0);
+      ctx.closePath();
+      ctx.fill();
+
+      // Stone highlights & jagged crack lines
+      ctx.fillStyle = '#8b6f4e';
+      ctx.beginPath();
+      ctx.moveTo(-4, -6);
+      ctx.lineTo(0, -32);
+      ctx.lineTo(4, -18);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.strokeStyle = '#c4a482';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, -32);
+      ctx.lineTo(-3, -12);
+      ctx.lineTo(2, 0);
+      ctx.stroke();
+
+      ctx.restore();
+    } else if (this.type === 'falling_rock') {
+      // Rotating craggy cavern boulder
+      ctx.save();
+      ctx.translate(rx + this.w / 2, ry + this.h / 2);
+      ctx.rotate(this.life * 5.0 * (Math.sign(this.vx) || 1));
+
+      // Boulder body
+      ctx.fillStyle = '#292524';
+      ctx.beginPath();
+      ctx.moveTo(-14, -6);
+      ctx.lineTo(-8, -14);
+      ctx.lineTo(6, -13);
+      ctx.lineTo(14, -4);
+      ctx.lineTo(12, 10);
+      ctx.lineTo(2, 14);
+      ctx.lineTo(-11, 11);
+      ctx.closePath();
+      ctx.fill();
+
+      // Surface facet shading
+      ctx.fillStyle = '#44403c';
+      ctx.beginPath();
+      ctx.moveTo(-8, -14);
+      ctx.lineTo(6, -13);
+      ctx.lineTo(2, -2);
+      ctx.lineTo(-6, 2);
+      ctx.closePath();
+      ctx.fill();
+
+      // Rough rock highlight & fracture
+      ctx.strokeStyle = '#78716c';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(-4, -10);
+      ctx.lineTo(0, 0);
+      ctx.lineTo(8, 6);
+      ctx.stroke();
+
+      ctx.restore();
+    } else if (this.type === 'ice_spike') {
+      if (this.delay && this.delay > 0) {
+        // Frost telegraph rune on floor
+        const pulse = Math.sin(this.life * 25) * 0.3 + 0.7;
+        ctx.fillStyle = `rgba(56, 189, 248, ${0.4 * pulse})`;
+        ctx.beginPath();
+        ctx.ellipse(rx + this.w / 2, 444 - camY, 18, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#e0f2fe';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      } else {
+        // Erupting sharp glacier crystal
+        const growProgress = Math.min(1.0, (this.life - (this.delay || 0)) / 0.12);
+        const spikeH = this.h * Math.sin(growProgress * Math.PI * 0.5);
+        const spikeBottom = ry + this.h;
+        const spikeTop = spikeBottom - spikeH;
+
+        ctx.save();
+        // Deep ice base
+        ctx.fillStyle = '#0284c7';
+        ctx.beginPath();
+        ctx.moveTo(rx, spikeBottom);
+        ctx.lineTo(rx + this.w / 2, spikeTop);
+        ctx.lineTo(rx + this.w, spikeBottom);
+        ctx.closePath();
+        ctx.fill();
+
+        // Crystalline bright facet
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.moveTo(rx + 4, spikeBottom);
+        ctx.lineTo(rx + this.w / 2, spikeTop);
+        ctx.lineTo(rx + this.w - 3, spikeBottom);
+        ctx.closePath();
+        ctx.fill();
+
+        // Brilliant glacial spine / specular glint
+        ctx.fillStyle = '#f0f9ff';
+        ctx.beginPath();
+        ctx.moveTo(rx + this.w / 2 - 2, spikeBottom);
+        ctx.lineTo(rx + this.w / 2, spikeTop + 2);
+        ctx.lineTo(rx + this.w / 2 + 2, spikeBottom);
+        ctx.closePath();
+        ctx.fill();
+
+        // Shimmering outline
+        ctx.strokeStyle = '#bae6fd';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(rx + 2, spikeBottom);
+        ctx.lineTo(rx + this.w / 2, spikeTop);
+        ctx.lineTo(rx + this.w - 2, spikeBottom);
+        ctx.stroke();
+        ctx.restore();
+      }
+    } else if (this.type === 'hellfire_wave') {
+      const dir = Math.sign(this.vx) || 1;
+      const flicker = Math.sin(this.life * 24) * 4;
+      ctx.save();
+      ctx.translate(rx + this.w / 2, ry + this.h);
+      if (dir < 0) ctx.scale(-1, 1);
+
+      // Dark crimson fire foundation
+      ctx.fillStyle = 'rgba(153, 27, 27, 0.9)';
+      ctx.beginPath();
+      ctx.moveTo(-18, 0);
+      ctx.quadraticCurveTo(-6, -20, 4, -36 + flicker);
+      ctx.quadraticCurveTo(10, -22, 18, 0);
+      ctx.closePath();
+      ctx.fill();
+
+      // Blazing orange inner flame
+      ctx.fillStyle = '#ea580c';
+      ctx.beginPath();
+      ctx.moveTo(-12, 0);
+      ctx.quadraticCurveTo(-3, -16, 4, -30 + flicker);
+      ctx.quadraticCurveTo(8, -16, 14, 0);
+      ctx.closePath();
+      ctx.fill();
+
+      // Golden solar core
+      ctx.fillStyle = '#fde047';
+      ctx.beginPath();
+      ctx.moveTo(-6, 0);
+      ctx.quadraticCurveTo(0, -12, 3, -22 + flicker);
+      ctx.quadraticCurveTo(5, -10, 8, 0);
+      ctx.closePath();
+      ctx.fill();
+
+      // White hot heart
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(2, -10, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    } else if (this.type === 'magma_orb') {
+      if (this.isPuddle) {
+        // Boiling lava pool on floor
+        const pulse = Math.sin(this.life * 12) * 2;
+        ctx.fillStyle = '#7c2d12';
+        ctx.fillRect(rx, ry, this.w, this.h);
+
+        ctx.fillStyle = '#ea580c';
+        ctx.fillRect(rx + 3, ry + 2, this.w - 6, this.h - 4);
+
+        ctx.fillStyle = '#fde047';
+        ctx.beginPath();
+        ctx.ellipse(rx + this.w / 2, ry + 4 + pulse * 0.5, this.w / 3, 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Magma bubble
+        const bubbleX = rx + 14 + ((this.life * 28) % 24);
+        ctx.fillStyle = '#ffedd5';
+        ctx.beginPath();
+        ctx.arc(bubbleX, ry + 3, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        // Flying molten lava bomb
+        ctx.save();
+        ctx.translate(rx + this.w / 2, ry + this.h / 2);
+
+        // Molten outer shell
+        ctx.fillStyle = '#c2410c';
+        ctx.beginPath();
+        ctx.arc(0, 0, 11, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Bright orange core
+        ctx.fillStyle = '#f97316';
+        ctx.beginPath();
+        ctx.arc(0, 0, 7.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Yellow-hot nucleus
+        ctx.fillStyle = '#fef08a';
+        ctx.beginPath();
+        ctx.arc(-1, -1, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Searing sparkles
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(-2, -2, 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+      }
+    } else if (this.type === 'judgment_lightning') {
       if (this.life < this.telegraphTime) {
         // Warning telegraph beam (translucent purple / pink hazard)
         const alpha = 0.25 + Math.sin(this.life * 25) * 0.15;

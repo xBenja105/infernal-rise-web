@@ -2791,82 +2791,8 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
     ctx.save();
 
-    // 1. Dedicated Sanctuary / Prologue Gothic Hall Decoration
+    // 1. Prologue Sanctuary has its own dedicated master architectural renderer (drawPrologueSanctuary)
     if (this.level.id === 'prologue') {
-      ctx.globalAlpha = 0.45;
-
-      // Cathedral Arches across Sanctuary back wall
-      if (props.gothicArch) {
-        const archW = 160;
-        const archH = 160;
-        const archPositions = [140, 400, 660];
-        for (const ax of archPositions) {
-          const rx = Math.round(ax - camX);
-          const ry = Math.round(180 - camY);
-          ctx.drawImage(props.gothicArch, 0, 0, 192, 192, rx, ry, archW, archH);
-          if (props.gargoyleFrieze) {
-            ctx.drawImage(props.gargoyleFrieze, 0, 0, 96, 64, rx + archW / 2 - 28, ry - 12, 56, 26);
-          }
-        }
-      }
-
-      // Sanctuary Flanking Pillars & Columns
-      if (props.standingPillar) {
-        ctx.globalAlpha = 0.55;
-        ctx.drawImage(props.standingPillar, 0, 0, 48, 128, Math.round(40 - camX), Math.round(352 - camY), 40, 128);
-        ctx.drawImage(props.standingPillar, 0, 0, 48, 128, Math.round(880 - camX), Math.round(352 - camY), 40, 128);
-      }
-
-      // Hanging Chains from Sanctuary ceiling cornice
-      if (props.hangingChains) {
-        ctx.globalAlpha = 0.6;
-        const chainPositions = [100, 300, 660, 860];
-        for (const cx of chainPositions) {
-          ctx.drawImage(props.hangingChains, 0, 0, 16, 80, Math.round(cx - camX), Math.round(22 - camY), 16, 80);
-        }
-      }
-
-      // Royal & Infernal Banners on Sanctuary walls
-      if (props.bannerBlue) {
-        ctx.globalAlpha = 0.55;
-        ctx.drawImage(props.bannerBlue, 0, 0, 192, 96, Math.round(120 - camX), Math.round(60 - camY), 120, 60);
-      }
-      if (props.bannerRed) {
-        ctx.globalAlpha = 0.55;
-        ctx.drawImage(props.bannerRed, 0, 0, 96, 48, Math.round(740 - camX), Math.round(60 - camY), 96, 48);
-      }
-
-      // Stained glass inside sanctuary arches
-      if (props.stainedGlass) {
-        ctx.globalAlpha = 0.65;
-        ctx.drawImage(props.stainedGlass, 0, 0, 48, 80, Math.round(196 - camX), Math.round(230 - camY), 48, 80);
-        ctx.drawImage(props.stainedGlass, 0, 0, 48, 80, Math.round(456 - camX), Math.round(230 - camY), 48, 80);
-        ctx.drawImage(props.stainedGlass, 0, 0, 48, 80, Math.round(716 - camX), Math.round(230 - camY), 48, 80);
-      }
-
-      // Stone Crest above central arch
-      if (props.stoneCrest) {
-        ctx.globalAlpha = 0.75;
-        ctx.drawImage(props.stoneCrest, 0, 0, 48, 48, Math.round(456 - camX), Math.round(120 - camY), 48, 48);
-      }
-
-      // Candelabras flanking sanctuary altar
-      if (props.candelabra) {
-        ctx.globalAlpha = 0.9;
-        ctx.drawImage(props.candelabra, 0, 0, 32, 32, Math.round(380 - camX), Math.round(408 - camY), 32, 32);
-        ctx.drawImage(props.candelabra, 0, 0, 32, 32, Math.round(548 - camX), Math.round(408 - camY), 32, 32);
-      }
-
-      // Knight Armor Dummy & Blacksmith Anvil in Sanctuary
-      if (props.armorStand) {
-        ctx.globalAlpha = 0.85;
-        ctx.drawImage(props.armorStand, 0, 0, 48, 48, Math.round(180 - camX), Math.round(432 - camY), 48, 48);
-      }
-      if (props.anvil) {
-        ctx.globalAlpha = 0.85;
-        ctx.drawImage(props.anvil, 0, 0, 48, 32, Math.round(235 - camX), Math.round(448 - camY), 48, 32);
-      }
-
       ctx.restore();
       return;
     }
@@ -3021,14 +2947,6 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
         }
       }
 
-      // 1b. Real Gothic Pillars & Column Shafts under large floating platforms
-      if (!hasSupportBelow && p.w >= 140 && props.pillarCapital && props.pillarShaft) {
-        const shaftH = Math.min(80, Math.max(32, Math.floor(p.w * 0.35)));
-        this.ctx.drawImage(props.pillarCapital, 0, 0, 64, 64, rx + 10, ry + p.h, 20, 20);
-        this.ctx.drawImage(props.pillarShaft, 0, 0, 64, 96, rx + 11, ry + p.h + 20, 18, shaftH);
-        this.ctx.drawImage(props.pillarCapital, 0, 0, 64, 64, rx + p.w - 30, ry + p.h, 20, 20);
-        this.ctx.drawImage(props.pillarShaft, 0, 0, 64, 96, rx + p.w - 29, ry + p.h + 20, 18, shaftH);
-      }
 
       // 1c. Gothic Stone Balustrade / Railing on Haven and Summit platforms
       if ((p.isHaven || p.isSummit) && props.stoneBalustrade) {
