@@ -90,21 +90,21 @@ class LevelManager {
       crumblingPlatforms: [],
       spikes: [],
       torches: [
-        // Ground & Dais Torches
-        { x: 45, y: 420, blue: false },
-        { x: 150, y: 425, blue: false },
-        { x: 310, y: 425, blue: false },
-        { x: 355, y: 405, blue: true },
-        { x: 590, y: 405, blue: true },
-        { x: 720, y: 425, blue: true },
-        { x: 890, y: 425, blue: true }
+        // Cathedral Sanctum Violet Wall Sconces
+        { x: 45, y: 420, color: 'purple' },
+        { x: 150, y: 425, color: 'purple' },
+        { x: 310, y: 425, color: 'purple' },
+        { x: 355, y: 405, color: 'purple' },
+        { x: 590, y: 405, color: 'purple' },
+        { x: 720, y: 425, color: 'purple' },
+        { x: 890, y: 425, color: 'purple' }
       ],
       enemies: [],
       urns: [
-        { x: 110, y: 448, value: 25 },
-        { x: 340, y: 428, value: 20 },
-        { x: 595, y: 428, value: 20 },
-        { x: 890, y: 448, value: 25 }
+        { x: 95, y: 448, value: 25 },
+        { x: 230, y: 448, value: 20 },
+        { x: 655, y: 428, value: 20 },
+        { x: 820, y: 448, value: 25 }
       ],
       chests: [],
       portal: {
@@ -167,7 +167,7 @@ class LevelManager {
       return config.tiers[config.tiers.length - 1];
     };
 
-    while (currY > 520) {
+    while (currY > 640) {
       // Step delta strictly between 90 and 112px (player jump reach with soft gravity is ~151px)
       const stepY = 90 + Math.floor(Math.random() * 23);
       currY -= stepY;
@@ -204,7 +204,7 @@ class LevelManager {
         continue;
       }
 
-      // Procedural platform patterns (8 Diverse Architectural Archetypes)
+      // Procedural platform patterns (9 Diverse Architectural Archetypes)
       // 0: Dual flanking platforms
       // 1: Wide center platform with stepping ledge
       // 2: Solid platform + moving platform bridge
@@ -213,9 +213,10 @@ class LevelManager {
       // 5: Collapsed Gothic Arch & Ruined Lintel (Multi-height broken arch slabs)
       // 6: Ruined Column Shafts with Capitals (Stepping stone pillars over gap)
       // 7: Fortress Parapet & Crenelated Stone Platform
-      let pattern = Math.floor(Math.random() * 8);
+      // 8: La Escala del Abismo (Gran Chimenea con Escalera Larga Solitaria)
+      let pattern = Math.floor(Math.random() * 9);
       if (pattern === lastPattern) {
-        pattern = (pattern + 1) % 8;
+        pattern = (pattern + 1) % 9;
       }
       lastPattern = pattern;
 
@@ -374,7 +375,7 @@ class LevelManager {
 
         platforms.push(col1, col2, midStep);
         layerPlatforms.push(col1, col2, midStep);
-      } else {
+      } else if (pattern === 7) {
         // ── PATRÓN 7: BALUARTE ALMENADO Y REPISA VOLADIZA ──
         // Plataforma defensiva ancha con almenas y losa voladiza
         const parapetW = 320 + Math.floor(Math.random() * 50);
@@ -389,6 +390,46 @@ class LevelManager {
 
         torches.push({ x: parapetX + 24, y: currY - 30, blue: isBlueTorch });
         torches.push({ x: parapetX + parapetW - 24, y: currY - 30, blue: isBlueTorch });
+      } else {
+        // ── PATRÓN 8: LA ESCALA DEL ABISMO (GRAN CHIMENEA CON ESCALERA LARGA SOLITARIA) ──
+        // Gran foso vertical sin plataformas intermedias a los lados: solo se puede subir trepando por la escalera
+        const ladderH = 220 + Math.floor(Math.random() * 50); // 220 a 270px de escalada pura
+        const shaftX = Math.floor(width / 2) - 13 + Math.floor((Math.random() - 0.5) * 80);
+
+        // Plataforma inferior de despegue (base de salto)
+        const baseW = 160 + Math.floor(Math.random() * 40);
+        const baseX = Math.max(90, Math.min(width - baseW - 90, shaftX - Math.floor(baseW / 2) + 13));
+        const platBase = { x: baseX, y: currY, w: baseW, h: 24, type: pType };
+
+        // Plataforma superior de recepción (desembarco del ascenso)
+        const topW = 180 + Math.floor(Math.random() * 40);
+        const topY = currY - ladderH;
+        const topSideLeft = Math.random() < 0.5;
+        const topX = topSideLeft
+          ? Math.max(90, shaftX - topW + 28)
+          : Math.min(width - topW - 90, shaftX - 8);
+        const platTop = { x: topX, y: topY, w: topW, h: 24, type: pType };
+
+        // Escalera larga que cruza todo el abismo vertical
+        const ladType = pType === 'gold' ? 'gold' : 'iron';
+        ladders.push({
+          x: shaftX,
+          y: topY,
+          w: 26,
+          h: ladderH,
+          type: ladType,
+          isLongLadder: true
+        });
+
+        // Antorchas en cornisas seguras de base y cima
+        torches.push({ x: baseX + 18, y: currY - 30, blue: isBlueTorch });
+        torches.push({ x: topX + topW - 18, y: topY - 30, blue: isBlueTorch });
+
+        platforms.push(platBase, platTop);
+        layerPlatforms.push(platBase, platTop);
+
+        // Compensar altura escalada para el siguiente ciclo procedural
+        currY = topY;
       }
 
       // Spawn patrolling enemies and urns
@@ -416,8 +457,14 @@ class LevelManager {
               hp: hp
             });
           } else if (spawnRoll < 0.75) {
+            // Urn placement: Ensure urn is never directly on top of or within 45px of any torch
+            let urnX = p.x + 24 + Math.floor(Math.random() * (p.w - 48));
+            const nearTorch = torches.find(t => Math.abs(t.x - urnX) < 48 && Math.abs(t.y - (p.y - 26)) < 40);
+            if (nearTorch) {
+              urnX = nearTorch.x > p.x + p.w / 2 ? p.x + 20 : p.x + p.w - 32;
+            }
             urns.push({
-              x: p.x + 20 + Math.floor(Math.random() * (p.w - 40)),
+              x: urnX,
               y: p.y - 26,
               value: 15 + Math.floor((1 - currY / height) * 35)
             });
@@ -444,12 +491,13 @@ class LevelManager {
     const summitStep = { x: 360, y: 360, w: 240, h: 24, type: 'runic' };
     platforms.push(summitAltar, summitStep);
 
-    torches.push({ x: 240, y: 430, blue: true });
-    torches.push({ x: 720, y: 430, blue: true });
-    torches.push({ x: 380, y: 330, blue: true });
-    torches.push({ x: 580, y: 330, blue: true });
+    const isSummitBlue = (config.basePlatformType === 'glacial_ice' || config.biome === 'frozen_peaks');
+    torches.push({ x: 240, y: 430, blue: isSummitBlue });
+    torches.push({ x: 720, y: 430, blue: isSummitBlue });
+    torches.push({ x: 380, y: 330, blue: isSummitBlue });
+    torches.push({ x: 580, y: 330, blue: isSummitBlue });
 
-    urns.push({ x: 680, y: 434, value: 60 });
+    urns.push({ x: 640, y: 434, value: 60 });
 
     const isFinalPortal = (config.portalTarget === 'victory');
     const portal = {
@@ -568,9 +616,9 @@ class LevelManager {
       crumblingPlatforms: [],
       spikes: [],
       torches: [
-        { x: 180, y: 420, blue: true },
-        { x: 1020, y: 420, blue: true },
-        { x: 600, y: 270, blue: true }
+        { x: 180, y: 420, blue: false },
+        { x: 1020, y: 420, blue: false },
+        { x: 600, y: 270, blue: false }
       ],
       boss: {
         type: 'minotaur',
@@ -585,8 +633,8 @@ class LevelManager {
       },
       enemies: [],
       urns: [
-        { x: 140, y: 424, value: 30 },
-        { x: 1020, y: 424, value: 30 }
+        { x: 130, y: 424, value: 30 },
+        { x: 940, y: 424, value: 30 }
       ],
       chests: []
     };
@@ -662,8 +710,8 @@ class LevelManager {
       },
       enemies: [],
       urns: [
-        { x: 140, y: 424, value: 45 },
-        { x: 1020, y: 424, value: 45 }
+        { x: 130, y: 424, value: 45 },
+        { x: 940, y: 424, value: 45 }
       ],
       chests: []
     };
@@ -743,8 +791,8 @@ class LevelManager {
       },
       enemies: [],
       urns: [
-        { x: 140, y: 424, value: 60 },
-        { x: 1020, y: 424, value: 60 }
+        { x: 130, y: 424, value: 60 },
+        { x: 940, y: 424, value: 60 }
       ],
       chests: []
     };
@@ -823,8 +871,8 @@ class LevelManager {
       },
       enemies: [],
       urns: [
-        { x: 140, y: 424, value: 60 },
-        { x: 1020, y: 424, value: 60 }
+        { x: 130, y: 424, value: 60 },
+        { x: 940, y: 424, value: 60 }
       ],
       chests: []
     };
@@ -898,8 +946,8 @@ class LevelManager {
       },
       enemies: [],
       urns: [
-        { x: 140, y: 424, value: 80 },
-        { x: 1020, y: 424, value: 80 }
+        { x: 130, y: 424, value: 80 },
+        { x: 940, y: 424, value: 80 }
       ],
       chests: []
     };
@@ -1050,8 +1098,9 @@ class LevelManager {
       }
 
       if (i > 1 && i % 4 === 0) {
+        const urnX = (i % 3 === 0) ? (x + w - 32) : (x + 25 + Math.random() * (w - 50));
         urns.push({
-          x: x + 25 + Math.random() * (w - 50),
+          x: urnX,
           y: currY - 26,
           value: 15 + i * 2
         });

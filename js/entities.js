@@ -3681,6 +3681,7 @@ class Ladder {
     this.w = data.w || 24;
     this.h = data.h || 120;
     this.type = data.type || 'iron';
+    this.isLongLadder = !!data.isLongLadder || (this.h >= 200);
   }
 
   draw(ctx, camX, camY) {
@@ -3688,6 +3689,27 @@ class Ladder {
     const ry = Math.round(this.y - camY);
 
     ctx.save();
+
+    // Heavy iron anchor plates for solitary long ladders into the dungeon wall
+    if (this.isLongLadder) {
+      for (let ay = ry + 20; ay < ry + this.h - 12; ay += 48) {
+        ctx.fillStyle = '#0f0c14';
+        ctx.fillRect(rx - 7, ay, 6, 7);
+        ctx.fillRect(rx + this.w + 1, ay, 6, 7);
+        ctx.fillStyle = this.type === 'gold' ? '#92400e' : '#392d42';
+        ctx.fillRect(rx - 6, ay + 1, 4, 5);
+        ctx.fillRect(rx + this.w + 2, ay + 1, 4, 5);
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(rx - 5, ay + 2, 2, 2);
+        ctx.fillRect(rx + this.w + 3, ay + 2, 2, 2);
+      }
+    }
+
+    // Top and bottom mounting flanges
+    ctx.fillStyle = this.type === 'gold' ? '#78350f' : '#17111b';
+    ctx.fillRect(rx - 3, ry, this.w + 6, 4);
+    ctx.fillRect(rx - 3, ry + this.h - 4, this.w + 6, 4);
+
     // Side rails
     ctx.fillStyle = this.type === 'gold' ? '#b45309' : '#1e1622';
     ctx.fillRect(rx, ry, 4, this.h);

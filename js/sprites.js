@@ -1303,35 +1303,71 @@ class SpriteManager {
   generateEnvironmentSprites() {
     this.sprites.props = {};
 
-    // Torches (4 animated frames)
-    this.sprites.props.torch = [];
-    for (let f = 0; f < 4; f++) {
-      const { canvas, ctx } = this.createCanvas(16, 24);
-      // Metal bracket
-      ctx.fillStyle = '#333';
-      ctx.fillRect(6, 12, 4, 10);
-      // Flame
-      const fh = 7 + (f % 2) * 2;
-      ctx.fillStyle = '#ff3300';
-      ctx.fillRect(5, 12 - fh, 6, fh);
-      ctx.fillStyle = '#ffcc00';
-      ctx.fillRect(6, 14 - fh, 4, fh - 2);
-      this.sprites.props.torch.push(canvas);
+    // ─── GOTHIC ANIMATED PROCEDURAL FLAMES (Zero floating artifact specks, teardrop contour, glowing core) ───
+    const paletteDefs = {
+      orange: { outer: '#b43a06', mid: '#f97316', core: '#fed7aa', seed: '#ffffff', ember: '#ea580c' },
+      blue:   { outer: '#0369a1', mid: '#0ea5e9', core: '#bae6fd', seed: '#ffffff', ember: '#38bdf8' },
+      purple: { outer: '#6b21a8', mid: '#a855f7', core: '#f3e8ff', seed: '#ffffff', ember: '#c084fc' },
+      green:  { outer: '#15803d', mid: '#22c55e', core: '#bbf7d0', seed: '#ffffff', ember: '#4ade80' },
+      white:  { outer: '#92400e', mid: '#facc15', core: '#fef08a', seed: '#ffffff', ember: '#fde047' }
+    };
+
+    this.sprites.fx = this.sprites.fx || {};
+    this.sprites.fx.fire = {};
+
+    for (const [colName, pal] of Object.entries(paletteDefs)) {
+      this.sprites.fx.fire[colName] = [];
+      for (let f = 0; f < 6; f++) {
+        const { canvas, ctx } = this.createCanvas(24, 30);
+        const t = (f / 6) * Math.PI * 2;
+        const wave1 = Math.sin(t) * 1.5;
+        const wave2 = Math.cos(t * 1.3) * 1.4;
+        const tipX = 12 + wave1;
+        const tipY = 5 + Math.sin(t * 2) * 1.6;
+
+        // 1. Outer Flame Teardrop Silhouette
+        ctx.fillStyle = pal.outer;
+        ctx.beginPath();
+        ctx.moveTo(6.5, 26);
+        ctx.quadraticCurveTo(4 + wave1 * 0.4, 16, tipX, tipY);
+        ctx.quadraticCurveTo(20 - wave1 * 0.4, 16, 17.5, 26);
+        ctx.closePath();
+        ctx.fill();
+
+        // 2. Mid Vibrant Flame Body
+        ctx.fillStyle = pal.mid;
+        ctx.beginPath();
+        ctx.moveTo(8, 26);
+        ctx.quadraticCurveTo(6 + wave2 * 0.4, 17, tipX - wave1 * 0.25, tipY + 4);
+        ctx.quadraticCurveTo(18 - wave2 * 0.4, 17, 16, 26);
+        ctx.closePath();
+        ctx.fill();
+
+        // 3. Inner White-Hot Seed / Core Flame
+        ctx.fillStyle = pal.core;
+        ctx.beginPath();
+        ctx.moveTo(9.5, 26);
+        ctx.quadraticCurveTo(8.5, 20, 12, 13 + Math.cos(t) * 1.5);
+        ctx.quadraticCurveTo(15.5, 20, 14.5, 26);
+        ctx.closePath();
+        ctx.fill();
+
+        // 4. Incandescent Spark Tip
+        ctx.fillStyle = pal.seed;
+        ctx.fillRect(11.5, 18 + Math.sin(t) * 1.5, 1.5, 4);
+
+        // 5. Coherent rising micro-ember (stays within vertical draft)
+        const sparkY = 2 + ((f * 5) % 11);
+        const sparkX = 12 + Math.sin(t + f) * 1.8;
+        ctx.fillStyle = pal.ember;
+        ctx.fillRect(sparkX, sparkY, 1.5, 1.5);
+
+        this.sprites.fx.fire[colName].push(canvas);
+      }
     }
 
-    // Blue Torch (for cold/dark sections)
-    this.sprites.props.blueTorch = [];
-    for (let f = 0; f < 4; f++) {
-      const { canvas, ctx } = this.createCanvas(16, 24);
-      ctx.fillStyle = '#333';
-      ctx.fillRect(6, 12, 4, 10);
-      const fh = 7 + (f % 2) * 2;
-      ctx.fillStyle = '#0077b6';
-      ctx.fillRect(5, 12 - fh, 6, fh);
-      ctx.fillStyle = '#90e0ef';
-      ctx.fillRect(6, 14 - fh, 4, fh - 2);
-      this.sprites.props.blueTorch.push(canvas);
-    }
+    this.sprites.props.torch = this.sprites.fx.fire.orange;
+    this.sprites.props.blueTorch = this.sprites.fx.fire.blue;
 
     // Spikes (Pinchos)
     const { canvas: sc, ctx: sctx } = this.createCanvas(32, 16);
@@ -1736,43 +1772,10 @@ class SpriteManager {
 
   // ─── ANIMATED FIRE FX (DESKTOP FIRE_FX PACK: 5 BIOME COLORS) ───
   async loadFireFx() {
-    this.sprites.fx = this.sprites.fx || {};
-    this.sprites.fx.fire = {
-      orange: [],
-      green: [],
-      blue: [],
-      purple: [],
-      white: []
-    };
-
-    const colors = ['orange', 'green', 'blue', 'purple', 'white'];
-    const promises = colors.map(color => new Promise((resolve) => {
-      const img = new Image();
-      img.src = `assets/fx/fire/${color}/loops/burning_loop_1.png`;
-      img.onload = () => {
-        const frames = [];
-        for (let i = 0; i < 6; i++) {
-          const { canvas, ctx } = this.createCanvas(32, 32);
-          ctx.drawImage(img, i * 32, 0, 32, 32, 0, 0, 32, 32);
-          frames.push(canvas);
-        }
-        this.sprites.fx.fire[color] = frames;
-        resolve();
-      };
-      img.onerror = () => {
-        console.warn(`[SpriteManager] Could not load fire fx for ${color}`);
-        resolve();
-      };
-    }));
-
-    await Promise.all(promises);
-
-    // If loaded, update default torch arrays with sliced high-res fire frames
-    if (this.sprites.fx.fire.orange && this.sprites.fx.fire.orange.length > 0) {
-      this.sprites.props.torch = this.sprites.fx.fire.orange;
-    }
-    if (this.sprites.fx.fire.blue && this.sprites.fx.fire.blue.length > 0) {
-      this.sprites.props.blueTorch = this.sprites.fx.fire.blue;
+    // High-fidelity procedural gothic fire generated in generateEnvironmentSprites().
+    // Ensures clean contours, glowing cores, and zero floating pixel specks across all 5 biome colors.
+    if (!this.sprites.fx || !this.sprites.fx.fire || !this.sprites.fx.fire.orange || this.sprites.fx.fire.orange.length === 0) {
+      this.generateEnvironmentSprites();
     }
   }
 

@@ -2820,34 +2820,71 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       return;
     }
 
-    // 2. Boss Arena Gothic Background Architecture
+    // 2. Boss Arena Gothic Background Architecture (Fully Grounded & Structural)
     if (this.level.isCombatScene && props.gothicArch) {
-      ctx.globalAlpha = 0.35;
+      const arenaW = this.level.width || 1200;
+      const floorY = 450;
+      const ceilingY = 52;
+
+      // A. Heavy Gothic Architrave Beam / Ceiling Cornice across the top
+      ctx.globalAlpha = 0.40;
+      ctx.fillStyle = '#0f0c16';
+      ctx.fillRect(Math.round(80 - camX), Math.round(ceilingY - camY - 14), arenaW - 160, 18);
+      ctx.fillStyle = '#2d2538';
+      ctx.fillRect(Math.round(80 - camX), Math.round(ceilingY - camY + 4), arenaW - 160, 4);
+
+      // B. Lateral Wall Buttresses / Pilasters from Ceiling to Floor
+      ctx.fillStyle = '#14101d';
+      ctx.fillRect(Math.round(80 - camX), Math.round(ceilingY - camY), 40, floorY - ceilingY);
+      ctx.fillRect(Math.round(arenaW - 120 - camX), Math.round(ceilingY - camY), 40, floorY - ceilingY);
+      ctx.fillStyle = '#32283e';
+      ctx.fillRect(Math.round(118 - camX), Math.round(ceilingY - camY), 4, floorY - ceilingY);
+      ctx.fillRect(Math.round(arenaW - 122 - camX), Math.round(ceilingY - camY), 4, floorY - ceilingY);
+
+      // C. Cathedral Column Shafts Grounded on Arena Floor (Supporting Arches)
+      const columnXPositions = [180, 320, 520, 680, 880, 1020];
+      for (const cx of columnXPositions) {
+        const rx = Math.round(cx - camX - 16);
+        const colTopY = Math.round(310 - camY);
+        const colH = Math.round(floorY - 310);
+        ctx.globalAlpha = 0.38;
+        if (props.standingPillar) {
+          ctx.drawImage(props.standingPillar, 0, 0, 48, 128, rx, colTopY, 32, colH);
+        } else {
+          ctx.fillStyle = '#171220';
+          ctx.fillRect(rx, colTopY, 32, colH);
+          ctx.fillStyle = '#342940';
+          ctx.fillRect(rx + 2, colTopY, 4, colH);
+        }
+      }
+
+      // D. Gothic Arches Resting Firmly Atop Column Shafts
+      ctx.globalAlpha = 0.36;
       const bArchPositions = [250, 600, 950];
       for (const bx of bArchPositions) {
         const rx = Math.round(bx - camX - 80);
-        const ry = Math.round(180 - camY);
+        const ry = Math.round(170 - camY);
         ctx.drawImage(props.gothicArch, 0, 0, 192, 192, rx, ry, 160, 160);
         if (props.gargoyleFrieze) {
-          ctx.drawImage(props.gargoyleFrieze, 0, 0, 96, 64, rx + 80 - 28, ry - 12, 56, 26);
+          ctx.drawImage(props.gargoyleFrieze, 0, 0, 96, 64, rx + 80 - 28, ry - 14, 56, 26);
         }
       }
-      if (props.hangingChains) {
-        ctx.globalAlpha = 0.5;
-        const chains = [180, 420, 780, 1020];
-        for (const cx of chains) {
-          ctx.drawImage(props.hangingChains, 0, 0, 16, 80, Math.round(cx - camX), Math.round(40 - camY), 16, 80);
-        }
-      }
-      if (props.standingPillar) {
-        ctx.globalAlpha = 0.45;
-        ctx.drawImage(props.standingPillar, 0, 0, 48, 128, Math.round(90 - camX), Math.round(322 - camY), 40, 128);
-        ctx.drawImage(props.standingPillar, 0, 0, 48, 128, Math.round(1070 - camX), Math.round(322 - camY), 40, 128);
-      }
+
+      // E. Central Keystones & Wall Crests (Mounted onto Arch Centers, Never Floating in Void)
       if (props.stoneCrest) {
-        ctx.globalAlpha = 0.6;
-        ctx.drawImage(props.stoneCrest, 0, 0, 48, 48, Math.round(600 - camX - 24), Math.round(140 - camY), 48, 48);
+        ctx.globalAlpha = 0.55;
+        ctx.drawImage(props.stoneCrest, 0, 0, 48, 48, Math.round(600 - camX - 22), Math.round(155 - camY), 44, 44);
       }
+
+      // F. Heavy Iron Chains Hanging Directly from the Ceiling Beam
+      if (props.hangingChains) {
+        ctx.globalAlpha = 0.45;
+        const chains = [200, 440, 760, 1000];
+        for (const cx of chains) {
+          ctx.drawImage(props.hangingChains, 0, 0, 16, 80, Math.round(cx - camX), Math.round(ceilingY + 8 - camY), 16, 80);
+        }
+      }
+
       ctx.restore();
       return;
     }
@@ -3183,21 +3220,19 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
   }
 
   drawTorches(camX, camY) {
+    if (!this.level || !this.level.torches) return;
     const fireFx = window.spriteManager && window.spriteManager.sprites && window.spriteManager.sprites.fx ? window.spriteManager.sprites.fx.fire : null;
     const props = window.spriteManager && window.spriteManager.sprites ? window.spriteManager.sprites.props : null;
-    if (!this.level || !this.level.torches) return;
 
     // Biome default torch color
     let defaultColor = 'orange';
     const biome = this.level.biome || '';
     const lvlId = this.level.id || '';
-    if (biome === 'frozen_peaks' || lvlId === 'tower2' || lvlId === 'boss_frost_guardian' || lvlId === 'boss_glacior' || lvlId === 'boss_flegias') {
+    if (biome === 'frozen_peaks' || lvlId === 'tower2' || lvlId.includes('frost') || lvlId.includes('glacior')) {
       defaultColor = 'blue';
-    } else if (biome === 'prologue' || lvlId === 'prologue') {
+    } else if (biome === 'prologue' || lvlId === 'prologue' || lvlId === 'boss_valgoth') {
       defaultColor = 'purple';
-    } else if (biome === 'void_sanctum' || lvlId === 'boss_valgoth') {
-      defaultColor = 'purple';
-    } else if (biome === 'sunken_necropolis' || lvlId === 'boss_pestilence') {
+    } else if (biome === 'sunken_necropolis' || lvlId.includes('pestilence')) {
       defaultColor = 'green';
     } else if (biome === 'surface_threshold' || lvlId === 'sanctuary') {
       defaultColor = 'white';
@@ -3206,11 +3241,11 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     }
 
     const haloColors = {
-      orange: { inner: 'rgba(255, 140, 30, 0.32)', mid: 'rgba(255, 70, 10, 0.12)' },
-      green: { inner: 'rgba(74, 222, 128, 0.32)', mid: 'rgba(22, 101, 52, 0.12)' },
-      blue: { inner: 'rgba(56, 189, 248, 0.32)', mid: 'rgba(14, 116, 144, 0.12)' },
-      purple: { inner: 'rgba(192, 132, 252, 0.32)', mid: 'rgba(107, 33, 168, 0.12)' },
-      white: { inner: 'rgba(254, 243, 199, 0.35)', mid: 'rgba(245, 158, 11, 0.12)' }
+      orange: { inner: 'rgba(255, 140, 30, 0.38)', mid: 'rgba(255, 70, 10, 0.14)', ember: '#ff4500' },
+      green:  { inner: 'rgba(74, 222, 128, 0.38)', mid: 'rgba(22, 101, 52, 0.14)', ember: '#22c55e' },
+      blue:   { inner: 'rgba(56, 189, 248, 0.38)', mid: 'rgba(14, 116, 144, 0.14)', ember: '#38bdf8' },
+      purple: { inner: 'rgba(192, 132, 252, 0.38)', mid: 'rgba(107, 33, 168, 0.14)', ember: '#c084fc' },
+      white:  { inner: 'rgba(254, 243, 199, 0.40)', mid: 'rgba(245, 158, 11, 0.14)', ember: '#fde047' }
     };
 
     const animIdx = Math.floor(Date.now() / 110) % 6;
@@ -3220,43 +3255,100 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       const ry = Math.round(t.y - camY);
 
       // Frustum culling
-      if (rx < -80 || rx > this.vWidth + 80 || ry < -80 || ry > this.vHeight + 80) continue;
+      if (rx < -60 || rx > this.vWidth + 60 || ry < -60 || ry > this.vHeight + 60) continue;
 
       const tColor = t.color || (t.blue ? 'blue' : defaultColor);
       const frames = fireFx && fireFx[tColor] && fireFx[tColor].length > 0
         ? fireFx[tColor]
         : (t.blue ? props?.blueTorch : props?.torch);
 
-      // 1. Gothic Wall Sconce Bracket (Wrought iron backplate and ring)
-      this.ctx.fillStyle = '#110d14';
-      this.ctx.fillRect(rx - 4, ry + 12, 8, 14);
-      this.ctx.fillStyle = '#261f2e';
-      this.ctx.fillRect(rx - 3, ry + 13, 6, 4);
-      this.ctx.fillStyle = '#473d52';
-      this.ctx.fillRect(rx - 5, ry + 11, 10, 2);
-      this.ctx.fillStyle = '#0a080c';
-      this.ctx.fillRect(rx - 1, ry + 26, 2, 6);
+      const hColor = haloColors[tColor] || haloColors.orange;
 
-      // 2. Animated Fire FX Flame (32x32 loop centered over sconce)
+      // Check if torch sits directly on a horizontal platform surface (ground brazier)
+      const isOnFloor = this.level.platforms && this.level.platforms.some(p =>
+        t.x >= p.x - 10 && t.x <= p.x + p.w + 10 && Math.abs(p.y - (t.y + 24)) < 24
+      );
+
+      this.ctx.save();
+
+      if (isOnFloor) {
+        // ── FREESTANDING GOTHIC GROUND BRAZIER (Pebetero Trípode de Forja) ──
+        // Iron Tripod Legs
+        this.ctx.fillStyle = '#110d18';
+        this.ctx.fillRect(rx - 8, ry + 16, 3, 12);
+        this.ctx.fillRect(rx + 5, ry + 16, 3, 12);
+        this.ctx.fillRect(rx - 2, ry + 18, 4, 10);
+        // Splayed feet
+        this.ctx.fillStyle = '#2d2438';
+        this.ctx.fillRect(rx - 10, ry + 26, 4, 2);
+        this.ctx.fillRect(rx + 6, ry + 26, 4, 2);
+        // Iron Cauldron Bowl
+        this.ctx.fillStyle = '#1a1424';
+        this.ctx.fillRect(rx - 9, ry + 10, 18, 7);
+        this.ctx.fillStyle = '#3f334d';
+        this.ctx.fillRect(rx - 10, ry + 9, 20, 2);
+        this.ctx.fillStyle = '#110d18';
+        this.ctx.fillRect(rx - 7, ry + 17, 14, 2);
+        // Glowing Coals bed inside bowl
+        this.ctx.fillStyle = '#260e05';
+        this.ctx.fillRect(rx - 7, ry + 10, 14, 3);
+        this.ctx.fillStyle = hColor.ember;
+        this.ctx.fillRect(rx - 5, ry + 10, 4, 2);
+        this.ctx.fillRect(rx + 1, ry + 10, 4, 2);
+      } else {
+        // ── ORNATE GOTHIC WALL SCONCE (Antorcha de Pared de Hierro Forjado) ──
+        // Wrought iron wall backplate with rivet details
+        this.ctx.fillStyle = '#0f0c15';
+        this.ctx.fillRect(rx - 4, ry + 6, 8, 22);
+        this.ctx.fillStyle = '#2a2233';
+        this.ctx.fillRect(rx - 3, ry + 8, 6, 18);
+        this.ctx.fillStyle = '#e2e8f0';
+        this.ctx.fillRect(rx - 2, ry + 7, 1.5, 1.5);
+        this.ctx.fillRect(rx + 0.5, ry + 7, 1.5, 1.5);
+        this.ctx.fillRect(rx - 2, ry + 25, 1.5, 1.5);
+        this.ctx.fillRect(rx + 0.5, ry + 25, 1.5, 1.5);
+
+        // Curved forged support arm
+        this.ctx.fillStyle = '#1a1424';
+        this.ctx.fillRect(rx - 6, ry + 14, 12, 3);
+        this.ctx.fillRect(rx - 7, ry + 11, 14, 2);
+        this.ctx.fillStyle = '#4a3d5b';
+        this.ctx.fillRect(rx - 5, ry + 13, 10, 1);
+
+        // Torch cup / brazier ring
+        this.ctx.fillStyle = '#161120';
+        this.ctx.fillRect(rx - 7, ry + 8, 14, 4);
+        this.ctx.fillStyle = '#3a2f47';
+        this.ctx.fillRect(rx - 8, ry + 7, 16, 2);
+
+        // Bed of burning coals
+        this.ctx.fillStyle = '#2b1006';
+        this.ctx.fillRect(rx - 5, ry + 8, 10, 2);
+        this.ctx.fillStyle = hColor.ember;
+        this.ctx.fillRect(rx - 3, ry + 8, 6, 1);
+      }
+
+      // 2. Animated Flame (Seamlessly nested into the coal bed at ry - 18)
       if (frames && frames.length > 0) {
         const frame = frames[animIdx % frames.length];
-        this.ctx.drawImage(frame, rx - 16, ry - 14);
+        this.ctx.drawImage(frame, rx - 12, ry - 18, 24, 30);
       }
 
       // 3. Dynamic Radial Light Halo with subtle flickering
       const flicker = (Math.sin(Date.now() * 0.008 + rx * 0.1) * 3 + Math.cos(Date.now() * 0.013 + ry * 0.1) * 2);
-      const haloRadius = 85 + flicker;
-      const hColor = haloColors[tColor] || haloColors.orange;
+      const haloRadius = 75 + flicker;
 
       const grad = this.ctx.createRadialGradient(rx, ry + 2, 4, rx, ry + 2, haloRadius);
       grad.addColorStop(0, hColor.inner);
-      grad.addColorStop(0.4, hColor.mid);
+      grad.addColorStop(0.45, hColor.mid);
       grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
       this.ctx.fillStyle = grad;
       this.ctx.beginPath();
       this.ctx.arc(rx, ry + 2, haloRadius, 0, Math.PI * 2);
       this.ctx.fill();
+
+      this.ctx.restore();
     }
   }
 
