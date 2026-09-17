@@ -1774,9 +1774,9 @@ class SkeletonEnemy {
 
     ctx.save();
     ctx.translate(rx + this.w / 2, ry + this.h - this.stepBob);
-    // Skeletons in Skeleton Sprite Pack naturally face LEFT by default:
-    // multiply by -this.dir so dir=1 (right) flips to right, and dir=-1 (left) keeps left
-    ctx.scale(-this.dir * this.scaleMultiplier, this.scaleMultiplier);
+    // Skeletons in Skeleton Sprite Pack naturally face RIGHT by default:
+    // multiply by this.dir so dir=1 (right) stays right, and dir=-1 (left) flips to left
+    ctx.scale(this.dir * this.scaleMultiplier, this.scaleMultiplier);
     ctx.rotate(this.wobbleAngle);
     ctx.translate(-13, -34); // Center at standard frame reference base
 

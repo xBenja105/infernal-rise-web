@@ -461,8 +461,16 @@ class Game {
           this.closeSanctuaryModal();
         } else if (this.state === 'SLOT_MACHINE') {
           this.closeSlotMachineModal();
-        } else if (this.state === 'BOON_SELECT' || this.state === 'LEVEL_UP') {
-          // Keep modal active until choice is selected
+        } else if (this.state === 'BOON_SELECT') {
+          if (!this.ui.boonModal || this.ui.boonModal.classList.contains('hidden')) {
+            // Fail-safe auto-recovery: modal DOM is hidden but state remained BOON_SELECT
+            this.closeBoonSelectionModal();
+          }
+        } else if (this.state === 'LEVEL_UP') {
+          if (!this.ui.levelUpModal || this.ui.levelUpModal.classList.contains('hidden')) {
+            // Fail-safe auto-recovery: modal DOM is hidden but state remained LEVEL_UP
+            this.closeLevelUpModal();
+          }
         } else {
           this.togglePause();
         }
@@ -1874,7 +1882,10 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
         });
         this.chests.push(relicChest);
         this.spawnSoulOrbs(cs.x + 16, cs.y + 10, 4, 80);
-        if (window.progression) window.progression.addRunXp(50);
+        if (window.progression) {
+          const lvls = window.progression.addRunXp(50);
+          if (lvls > 0) this.queueLevelUps(lvls);
+        }
       }
     }
 
@@ -3649,10 +3660,15 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
   closeHermitShopModal() {
     if (!this.ui.hermitShopModal) return;
     this.ui.hermitShopModal.classList.add('hidden');
-    this.state = 'PLAYING';
     if (window.soundEngine && window.soundEngine.playCloseSanctuary) {
       window.soundEngine.playCloseSanctuary();
     }
+    if (this.pendingLevelUps > 0) {
+      this.state = 'PLAYING';
+      this.openLevelUpModal();
+      return;
+    }
+    this.state = 'PLAYING';
   }
 
   renderHermitShopItems() {
@@ -3962,7 +3978,14 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     const boons = window.progression.getRandomBoons(3, isRelic);
     if (boons.length === 0) return;
 
-    this.prevStateBeforeModal = this.state;
+    // Never store a modal state in prevStateBeforeModal
+    const nonModalStates = ['PLAYING', 'MENU'];
+    if (nonModalStates.includes(this.state)) {
+      this.prevStateBeforeModal = this.state;
+    } else if (!this.prevStateBeforeModal || this.prevStateBeforeModal === 'LEVEL_UP' || this.prevStateBeforeModal === 'BOON_SELECT') {
+      this.prevStateBeforeModal = 'PLAYING';
+    }
+
     this.state = 'BOON_SELECT';
     this.input.attack = false;
     this.modalInputCooldownUntil = Date.now() + 450;
@@ -3991,7 +4014,9 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       this.ui.btnBoonReroll.disabled = !window.progression.canReroll();
     }
 
-    this.ui.boonModal.classList.remove('hidden');
+    if (this.ui && this.ui.boonModal) {
+      this.ui.boonModal.classList.remove('hidden');
+    }
   }
 
   renderBoonCards(boons) {
@@ -4056,17 +4081,34 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
   closeBoonSelectionModal() {
     this.input.attack = false;
     this.modalInputCooldownUntil = 0;
-    this.ui.boonModal.classList.add('hidden');
-    this.state = this.prevStateBeforeModal || 'PLAYING';
+    if (this.ui && this.ui.boonModal) {
+      this.ui.boonModal.classList.add('hidden');
+    }
+
+    // If level-up was queued during chest interaction, seamlessly transition to Level Up Modal!
+    if (this.pendingLevelUps > 0) {
+      this.state = 'PLAYING';
+      this.openLevelUpModal();
+      return;
+    }
+
+    const targetState = (this.prevStateBeforeModal && !['LEVEL_UP', 'BOON_SELECT', 'SANCTUARY', 'HERMIT_SHOP', 'SLOT_MACHINE'].includes(this.prevStateBeforeModal))
+      ? this.prevStateBeforeModal
+      : 'PLAYING';
+    this.prevStateBeforeModal = null;
+    this.state = targetState;
   }
 
   // ─── VAMPIRE SURVIVORS LEVEL-UP MODAL & QUEUE ───
   queueLevelUps(count = 1) {
     if (!this.pendingLevelUps) this.pendingLevelUps = 0;
     this.pendingLevelUps += count;
-    if (this.state !== 'LEVEL_UP') {
+    // Only open immediately if playing and no other modal is currently active!
+    if (this.state === 'PLAYING') {
       this.openLevelUpModal();
     }
+    // If state is 'BOON_SELECT', 'LEVEL_UP', 'HERMIT_SHOP', 'SANCTUARY', 'SLOT_MACHINE', 'PAUSED', 'DIALOGUE',
+    // the level up will stay safely in pendingLevelUps and open cleanly as soon as the active modal closes.
   }
 
   openLevelUpModal() {
@@ -4078,13 +4120,19 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     const boons = window.progression.getRandomBoons(3, false);
     if (boons.length === 0) {
       this.pendingLevelUps = 0;
+      this.state = 'PLAYING';
       return;
     }
 
-    if (this.state !== 'LEVEL_UP') {
+    // Only record previous state if it was a non-modal state
+    const nonModalStates = ['PLAYING', 'MENU'];
+    if (nonModalStates.includes(this.state)) {
       this.prevStateBeforeModal = this.state;
-      this.state = 'LEVEL_UP';
+    } else if (!this.prevStateBeforeModal || this.prevStateBeforeModal === 'LEVEL_UP' || this.prevStateBeforeModal === 'BOON_SELECT') {
+      this.prevStateBeforeModal = 'PLAYING';
     }
+
+    this.state = 'LEVEL_UP';
     this.input.attack = false;
     this.modalInputCooldownUntil = Date.now() + 450;
     if (this.ui && this.ui.interactionBadge) {
@@ -4192,7 +4240,12 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     if (this.ui && this.ui.levelUpModal) {
       this.ui.levelUpModal.classList.add('hidden');
     }
-    this.state = this.prevStateBeforeModal || 'PLAYING';
+    // Always return cleanly to PLAYING (or valid non-modal state), never a stuck modal state!
+    const targetState = (this.prevStateBeforeModal && !['LEVEL_UP', 'BOON_SELECT', 'SANCTUARY', 'HERMIT_SHOP', 'SLOT_MACHINE'].includes(this.prevStateBeforeModal))
+      ? this.prevStateBeforeModal
+      : 'PLAYING';
+    this.prevStateBeforeModal = null;
+    this.state = targetState;
   }
 
   // ─── PASSIVE WEAPONS HELPERS ───
@@ -4237,9 +4290,16 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
   }
 
   closeSanctuaryModal() {
-    this.ui.sanctuaryModal.classList.add('hidden');
+    if (this.ui && this.ui.sanctuaryModal) {
+      this.ui.sanctuaryModal.classList.add('hidden');
+    }
     if (this.player) {
       this.player.applyProgressionStats();
+    }
+    if (this.pendingLevelUps > 0) {
+      this.state = 'PLAYING';
+      this.openLevelUpModal();
+      return;
     }
     this.state = this.prevStateBeforeSanctuary || 'PLAYING';
   }
@@ -4334,11 +4394,16 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
   }
 
   closeSlotMachineModal() {
-    if (this.ui.slotMachineModal) {
+    if (this.ui && this.ui.slotMachineModal) {
       this.ui.slotMachineModal.classList.add('hidden');
     }
     this.isSlotSpinning = false;
-    if (this.ui.btnSpinSlot) this.ui.btnSpinSlot.disabled = false;
+    if (this.ui && this.ui.btnSpinSlot) this.ui.btnSpinSlot.disabled = false;
+    if (this.pendingLevelUps > 0) {
+      this.state = 'PLAYING';
+      this.openLevelUpModal();
+      return;
+    }
     this.state = this.prevStateBeforeSlot || 'PLAYING';
   }
 
@@ -4810,8 +4875,14 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
         this.closeSanctuaryModal();
       } else if (this.state === 'SLOT_MACHINE') {
         this.closeSlotMachineModal();
-      } else if (this.state === 'BOON_SELECT' || this.state === 'LEVEL_UP') {
-        // Selection is required
+      } else if (this.state === 'BOON_SELECT') {
+        if (!this.ui.boonModal || this.ui.boonModal.classList.contains('hidden')) {
+          this.closeBoonSelectionModal();
+        }
+      } else if (this.state === 'LEVEL_UP') {
+        if (!this.ui.levelUpModal || this.ui.levelUpModal.classList.contains('hidden')) {
+          this.closeLevelUpModal();
+        }
       } else {
         this.togglePause();
       }
