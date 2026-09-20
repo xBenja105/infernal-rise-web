@@ -4,7 +4,7 @@
 [![Engine Electron](https://img.shields.io/badge/Motor-Electron%20Desktop-47848F?style=for-the-badge&logo=electron)](https://github.com/xBenja105/infernal-rise-web)
 [![GitHub Repo](https://img.shields.io/badge/GitHub-xBenja105%2Finfernal--rise--web-181717?style=for-the-badge&logo=github)](https://github.com/xBenja105/infernal-rise-web)
 
-🎮 **Juego Nativo de Escritorio PC**: Ejecuta directamente `JUGAR.bat` o `npm start`.
+🎮 **Juego Nativo de Escritorio PC**: Ejecuta directamente el ejecutable en `dist/Infernal Rise 2.0.0.exe` o `npm start`.
 
 **Autor**: Benjamín Arriagada ([@xBenja105](https://github.com/xBenja105))
 
@@ -106,7 +106,7 @@ Durante cada ascenso encontrarás cofres sagrados que te ofrecen **1 de 3 bendic
 ---
 
 ## 🚀 Cómo Jugar en PC (Escritorio Local)
-- **Inicio Rápido**: Haz doble clic en `JUGAR.bat`. Iniciará el juego nativo de escritorio para PC.
+- **Inicio Rápido**: Ejecuta directamente el binario compilado `dist/Infernal Rise 2.0.0.exe`.
 - **Modo Desarrollo**: Ejecuta `npm start` en la terminal para iniciar el entorno Electron.
-- **Compilar Ejecutable Portátil**: Ejecuta `npm run dist:portable` para generar el instalador/ejecutable `.exe` independiente en la carpeta `dist/`.
+- **Compilar Ejecutable Portátil**: Ejecuta `npm run dist:portable` para empaquetar nuevamente el instalador/ejecutable `.exe` independiente en la carpeta `dist/`.
 
