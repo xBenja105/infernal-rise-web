@@ -112,7 +112,7 @@ class SpriteManager {
     this.generateBossSprites();
     this.generateNpcSprites();
     this.generateEnvironmentSprites();
-    await this.loadFireFx();
+    this.loadFireFx();
     await this.loadTilesetProps();
     await this.loadBossSprites();
     this.generateInfernalBackgrounds();
@@ -1799,10 +1799,10 @@ class SpriteManager {
     this.sprites.props.rockyRuinsTile = f3c_rock;
   }
 
-  // ─── ANIMATED FIRE FX (DESKTOP FIRE_FX PACK: 5 BIOME COLORS) ───
-  async loadFireFx() {
+  // ─── ANIMATED FIRE FX (HIGH-FIDELITY PROCEDURAL EMISSION) ───
+  loadFireFx() {
     // High-fidelity procedural gothic fire generated in generateEnvironmentSprites().
-    // Ensures clean contours, glowing cores, and zero floating pixel specks across all 5 biome colors.
+    // Ensures crisp contours, incandescent cores, and calibrated lighting across all 5 biome palettes.
     if (!this.sprites.fx || !this.sprites.fx.fire || !this.sprites.fx.fire.orange || this.sprites.fx.fire.orange.length === 0) {
       this.generateEnvironmentSprites();
     }

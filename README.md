@@ -11,31 +11,24 @@
 ---
 
 ## ⚔️ Acerca del Juego
-*Infernal Rise 2.0* es un videojuego de plataformas vertical y acción en 2D desarrollado nativamente para PC con ambientación de fantasía oscura y dificultad desafiante. Encarnas a **Kael**, un alma guerrera condenada a escalar las entrañas de **La Gran Torre del Inframundo**, una colosal megatorre que asciende desde los fosos más oscuros hasta la cumbre donde yace el **Gran Portal Terrenal hacia el Mundo de los Seres Vivos**.
+*Infernal Rise 2.0* es un videojuego de plataformas vertical y acción en 2D desarrollado nativamente para PC con ambientación de fantasía oscura y dificultad desafiante. Encarnas a **Kael**, un alma guerrera condenada que despierta en una caverna subterránea y debe escalar las entrañas de **La Gran Torre del Inframundo**, una colosal megatorre que asciende desde los fosos más oscuros hasta la cumbre donde yace el **Gran Portal Terrenal hacia el Mundo de los Seres Vivos**.
 
-A lo largo de los **6 Pisos de la Gran Torre**, enfrentarás a 5 Guardianes Legendarios:
-1. **Minos** (Juez de las Fosas Abisales — Piso 1)
-2. **Flegias** (Barquero del Abismo Hundido — Piso 2)
-3. **Azgalor** (Abrasador de la Fortaleza Carmesí — Piso 3)
-4. **Malacoda** (Bestia de las Agujas Glaciares — Piso 4)
-5. **Glacior** (Centinela del Umbral de la Cúpula — Piso 5)
-6. **La Gran Puerta Terrenal** (El Umbral hacia la Luz del Sol y la Vida — Piso 6)
+A lo largo de la campaña de **La Gran Torre**, enfrentarás a 3 Guardianes Legendarios con cinemáticas y fases únicas:
+1. **Azgalor, el Demonio Abrasador (Demon Slime)** — Señor de las Fosas (Piso 1)
+2. **Kranor, el Guardián Gélido (Frost Guardian)** — Custodio de las Cumbres Heladas (Piso 2)
+3. **Asterión, el Minotauro del Tártaro (Minotauro)** — Titán de las Cavernas • Jefe Final (Piso 3)
 
 ---
 
 ## 🏛️ Estructura de la Gran Torre del Inframundo
+- **Lobby: La Caverna Subterránea**:
+  - Bóveda de pizarra y basalto con runas arcanas, antorchas violetas y el monolito del Santuario de Mejoras.
 - **Piso 1: El Foso Abisal (Cimientos de Basalto y Fuego)**:
-  - Plataformas de basalto gótico, escaleras de hierro y fosas incandescentes. Custodiado por Minos.
-- **Piso 2: Las Catacumbas Hundidas (Bruma y Criptas)**:
-  - Fango espeso que altera la tracción, plataformas móviles sobre aguas estigias y esporas espectrales. Custodiado por Flegias.
-- **Piso 3: Las Murallas Carmesí (Fortaleza de Hierro)**:
-  - Plataformas de obsidiana, lluvia volcánica, trampas de pinchos y corrientes huracanadas. Custodiado por Azgalor.
-- **Piso 4: Las Agujas Glaciares (Viento y Escarcha)**:
-  - Cumbres de hielo resbaloso (`iceTile`), estalagmitas y tormentas de nieve helada. Custodiado por Malacoda.
-- **Piso 5: El Atrio Dorado (El Velo de la Cúpula)**:
-  - Mármol rúnico y plataformas de oro macizo (`goldTile`), luz pre-terrenal y guardianes dorados. Custodiado por Glacior.
-- **Piso 6: La Gran Puerta Terrenal (El Umbral de los Vivos)**:
-  - El ascenso definitivo bañado en rayos solares celestiales hacia el Gran Portal que te devolverá al mundo de los vivos.
+  - Plataformas de basalto gótico, escaleras de hierro y fosas incandescentes. Custodiado por **Azgalor**.
+- **Piso 2: Las Cumbres Heladas (Bruma y Permafrost)**:
+  - Plataformas de hielo resbaloso (`iceTile`), estalagmitas y ventiscas gélidas. Custodiado por **Kranor**.
+- **Piso 3: Las Cavernas Rocosas y Ruinas de la Superficie**:
+  - Cavernas escarpadas con mampostería de ruinas destruidas, lava en persecución ascendente y el enfrentamiento final contra **Asterión**, abriendo el portal hacia la luz del sol terrenal.
 
 ---
 

@@ -1,8 +1,6 @@
 # Dependencies
 node_modules/
 
-# SonarQube analysis workdir
-.scannerwork/
 
 # OS and editor files
 .DS_Store
