@@ -211,6 +211,7 @@ class CutsceneManager {
   finishCutscene() {
     this.active = false;
     this.letterboxProgress = 0;
+    this.targetLetterbox = 0;
     this.fadeAlpha = 0;
     this.whiteoutAlpha = 0;
     this.bossBannerAlpha = 0;

@@ -435,6 +435,14 @@ class Game {
         }
       }
 
+      // Dialogue advancement via keyboard (Space, Enter, E, Z, X, C, jump, interact, attack)
+      if (this.state === 'DIALOGUE') {
+        if (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyE' || e.code === 'KeyZ' || e.code === 'KeyX' || e.code === 'KeyC' || this.isActionKey('jump', e.code) || this.isActionKey('interact', e.code) || this.isActionKey('attack', e.code)) {
+          if (window.dialogueManager) window.dialogueManager.advance();
+          return;
+        }
+      }
+
       if (e.code === 'Enter') {
         if (this.state === 'VICTORY') {
           const btn = document.getElementById('btn-victory-next');
@@ -532,11 +540,14 @@ class Game {
       this.input.interact = false;
     });
 
-    // Canvas click attacks in combat mode / skip cutscenes
+    // Canvas click attacks in combat mode / skip cutscenes / advance dialogues
     this.canvas.addEventListener('mousedown', () => {
       if (this.state === 'PLAYING') this.input.attack = true;
       if (this.state === 'CUTSCENE' && this.cutsceneManager) {
         this.cutsceneManager.skip();
+      }
+      if (this.state === 'DIALOGUE' && window.dialogueManager) {
+        window.dialogueManager.advance();
       }
     });
     this.canvas.addEventListener('mouseup', () => {
@@ -1762,6 +1773,41 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     }
   }
 
+  resumeAfterBossDialogue() {
+    this.state = 'PLAYING';
+    if (this.player) {
+      this.player.isFrozen = false;
+      this.player.cutscenePose = null;
+      this.player.animState = 'idle';
+      this.player.vx = 0;
+      this.player.vy = 0;
+    }
+    if (this.cutsceneManager) {
+      this.cutsceneManager.active = false;
+      this.cutsceneManager.type = null;
+      this.cutsceneManager.targetLetterbox = 0;
+      this.cutsceneManager.letterboxProgress = 0;
+      this.cutsceneManager.bossBannerAlpha = 0;
+    }
+    // Re-center camera smoothly on the player
+    if (this.player && this.level) {
+      const targetCamX = this.player.x + this.player.w / 2 - this.vWidth / 2;
+      const targetCamY = this.player.y + this.player.h / 2 - this.vHeight / 2;
+      if (this.level.width <= this.vWidth) {
+        this.camX = (this.level.width - this.vWidth) / 2;
+      } else {
+        this.camX = Math.max(0, Math.min(this.level.width - this.vWidth, targetCamX));
+      }
+      if (this.level.height <= this.vHeight) {
+        this.camY = (this.level.height - this.vHeight) / 2;
+      } else {
+        this.camY = Math.max(0, Math.min(this.level.height - this.vHeight, targetCamY));
+      }
+    }
+    this.updateMouseCursor();
+    this.updateVirtualControlsVisibility();
+  }
+
   // ─── MAIN LOOP ───
   loop(timestamp) {
     if (!this.lastTime) this.lastTime = timestamp;
@@ -1923,18 +1969,16 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
           if (this.cutsceneManager) {
             this.cutsceneManager.startBossIntro(this.boss, () => {
               this.state = 'DIALOGUE';
-              this.player.isFrozen = true;
+              if (this.player) this.player.isFrozen = true;
               window.dialogueManager.startDialogue(this.boss.dialogueKey, () => {
-                this.state = 'PLAYING';
-                this.player.isFrozen = false;
+                this.resumeAfterBossDialogue();
               });
             });
           } else {
             this.state = 'DIALOGUE';
-            this.player.isFrozen = true;
+            if (this.player) this.player.isFrozen = true;
             window.dialogueManager.startDialogue(this.boss.dialogueKey, () => {
-              this.state = 'PLAYING';
-              this.player.isFrozen = false;
+              this.resumeAfterBossDialogue();
             });
           }
         }
@@ -2168,7 +2212,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
         this.boss,
         this.enemyProjectiles,
         window.soundEngine,
-        this.particleSystem
+        window.particleSystem
       );
     }
 

@@ -18,6 +18,14 @@ class DialogueManager {
     this.typingTimer = null;
     this.onCompleteCallback = null;
 
+    // Advance dialogue on click
+    if (this.modal) {
+      this.modal.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.advance();
+      });
+    }
+
     // Database of authentic game dialogues
     this.dialogueTrees = {
       prologue: [

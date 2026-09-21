@@ -3141,7 +3141,7 @@ class SpriteManager {
 
   // ─── DIALOGUE PORTRAITS (96x96) ───
   generatePortraits() {
-    this.portraits = {};
+    this.portraits = this.portraits || {};
 
     // 1. Kael Portrait
     const { canvas: kc, ctx: kctx } = this.createCanvas(96, 96);

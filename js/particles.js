@@ -125,6 +125,66 @@ class ParticleSystem {
     }
   }
 
+  // ─── THEMATIC FX SPARKS (BOSS INTRO & GENERAL) ───
+  spawnSparks(x, y, color = '#ff4400', count = 6) {
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 1.5 + Math.random() * 4.0;
+      this.particles.push({
+        type: 'spark',
+        x: x + (Math.random() - 0.5) * 8,
+        y: y + (Math.random() - 0.5) * 8,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 1.2,
+        gravity: 0.1,
+        size: 1.5 + Math.random() * 2.5,
+        color: color,
+        life: 1.0,
+        decay: 0.03 + Math.random() * 0.03
+      });
+    }
+  }
+
+  // ─── HEALING CROSSES ───
+  spawnHealingCrosses(x, y, count = 8) {
+    for (let i = 0; i < count; i++) {
+      this.particles.push({
+        type: 'heal',
+        x: x + (Math.random() - 0.5) * 20,
+        y: y + (Math.random() - 0.5) * 20,
+        vx: (Math.random() - 0.5) * 1.5,
+        vy: -1.5 - Math.random() * 2.0,
+        gravity: -0.02,
+        size: 3 + Math.random() * 2,
+        color: '#4ade80',
+        life: 1.0,
+        decay: 0.025 + Math.random() * 0.02
+      });
+    }
+  }
+
+  // ─── LEVEL UP FIREWORKS ───
+  spawnLevelUpFireworks(x, y, count = 30) {
+    this.triggerScreenShake(0.3, 8);
+    const colors = ['#ffd700', '#38bdf8', '#c084fc', '#4ade80', '#f43f5e'];
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 2.0 + Math.random() * 6.5;
+      this.particles.push({
+        type: 'spark',
+        x: x,
+        y: y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 2.0,
+        gravity: 0.15,
+        size: 2.5 + Math.random() * 3,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        life: 1.0,
+        decay: 0.015 + Math.random() * 0.02
+      });
+    }
+  }
+
   // ─── ASCENSION / TELEPORT SPARKS ───
   spawnTeleportSparks(x, y, count = 10) {
     for (let i = 0; i < count; i++) {
