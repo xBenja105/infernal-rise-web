@@ -88,6 +88,36 @@ class SpriteManager {
     }
     this.backgrounds = await Promise.all(bgPromises);
 
+    // 1b. Load Cave Multi-layer Backgrounds (assets/caves/)
+    const caveNames = ['background1', 'background2', 'background3', 'background4a', 'background4b'];
+    const cavePromises = caveNames.map(name => new Promise((resolve) => {
+      const img = new Image();
+      img.src = `assets/caves/${name}.png`;
+      img.onload = () => resolve(img);
+      img.onerror = () => {
+        console.warn(`Could not load assets/caves/${name}.png`);
+        resolve(null);
+      };
+    }));
+    this.caveBgs = await Promise.all(cavePromises);
+    this.sprites.caveBgs = this.caveBgs;
+
+    // 1c. Load Surface Outdoor Multi-layer Backgrounds (assets/surface/)
+    const surfacePromises = [];
+    for (let i = 1; i <= 6; i++) {
+      surfacePromises.push(new Promise((resolve) => {
+        const img = new Image();
+        img.src = `assets/surface/background${i}.png`;
+        img.onload = () => resolve(img);
+        img.onerror = () => {
+          console.warn(`Could not load assets/surface/background${i}.png`);
+          resolve(null);
+        };
+      }));
+    }
+    this.surfaceBgs = await Promise.all(surfacePromises);
+    this.sprites.surfaceBgs = this.surfaceBgs;
+
     // 2. Load Skeleton Sheets (Awaited with Promises for instant readiness)
     const skelNames = ['Attack', 'Dead', 'Hit', 'Idle', 'React', 'Walk'];
     const skelPromises = skelNames.map(name => new Promise((resolve) => {
@@ -1816,9 +1846,18 @@ class SpriteManager {
       { key: 'buildA', file: 'assets/tilesets/main_lev_buildA.png' },
       { key: 'buildB', file: 'assets/tilesets/main_lev_buildB.png' },
       { key: 'castleWalls', file: 'assets/castle/walls.png' },
+      { key: 'castleWallsFar', file: 'assets/castle/walls_far.png' },
+      { key: 'castleWoodEnv', file: 'assets/castle/wood_env.png' },
       { key: 'castleEnv', file: 'assets/castle/environment.png' },
       { key: 'castleEnvObj', file: 'assets/castle/env_objects.png' },
-      { key: 'castleLights', file: 'assets/castle/anim_lights.png' }
+      { key: 'castleEnvObjFar', file: 'assets/castle/env_objects_far.png' },
+      { key: 'castleBg', file: 'assets/castle/background.png' },
+      { key: 'castleLights', file: 'assets/castle/anim_lights.png' },
+      { key: 'caveMain', file: 'assets/caves/mainlev_build.png' },
+      { key: 'caveProps1', file: 'assets/caves/props1.png' },
+      { key: 'caveProps2', file: 'assets/caves/props2.png' },
+      { key: 'surfaceBuildA', file: 'assets/surface/main_lev_buildA.png' },
+      { key: 'surfaceBuildB', file: 'assets/surface/main_lev_buildB.png' }
     ];
 
     const promises = tilesetDefs.map(def => new Promise((resolve) => {
@@ -1914,6 +1953,55 @@ class SpriteManager {
     // 4. Slices from main_lev_buildB.png (Pedestals, Capitals, Relics)
     if (bB) {
       this.sprites.props.ornatePedestal = slice(bB, 0, 96, 96, 96);
+    }
+
+    // 5. Timber Trusses & Structural Braces from castle/wood_env.png
+    const cwe = this.sprites.tilesets.castleWoodEnv;
+    if (cwe) {
+      this.sprites.props.timberTrussX = slice(cwe, 0, 0, 48, 48);
+      this.sprites.props.timberTrussDiagLeft = slice(cwe, 48, 0, 32, 48);
+      this.sprites.props.timberTrussDiagRight = slice(cwe, 80, 0, 32, 48);
+      this.sprites.props.timberBeamH = slice(cwe, 0, 48, 64, 24);
+      this.sprites.props.timberPostV = slice(cwe, 112, 0, 32, 96);
+      this.sprites.props.scaffolding = slice(cwe, 144, 0, 64, 64);
+    }
+
+    // 6. Subterranean Mine Scaffolding & Rock Slices from caves
+    const cp1 = this.sprites.tilesets.caveProps1;
+    const cm = this.sprites.tilesets.caveMain;
+    if (cp1) {
+      this.sprites.props.caveMineBeam = slice(cp1, 64, 64, 48, 96);
+      this.sprites.props.caveMineCross = slice(cp1, 112, 64, 64, 64);
+      this.sprites.props.caveHangingRope = slice(cp1, 0, 64, 24, 80);
+    }
+    if (cm) {
+      this.sprites.props.caveStalactites = slice(cm, 128, 0, 64, 64);
+      this.sprites.props.caveRockLedge = slice(cm, 0, 64, 64, 32);
+      this.sprites.props.cavePillarShaft = slice(cm, 64, 0, 48, 96);
+    }
+
+    // 7. Surface World Foliage, Moss & Wildflowers from surface
+    const sba = this.sprites.tilesets.surfaceBuildA;
+    if (sba) {
+      this.sprites.props.surfaceMossLedge = slice(sba, 0, 0, 64, 32);
+      this.sprites.props.surfaceFoliageClump = slice(sba, 64, 0, 48, 48);
+      this.sprites.props.surfaceWildflowers = slice(sba, 112, 0, 32, 24);
+      this.sprites.props.surfaceAutumnVines = slice(sba, 144, 0, 32, 64);
+    }
+
+    // 8. Gothic Windows & Castle Wall Textures
+    const cwf = this.sprites.tilesets.castleWallsFar;
+    const cbg = this.sprites.tilesets.castleBg;
+    if (cwf) {
+      this.sprites.props.castleWallsFarImg = cwf;
+    }
+    if (cbg) {
+      this.sprites.props.castleBgImg = cbg;
+    }
+    if (ceo) {
+      this.sprites.props.gothicWindowBig = slice(ceo, 0, 0, 64, 128);
+      this.sprites.props.gothicRoseWindow = slice(ceo, 64, 0, 96, 96);
+      this.sprites.props.gargoyleCorbel = slice(ceo, 160, 0, 48, 48);
     }
   }
 

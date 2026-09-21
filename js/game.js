@@ -2743,6 +2743,60 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       return;
     }
 
+    // 5a. Outdoor Surface World 6-Layer Parallax (Floor 6 & Summit Emergence - Jump King Image 4)
+    const isSurface = (biomeKey === 'surface_threshold' || surfaceBlend >= 0.85 || (this.level && (this.level.id === 'tower6' || this.level.id === 'victory')));
+    const surfaceBgs = (window.spriteManager && window.spriteManager.surfaceBgs) ? window.spriteManager.surfaceBgs.filter(Boolean) : null;
+
+    if (isSurface && surfaceBgs && surfaceBgs.length >= 5) {
+      const tileH = 540;
+      const tileW = Math.round(426 * (540 / 384)); // 600px width
+      const speeds = [0.03, 0.08, 0.16, 0.28, 0.44, 0.65];
+      const time = Date.now() * 0.001;
+
+      for (let i = 0; i < Math.min(surfaceBgs.length, 6); i++) {
+        const sImg = surfaceBgs[i];
+        if (!sImg) continue;
+        const spd = speeds[i] || (0.1 * (i + 1));
+        const drift = (i === 0) ? (time * 6) : 0; // Gentle drifting sky clouds
+        const offX = -(camX * spd) + drift;
+        let startX = offX % tileW;
+        if (startX > 0) startX -= tileW;
+
+        const shiftY = (climbRatio - 0.5) * (20 + i * 14);
+        for (let x = startX; x < this.vWidth; x += tileW) {
+          this.ctx.drawImage(sImg, 0, 0, 426, 384, x, shiftY, tileW, tileH);
+        }
+      }
+      this.drawAtmosphericParticles();
+      return;
+    }
+
+    // 5b. Subterranean Cavern Parallax (Floors 1 & 2: Abyss & Catacombs)
+    const isCavern = (biomeKey === 'abyss' || biomeKey === 'sunken_necropolis' || (this.level && (this.level.id === 'tower1' || this.level.id === 'tower2')));
+    const caveBgs = (window.spriteManager && window.spriteManager.caveBgs) ? window.spriteManager.caveBgs.filter(Boolean) : null;
+
+    if (isCavern && caveBgs && caveBgs.length >= 3) {
+      const layerW = 960;
+      const layerH = 540;
+      const speeds = [0.04, 0.12, 0.24, 0.40];
+
+      for (let i = 0; i < Math.min(caveBgs.length, 4); i++) {
+        const cImg = caveBgs[i];
+        if (!cImg) continue;
+        const spd = speeds[i] || (0.1 * (i + 1));
+        const offX = -(camX * spd);
+        let startX = offX % layerW;
+        if (startX > 0) startX -= layerW;
+
+        const shiftY = (climbRatio - 0.5) * (30 + i * 16);
+        for (let x = startX; x < this.vWidth; x += layerW) {
+          this.ctx.drawImage(cImg, 0, 0, 960, 480, x, shiftY, layerW, layerH);
+        }
+      }
+      this.drawAtmosphericParticles();
+      return;
+    }
+
     // Layer 1: Celestial Spires & Sky (Parallax speed: 0.06)
     if (bg.skySpires) {
       const layerW = 960;
@@ -3022,47 +3076,167 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     if (!props || !this.level) return;
 
     const levelH = this.level.height || 3600;
+    const levelW = this.level.width || 960;
     const ctx = this.ctx;
+
+    // 1. Prologue Sanctuary and Boss Combat Arenas have dedicated clean backdrops
+    if (this.level.id === 'prologue' || this.level.isCombatScene) {
+      return;
+    }
 
     ctx.save();
 
-    // 1. Prologue Sanctuary and Boss Combat Arenas have dedicated clean backdrops rendered by drawParallaxBackgrounds / drawPrologueSanctuary
-    if (this.level.id === 'prologue' || this.level.isCombatScene) {
-      ctx.restore();
-      return;
-    }
+    const isFortress = (this.level.biome === 'fortress' || this.level.id === 'tower3' || this.level.id === 'boss_demon_slime');
+    const isHighRamparts = (this.level.id === 'tower4' || this.level.id === 'tower5');
+    const isSurface = (this.level.id === 'tower6' || this.level.id === 'victory' || this.level.biome === 'surface_threshold');
 
-    // 2. Vertical Tower Levels: Cathedral Arches and Grounded Column Shafts
-    if (!props.gothicArch) {
-      ctx.restore();
-      return;
-    }
+    // 2. FLOOR 3: Interior Gothic Castle Chamber (Jump King Image 3 Style)
+    if (isFortress) {
+      // 2a. Repeating dark brick wall facade across the tower interior
+      const brickPatternImg = props.castleWallsFarImg || props.castleBgImg;
+      if (brickPatternImg) {
+        const ptrnW = 256;
+        const ptrnH = 256;
+        const offX = -(camX * 0.25);
+        const offY = -(camY * 0.30);
+        let startX = offX % ptrnW;
+        if (startX > 0) startX -= ptrnW;
+        let startY = offY % ptrnH;
+        if (startY > 0) startY -= ptrnH;
 
-    ctx.globalAlpha = 0.32;
-    const archInterval = 680;
-    const startY = Math.floor((camY - 200) / archInterval) * archInterval;
-    const endY = camY + this.vHeight + 200;
-    const midX = (this.level.width || 960) / 2;
+        ctx.globalAlpha = 0.45;
+        for (let x = startX; x < this.vWidth; x += ptrnW) {
+          for (let y = startY; y < this.vHeight; y += ptrnH) {
+            ctx.drawImage(brickPatternImg, 0, 0, 512, 512, x, y, ptrnW, ptrnH);
+          }
+        }
+      }
 
-    for (let archY = startY; archY <= endY; archY += archInterval) {
-      if (archY < 120 || archY > levelH - 120) continue;
+      // 2b. Large Arched Windows with Candlelight Halos & Hanging Banners
+      ctx.globalAlpha = 0.70;
+      const windowInterval = 560;
+      const startWinY = Math.floor((camY - 200) / windowInterval) * windowInterval;
+      const endWinY = camY + this.vHeight + 200;
 
-      const rx = Math.round(midX - camX);
-      const ry = Math.round(archY - camY);
+      for (let wy = startWinY; wy <= endWinY; wy += windowInterval) {
+        if (wy < 100 || wy > levelH - 100) continue;
+        const rx = Math.round(levelW / 2 - camX);
+        const ry = Math.round(wy - camY);
+        if (ry < -200 || ry > this.vHeight + 200) continue;
 
-      if (ry < -250 || ry > this.vHeight + 250) continue;
+        // Central arched stained window
+        if (props.gothicWindowBig) {
+          ctx.drawImage(props.gothicWindowBig, 0, 0, 64, 128, rx - 32, ry, 64, 128);
+        } else if (props.gothicArch) {
+          ctx.drawImage(props.gothicArch, 0, 0, 192, 192, rx - 64, ry, 128, 128);
+        }
 
-      const archW = 160;
-      const archH = 160;
-      const archX = rx - archW / 2;
+        // Candle halo behind window
+        const winGlow = ctx.createRadialGradient(rx, ry + 60, 10, rx, ry + 60, 90);
+        winGlow.addColorStop(0, 'rgba(251, 146, 60, 0.45)');
+        winGlow.addColorStop(1, 'rgba(251, 146, 60, 0)');
+        ctx.fillStyle = winGlow;
+        ctx.beginPath();
+        ctx.arc(rx, ry + 60, 90, 0, Math.PI * 2);
+        ctx.fill();
 
-      // Central Cathedral Archway
-      ctx.drawImage(props.gothicArch, 0, 0, 192, 192, archX, ry, archW, archH);
+        // Heraldic Banners flanking the window
+        if (props.bannerRed) {
+          ctx.drawImage(props.bannerRed, 0, 0, 96, 48, rx - 180, ry + 20, 64, 96);
+        }
+        if (props.bannerBlue) {
+          ctx.drawImage(props.bannerBlue, 0, 0, 192, 96, rx + 120, ry + 20, 64, 96);
+        }
+      }
 
-      // Flanking Cathedral Columns
-      if (props.pillarShaft) {
-        ctx.drawImage(props.pillarShaft, 0, 0, 64, 96, archX - 22, ry + 36, 22, 160);
-        ctx.drawImage(props.pillarShaft, 0, 0, 64, 96, archX + archW, ry + 36, 22, 160);
+      // 2c. Open Balcony on Left Margin with Cold Rain Streaks (Jump King Image 3)
+      const balX = Math.round(60 - camX);
+      if (balX > -150 && balX < this.vWidth) {
+        ctx.strokeStyle = 'rgba(147, 197, 253, 0.35)';
+        ctx.lineWidth = 1;
+        const time = Date.now() * 0.003;
+        for (let ri = 0; ri < 14; ri++) {
+          const rxPos = balX + ((ri * 23 + time * 50) % 90);
+          const ryPos = (ri * 47 + time * 300) % this.vHeight;
+          ctx.beginPath();
+          ctx.moveTo(rxPos, ryPos);
+          ctx.lineTo(rxPos - 6, ryPos + 18);
+          ctx.stroke();
+        }
+      }
+    } else if (isHighRamparts) {
+      // 3. FLOOR 4 & 5: High Ruined Ramparts (Jump King Images 1 & 2 Style)
+      ctx.globalAlpha = 0.38;
+      const towerInterval = 720;
+      const startTY = Math.floor((camY - 300) / towerInterval) * towerInterval;
+      const endTY = camY + this.vHeight + 300;
+
+      for (let ty = startTY; ty <= endTY; ty += towerInterval) {
+        const ry = Math.round(ty - camY * 0.25);
+        if (ry < -300 || ry > this.vHeight + 300) continue;
+
+        // Distant castle silhouette towers
+        ctx.fillStyle = '#0f172a';
+        // Left silhouette tower
+        ctx.fillRect(40, ry, 120, 360);
+        ctx.beginPath();
+        ctx.moveTo(40, ry);
+        ctx.lineTo(100, ry - 70); // Spire peak
+        ctx.lineTo(160, ry);
+        ctx.closePath();
+        ctx.fill();
+
+        // Right silhouette tower
+        ctx.fillRect(this.vWidth - 160, ry + 40, 110, 320);
+        ctx.beginPath();
+        ctx.moveTo(this.vWidth - 160, ry + 40);
+        ctx.lineTo(this.vWidth - 105, ry - 25); // Spire peak
+        ctx.lineTo(this.vWidth - 50, ry + 40);
+        ctx.closePath();
+        ctx.fill();
+
+        // Arched bridge between them in deep background
+        ctx.beginPath();
+        ctx.moveTo(160, ry + 120);
+        ctx.quadraticCurveTo(this.vWidth / 2, ry + 70, this.vWidth - 160, ry + 120);
+        ctx.lineWidth = 14;
+        ctx.strokeStyle = '#0f172a';
+        ctx.stroke();
+      }
+    } else if (isSurface) {
+      // 4. FLOOR 6: Surface Battlements Opening to Horizon (Jump King Image 4)
+      ctx.globalAlpha = 0.65;
+      if (props.surfaceAutumnVines) {
+        const rx = Math.round(30 - camX);
+        for (let y = 100; y < levelH; y += 480) {
+          const ry = Math.round(y - camY);
+          if (ry > -100 && ry < this.vHeight + 100) {
+            ctx.drawImage(props.surfaceAutumnVines, 0, 0, 32, 64, rx, ry, 48, 96);
+            ctx.drawImage(props.surfaceAutumnVines, 0, 0, 32, 64, rx + levelW - 80, ry + 120, 48, 96);
+          }
+        }
+      }
+    } else {
+      // Default: Gothic Cathedral Arches
+      if (props.gothicArch) {
+        ctx.globalAlpha = 0.32;
+        const archInterval = 680;
+        const startY = Math.floor((camY - 200) / archInterval) * archInterval;
+        const endY = camY + this.vHeight + 200;
+        const midX = levelW / 2;
+
+        for (let archY = startY; archY <= endY; archY += archInterval) {
+          if (archY < 120 || archY > levelH - 120) continue;
+          const rx = Math.round(midX - camX);
+          const ry = Math.round(archY - camY);
+          if (ry < -250 || ry > this.vHeight + 250) continue;
+
+          ctx.drawImage(props.gothicArch, 0, 0, 192, 192, rx - 80, ry, 160, 160);
+          if (props.pillarShaft) {
+            ctx.drawImage(props.pillarShaft, 0, 0, 64, 96, rx - 102, ry + 36, 22, 160);
+            ctx.drawImage(props.pillarShaft, 0, 0, 64, 96, rx + 80, ry + 36, 22, 160);
+          }
+        }
       }
     }
 
@@ -3143,14 +3317,8 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
           other.y <= p.y + p.h + 20
         );
 
-      // 1. Architectural Corbels (Stepped stone bracket supports underneath floating platforms)
-      if (!hasSupportBelow && p.w >= 60) {
-        this.drawCorbelBracket(rx + 6, ry + p.h, style.corbel, style.dark, false);
-        this.drawCorbelBracket(rx + p.w - 18, ry + p.h, style.corbel, style.dark, true);
-        if (p.w >= 280) {
-          this.drawCorbelBracket(rx + Math.floor(p.w / 2) - 6, ry + p.h, style.corbel, style.dark, false);
-        }
-      }
+      // 1. Architectural Structural Grounding (Diagonal Wall Brackets, Cross Trusses, Columns, Surface Flora)
+      this.drawArchitecturalSupports(rx, ry, p, style, props, pType, hasSupportBelow);
 
 
       // 1c. Gothic Stone Balustrade / Railing on Haven and Summit platforms
@@ -3243,6 +3411,194 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
         this.ctx.lineTo(rx + p.w, ry + p.h);
         this.ctx.closePath();
         this.ctx.fill();
+      }
+    }
+  }
+
+  drawArchitecturalSupports(rx, ry, p, style, props, pType, hasSupportBelow) {
+    if (!p || p.isMovingPlatform || p.isCrumbling) return;
+    const ctx = this.ctx;
+    const levelW = (this.level && this.level.width) ? this.level.width : 960;
+    const levelH = (this.level && this.level.height) ? this.level.height : 3600;
+    const isSurface = (this.level && (this.level.id === 'tower6' || this.level.id === 'victory' || this.level.biome === 'surface_threshold')) || pType === 'terrenal_sanctuary';
+    const isCave = (pType === 'basalt_abyss' || pType === 'cavern_stone' || pType === 'catacomb_stone' || pType === 'rocky_ruins');
+    const isFortress = (pType === 'crimson_iron' || (this.level && (this.level.biome === 'fortress' || this.level.id === 'tower3')));
+
+    // 1. DIAGONAL WALL STRUTS / CANTILEVER BRACKETS
+    // If platform is near the left wall (p.x <= 160) and not spanning entire level width
+    if (p.x <= 160 && p.w < levelW - 100) {
+      if (props && props.timberTrussDiagLeft && (isFortress || !isCave)) {
+        ctx.drawImage(props.timberTrussDiagLeft, 0, 0, 32, 48, rx, ry + p.h, 28, 42);
+      } else if (props && props.caveRockLedge && isCave) {
+        ctx.drawImage(props.caveRockLedge, 0, 0, 64, 32, rx - 6, ry + p.h, 44, 22);
+      } else {
+        // Procedural heavy diagonal masonry bracket
+        ctx.fillStyle = style.dark;
+        ctx.beginPath();
+        ctx.moveTo(rx, ry + p.h);
+        ctx.lineTo(rx + 22, ry + p.h);
+        ctx.lineTo(rx - 14, ry + p.h + 34);
+        ctx.lineTo(rx - 22, ry + p.h + 34);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = style.corbel;
+        ctx.beginPath();
+        ctx.moveTo(rx + 2, ry + p.h);
+        ctx.lineTo(rx + 18, ry + p.h);
+        ctx.lineTo(rx - 12, ry + p.h + 30);
+        ctx.lineTo(rx - 18, ry + p.h + 30);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+
+    // If platform is near the right wall (p.x + p.w >= levelW - 160) and not spanning entire level width
+    if (p.x + p.w >= levelW - 160 && p.w < levelW - 100) {
+      if (props && props.timberTrussDiagRight && (isFortress || !isCave)) {
+        ctx.drawImage(props.timberTrussDiagRight, 0, 0, 32, 48, rx + p.w - 28, ry + p.h, 28, 42);
+      } else if (props && props.caveRockLedge && isCave) {
+        ctx.save();
+        ctx.scale(-1, 1);
+        ctx.drawImage(props.caveRockLedge, 0, 0, 64, 32, -(rx + p.w + 6), ry + p.h, 44, 22);
+        ctx.restore();
+      } else {
+        // Procedural heavy diagonal masonry bracket
+        ctx.fillStyle = style.dark;
+        ctx.beginPath();
+        ctx.moveTo(rx + p.w, ry + p.h);
+        ctx.lineTo(rx + p.w - 22, ry + p.h);
+        ctx.lineTo(rx + p.w + 14, ry + p.h + 34);
+        ctx.lineTo(rx + p.w + 22, ry + p.h + 34);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = style.corbel;
+        ctx.beginPath();
+        ctx.moveTo(rx + p.w - 2, ry + p.h);
+        ctx.lineTo(rx + p.w - 18, ry + p.h);
+        ctx.lineTo(rx + p.w + 12, ry + p.h + 30);
+        ctx.lineTo(rx + p.w + 18, ry + p.h + 30);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+
+    // 2. UNDER-PLATFORM STRUCTURAL TRUSSES & TIMBER BEAMS (Jump King Architecture)
+    if (!hasSupportBelow && p.w >= 50 && p.w < levelW - 80) {
+      // Horizontal Tie-Beam directly underneath the platform
+      if (props && props.timberBeamH && (isFortress || isCave)) {
+        const beamW = 48;
+        const count = Math.ceil(p.w / beamW);
+        for (let i = 0; i < count; i++) {
+          const bw = Math.min(beamW, p.w - i * beamW);
+          ctx.drawImage(props.timberBeamH, 0, 0, 64, 24, rx + i * beamW, ry + p.h, bw, 14);
+        }
+      }
+
+      // Modular Cross-Trusses or Scaffolding
+      if (p.w >= 70) {
+        const trussW = 40;
+        const trussH = 34;
+        const numTrusses = Math.floor((p.w - 16) / trussW);
+        const startOffset = Math.round((p.w - numTrusses * trussW) / 2);
+
+        for (let ti = 0; ti < numTrusses; ti++) {
+          const tx = rx + startOffset + ti * trussW;
+          if (props && props.timberTrussX && (isFortress || !isCave)) {
+            ctx.drawImage(props.timberTrussX, 0, 0, 48, 48, tx, ry + p.h + (props.timberBeamH ? 12 : 0), trussW, trussH);
+          } else if (props && props.caveMineCross && isCave) {
+            ctx.drawImage(props.caveMineCross, 0, 0, 64, 64, tx, ry + p.h + 4, trussW, trussH);
+          }
+        }
+      }
+
+      // Corbel Brackets on edges
+      if (props && props.gargoyleCorbel) {
+        ctx.drawImage(props.gargoyleCorbel, 0, 0, 48, 48, rx + 4, ry + p.h, 24, 24);
+        ctx.save();
+        ctx.scale(-1, 1);
+        ctx.drawImage(props.gargoyleCorbel, 0, 0, 48, 48, -(rx + p.w - 4), ry + p.h, 24, 24);
+        ctx.restore();
+      } else {
+        this.drawCorbelBracket(rx + 6, ry + p.h, style.corbel, style.dark, false);
+        this.drawCorbelBracket(rx + p.w - 18, ry + p.h, style.corbel, style.dark, true);
+        if (p.w >= 240) {
+          this.drawCorbelBracket(rx + Math.floor(p.w / 2) - 6, ry + p.h, style.corbel, style.dark, false);
+        }
+      }
+    }
+
+    // 3. VERTICAL COLUMNS & SCAFFOLDING POSTS (Grounding to world/depths)
+    if (!hasSupportBelow && (p.w >= 140 || p.isVerticalStructure || p.isPillarRemnant)) {
+      const colW = 20;
+      let targetBelowY = levelH - 60;
+      if (this.level && this.level.platforms) {
+        for (const other of this.level.platforms) {
+          if (other === p || other.isMovingPlatform || other.isCrumbling) continue;
+          if (other.x < p.x + p.w && other.x + other.w > p.x && other.y > p.y + p.h + 10) {
+            if (other.y < targetBelowY) {
+              targetBelowY = other.y;
+            }
+          }
+        }
+      }
+      const maxColH = Math.min(260, targetBelowY - (p.y + p.h));
+
+      if (maxColH > 30) {
+        const numCols = p.w >= 260 ? 2 : 1;
+        const colXPositions = numCols === 1
+          ? [rx + Math.floor(p.w / 2) - colW / 2]
+          : [rx + 32, rx + p.w - 32 - colW];
+
+        for (const cx of colXPositions) {
+          ctx.save();
+          if (isCave && props && props.caveMineBeam) {
+            for (let cy = ry + p.h; cy < ry + p.h + maxColH; cy += 64) {
+              const segH = Math.min(64, ry + p.h + maxColH - cy);
+              ctx.drawImage(props.caveMineBeam, 0, 0, 48, 96, cx - 4, cy, colW + 8, segH);
+            }
+          } else if ((isFortress || !isCave) && props && props.timberPostV) {
+            for (let cy = ry + p.h; cy < ry + p.h + maxColH; cy += 72) {
+              const segH = Math.min(72, ry + p.h + maxColH - cy);
+              ctx.drawImage(props.timberPostV, 0, 0, 32, 96, cx - 2, cy, colW + 4, segH);
+            }
+          } else if (props && props.pillarShaft) {
+            for (let cy = ry + p.h; cy < ry + p.h + maxColH; cy += 80) {
+              const segH = Math.min(80, ry + p.h + maxColH - cy);
+              ctx.drawImage(props.pillarShaft, 0, 0, 64, 96, cx - 6, cy, colW + 12, segH);
+            }
+          } else {
+            const grad = ctx.createLinearGradient(cx, 0, cx + colW, 0);
+            grad.addColorStop(0, style.dark);
+            grad.addColorStop(0.5, style.corbel);
+            grad.addColorStop(1, style.dark);
+            ctx.fillStyle = grad;
+            ctx.fillRect(cx, ry + p.h, colW, maxColH);
+          }
+          ctx.restore();
+        }
+      }
+    }
+
+    // 4. SURFACE LIVING WORLD OVERGROWTH (Floor 6 & Summit - Jump King Living World Style)
+    if (isSurface && props) {
+      if (props.surfaceWildflowers && p.w >= 40) {
+        ctx.drawImage(props.surfaceWildflowers, 0, 0, 32, 24, rx + 4, ry - 14, 20, 16);
+        if (p.w >= 100) {
+          ctx.drawImage(props.surfaceWildflowers, 0, 0, 32, 24, rx + p.w - 24, ry - 14, 20, 16);
+        }
+      }
+      if (props.surfaceMossLedge && p.w >= 60) {
+        ctx.drawImage(props.surfaceMossLedge, 0, 0, 64, 32, rx, ry, 36, 18);
+        ctx.save();
+        ctx.scale(-1, 1);
+        ctx.drawImage(props.surfaceMossLedge, 0, 0, 64, 32, -(rx + p.w), ry, 36, 18);
+        ctx.restore();
+      }
+      if (props.surfaceFoliageClump && !hasSupportBelow && p.w >= 80) {
+        ctx.drawImage(props.surfaceFoliageClump, 0, 0, 48, 48, rx + 16, ry + p.h - 4, 32, 32);
+        if (p.w >= 180) {
+          ctx.drawImage(props.surfaceFoliageClump, 0, 0, 48, 48, rx + p.w - 48, ry + p.h - 4, 32, 32);
+        }
       }
     }
   }

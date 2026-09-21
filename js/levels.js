@@ -190,6 +190,7 @@ class LevelManager {
           h: 28,
           type: pType,
           isCheckpoint: true,
+          isHaven: true,
           checkpointId: ckptId++
         };
         platforms.push(havenPlat);
@@ -490,8 +491,9 @@ class LevelManager {
     }
 
     // ─── SUMMIT PLATEAU & ASCENSION PORTAL ───
-    const summitAltar = { x: 200, y: 460, w: 560, h: 32, type: 'runic', isCheckpoint: true, checkpointId: ckptId++ };
-    const summitStep = { x: 360, y: 360, w: 240, h: 24, type: 'runic' };
+    const summitType = config.basePlatformType || 'runic';
+    const summitAltar = { x: 200, y: 460, w: 560, h: 32, type: summitType, isCheckpoint: true, isHaven: true, isSummit: true, checkpointId: ckptId++ };
+    const summitStep = { x: 360, y: 360, w: 240, h: 24, type: summitType, isSummit: true };
     platforms.push(summitAltar, summitStep);
 
     const isSummitBlue = (config.basePlatformType === 'glacial_ice' || config.biome === 'frozen_peaks');
