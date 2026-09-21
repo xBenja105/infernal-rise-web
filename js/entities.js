@@ -611,6 +611,9 @@ class Player {
     if (window.progression && window.progression.hasBoon('ironWill')) {
       amount = Math.round(amount * 0.65);
     }
+    if (window.progression && window.progression.hasBoon('curse_damage')) {
+      amount = Math.round(amount * 1.15);
+    }
     this.hp -= amount;
     this.invulnerableTimer = 1.1; // 1.1s of i-frame grace period to prevent unfair consecutive stuns
     this.vy = -5.0;
@@ -3601,6 +3604,235 @@ class BreakableUrn {
       ctx.fillRect(rx + 2, ry + 22, 6, 4);
       ctx.fillRect(rx + 11, ry + 21, 7, 5);
     }
+    ctx.restore();
+  }
+}
+
+// 3b. CRACKED BREAKABLE WALL (Secret Room Gate)
+class CrackedWall {
+  constructor(data) {
+    this.id = data.id || ('cracked_wall_' + Math.random().toString(36).substr(2, 9));
+    this.x = data.x;
+    this.y = data.y;
+    this.w = data.w || 32;
+    this.h = data.h || 80;
+    this.maxHp = data.hp || 50;
+    this.hp = this.maxHp;
+    this.isBroken = false;
+    this.hitCooldown = 0;
+    this.shakeTimer = 0;
+    this.biome = data.biome || 'abyss';
+  }
+
+  update(dt) {
+    if (this.hitCooldown > 0) this.hitCooldown -= dt;
+    if (this.shakeTimer > 0) this.shakeTimer -= dt;
+  }
+
+  checkHit(attackHitbox, damage = 25, soundEng, particleSys) {
+    if (this.isBroken || this.hitCooldown > 0) return false;
+    if (attackHitbox.x + attackHitbox.w > this.x && attackHitbox.x < this.x + this.w &&
+        attackHitbox.y + attackHitbox.h > this.y && attackHitbox.y < this.y + this.h) {
+      this.hitCooldown = 0.2;
+      this.shakeTimer = 0.18;
+      this.hp -= damage;
+      if (soundEng && soundEng.playHit) soundEng.playHit();
+      if (particleSys) {
+        particleSys.spawnDust(this.x + this.w / 2, this.y + this.h / 2, 8);
+        if (particleSys.spawnSlashSparks) particleSys.spawnSlashSparks(this.x + this.w / 2, this.y + this.h / 2, 1);
+      }
+      if (this.hp <= 0) {
+        this.break(soundEng, particleSys);
+      }
+      return true;
+    }
+    return false;
+  }
+
+  break(soundEng, particleSys) {
+    if (this.isBroken) return;
+    this.isBroken = true;
+    this.hp = 0;
+    if (soundEng) {
+      if (soundEng.playUrnBreak) soundEng.playUrnBreak();
+      if (soundEng.playChestOpen) soundEng.playChestOpen();
+    }
+    if (particleSys) {
+      particleSys.spawnDust(this.x + this.w / 2, this.y + this.h / 2, 30);
+      if (particleSys.spawnBloodExplosion) {
+        particleSys.spawnBloodExplosion(this.x + this.w / 2, this.y + this.h / 2, 20);
+      }
+    }
+    if (window.game && window.game.triggerScreenShake) {
+      window.game.triggerScreenShake(7, 0.25);
+    }
+  }
+
+  draw(ctx, camX, camY) {
+    if (this.isBroken) return;
+    const rx = Math.round(this.x - camX);
+    const ry = Math.round(this.y - camY);
+
+    const shakeX = this.shakeTimer > 0 ? (Math.random() - 0.5) * 4 : 0;
+    const shakeY = this.shakeTimer > 0 ? (Math.random() - 0.5) * 4 : 0;
+    const drawX = rx + shakeX;
+    const drawY = ry + shakeY;
+
+    ctx.save();
+    // Base dark basalt / stone wall block
+    ctx.fillStyle = '#100b14';
+    ctx.fillRect(drawX, drawY, this.w, this.h);
+
+    // Stone blocks texture
+    ctx.fillStyle = '#1c1524';
+    ctx.fillRect(drawX + 2, drawY + 2, this.w - 4, this.h - 4);
+
+    // Horizontal joints
+    ctx.strokeStyle = '#08050a';
+    ctx.lineWidth = 2;
+    for (let yOffset = 20; yOffset < this.h; yOffset += 20) {
+      ctx.beginPath();
+      ctx.moveTo(drawX + 2, drawY + yOffset);
+      ctx.lineTo(drawX + this.w - 2, drawY + yOffset);
+      ctx.stroke();
+    }
+
+    // Cracks based on health damage
+    const damageRatio = 1 - (this.hp / this.maxHp);
+    ctx.strokeStyle = damageRatio > 0.5 ? '#ff3b30' : '#8b5cf6';
+    ctx.shadowColor = damageRatio > 0.5 ? 'rgba(255, 59, 48, 0.7)' : 'rgba(139, 92, 246, 0.6)';
+    ctx.shadowBlur = 6;
+    ctx.lineWidth = damageRatio > 0.5 ? 2.5 : 1.5;
+
+    // Fissure 1 (vertical jagged line)
+    ctx.beginPath();
+    ctx.moveTo(drawX + this.w * 0.4, drawY + 6);
+    ctx.lineTo(drawX + this.w * 0.6, drawY + 24);
+    ctx.lineTo(drawX + this.w * 0.35, drawY + 48);
+    ctx.lineTo(drawX + this.w * 0.55, drawY + 70);
+    ctx.stroke();
+
+    // Fissure 2 (if damaged)
+    if (damageRatio > 0.3) {
+      ctx.beginPath();
+      ctx.moveTo(drawX + this.w * 0.6, drawY + 24);
+      ctx.lineTo(drawX + this.w * 0.8, drawY + 36);
+      ctx.lineTo(drawX + this.w * 0.7, drawY + 60);
+      ctx.stroke();
+    }
+    if (damageRatio > 0.6) {
+      ctx.beginPath();
+      ctx.moveTo(drawX + this.w * 0.35, drawY + 48);
+      ctx.lineTo(drawX + this.w * 0.15, drawY + 58);
+      ctx.stroke();
+    }
+
+    // Glowing crack pulse
+    ctx.fillStyle = damageRatio > 0.5 ? 'rgba(255, 60, 60, 0.25)' : 'rgba(147, 51, 234, 0.2)';
+    ctx.fillRect(drawX + 4, drawY + 4, this.w - 8, this.h - 8);
+
+    ctx.restore();
+  }
+}
+
+// 3c. BLOOD SACRIFICE ALTAR (Dark Pacts)
+class BloodAltar {
+  constructor(data) {
+    this.id = data.id || ('blood_altar_' + Math.random().toString(36).substr(2, 9));
+    this.x = data.x;
+    this.y = data.y;
+    this.w = data.w || 44;
+    this.h = data.h || 52;
+    this.isUsed = false;
+    this.isNear = false;
+    this.pulseTime = 0;
+  }
+
+  update(dt, player) {
+    this.pulseTime += dt;
+    if (this.isUsed) {
+      this.isNear = false;
+      return;
+    }
+    const dist = Math.hypot(
+      (player.x + player.w / 2) - (this.x + this.w / 2),
+      (player.y + player.h / 2) - (this.y + this.h / 2)
+    );
+    this.isNear = dist < 70;
+  }
+
+  use() {
+    this.isUsed = true;
+    this.isNear = false;
+  }
+
+  draw(ctx, camX, camY) {
+    const rx = Math.round(this.x - camX);
+    const ry = Math.round(this.y - camY);
+
+    ctx.save();
+    // Pedestal Base (Obsidian steps)
+    ctx.fillStyle = '#0f0507';
+    ctx.fillRect(rx, ry + this.h - 12, this.w, 12);
+    ctx.fillStyle = '#22090e';
+    ctx.fillRect(rx + 4, ry + this.h - 22, this.w - 8, 10);
+    ctx.fillStyle = '#140508';
+    ctx.fillRect(rx + 8, ry + 16, this.w - 16, this.h - 38);
+
+    // Glowing Crimson Veins
+    const pulse = Math.sin(this.pulseTime * 3) * 0.3 + 0.7;
+    ctx.strokeStyle = this.isUsed ? '#4a151b' : `rgba(239, 68, 68, ${pulse})`;
+    ctx.shadowColor = this.isUsed ? 'transparent' : '#ef4444';
+    ctx.shadowBlur = this.isUsed ? 0 : 8;
+    ctx.lineWidth = 1.5;
+
+    ctx.beginPath();
+    ctx.moveTo(rx + 14, ry + this.h - 10);
+    ctx.lineTo(rx + 18, ry + this.h - 24);
+    ctx.lineTo(rx + 14, ry + 24);
+    ctx.lineTo(rx + 22, ry + 14);
+    ctx.moveTo(rx + this.w - 14, ry + this.h - 10);
+    ctx.lineTo(rx + this.w - 18, ry + this.h - 24);
+    ctx.lineTo(rx + this.w - 14, ry + 24);
+    ctx.lineTo(rx + 22, ry + 14);
+    ctx.stroke();
+
+    // Chalice Basin atop the Altar
+    ctx.fillStyle = '#4a0e17';
+    ctx.beginPath();
+    ctx.ellipse(rx + this.w / 2, ry + 14, 12, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Blood Flame / Orb in chalice
+    if (!this.isUsed) {
+      const flameWobble = Math.sin(this.pulseTime * 6) * 1.5;
+      const flameGrad = ctx.createRadialGradient(
+        rx + this.w / 2, ry + 9 + flameWobble, 1,
+        rx + this.w / 2, ry + 9 + flameWobble, 9
+      );
+      flameGrad.addColorStop(0, '#ffffff');
+      flameGrad.addColorStop(0.3, '#ff2244');
+      flameGrad.addColorStop(0.8, '#880015');
+      flameGrad.addColorStop(1, 'rgba(40, 0, 8, 0)');
+
+      ctx.fillStyle = flameGrad;
+      ctx.beginPath();
+      ctx.arc(rx + this.w / 2, ry + 9 + flameWobble, 9, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Floating Skull Rune above
+      ctx.fillStyle = `rgba(255, 100, 100, ${pulse * 0.8})`;
+      ctx.font = '10px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('🩸', rx + this.w / 2, ry - 4 + flameWobble);
+    } else {
+      // Extinguished ashes in chalice
+      ctx.fillStyle = '#2b1b1d';
+      ctx.beginPath();
+      ctx.arc(rx + this.w / 2, ry + 13, 5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
     ctx.restore();
   }
 }

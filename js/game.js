@@ -58,6 +58,12 @@ class Game {
     this.healthOrbs = [];
     this.chests = [];
     this.urns = [];
+    this.crackedWalls = [];
+    this.bloodAltars = [];
+    this.activeBloodAltar = null;
+    this.nearBloodAltar = false;
+    this.currentBloodAltar = null;
+    this.offeredCursedBoon = null;
     this.flameWaves = [];
     this.activeChest = null;
     this.pendingLevelUps = 0;
@@ -241,6 +247,16 @@ class Game {
       hermitShopRelicsCount: document.getElementById('hermit-shop-relics-count'),
       btnCloseHermitShop: document.getElementById('btn-close-hermit-shop'),
       btnHermitShopDone: document.getElementById('btn-hermit-shop-done'),
+
+      // Blood Altar Modal
+      bloodAltarModal: document.getElementById('blood-altar-modal'),
+      btnCloseBloodAltar: document.getElementById('btn-close-blood-altar'),
+      btnBloodAltarDecline: document.getElementById('btn-blood-altar-decline'),
+      btnPactSouls: document.getElementById('btn-pact-souls'),
+      btnPactCurse: document.getElementById('btn-pact-curse'),
+      bloodAltarCurrentHp: document.getElementById('blood-altar-current-hp'),
+      bloodAltarSouls: document.getElementById('blood-altar-souls'),
+      bloodAltarBoonName: document.getElementById('blood-altar-boon-name'),
 
       // Mobile Touch Elements
       btnTouchPause: document.getElementById('btn-touch-pause'),
@@ -450,6 +466,8 @@ class Game {
           this.openSanctuaryModal();
         } else if (this.nearHermitMerchant) {
           this.openHermitShopModal();
+        } else if (this.nearBloodAltar && this.activeBloodAltar) {
+          this.openBloodAltarModal(this.activeBloodAltar);
         } else if (this.nearChallengeShrine) {
           this.activateChallengeShrine(this.level.challengeShrine);
         } else {
@@ -471,6 +489,8 @@ class Game {
         }
         if (this.state === 'HERMIT_SHOP') {
           this.closeHermitShopModal();
+        } else if (this.state === 'BLOOD_ALTAR') {
+          this.closeBloodAltarModal();
         } else if (this.state === 'SANCTUARY') {
           this.closeSanctuaryModal();
         } else if (this.state === 'SLOT_MACHINE') {
@@ -556,6 +576,12 @@ class Game {
             this.openSlotMachineModal();
           } else if (this.nearSanctuary) {
             this.openSanctuaryModal();
+          } else if (this.nearHermitMerchant) {
+            this.openHermitShopModal();
+          } else if (this.nearBloodAltar && this.activeBloodAltar) {
+            this.openBloodAltarModal(this.activeBloodAltar);
+          } else if (this.nearChallengeShrine) {
+            this.activateChallengeShrine(this.level.challengeShrine);
           } else {
             this.checkNpcInteraction();
           }
@@ -964,6 +990,20 @@ class Game {
     if (this.ui.btnHermitShopDone) {
       this.ui.btnHermitShopDone.addEventListener('click', () => this.closeHermitShopModal());
     }
+
+    // Altar de Sangre Modal Actions
+    if (this.ui.btnCloseBloodAltar) {
+      this.ui.btnCloseBloodAltar.addEventListener('click', () => this.closeBloodAltarModal());
+    }
+    if (this.ui.btnBloodAltarDecline) {
+      this.ui.btnBloodAltarDecline.addEventListener('click', () => this.closeBloodAltarModal());
+    }
+    if (this.ui.btnPactSouls) {
+      this.ui.btnPactSouls.addEventListener('click', () => this.acceptBloodPactSouls());
+    }
+    if (this.ui.btnPactCurse) {
+      this.ui.btnPactCurse.addEventListener('click', () => this.acceptBloodPactCurse());
+    }
   }
 
   // ─── STATE / SCREEN TRANSITIONS ───
@@ -1168,9 +1208,15 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     this.nearHermitMerchant = false;
     this.nearChallengeShrine = false;
     this.lastReportedAltitude = 0;
-    this.levelGraceTimer = 4.0;
     this.chests = (this.level.chests || []).map(c => new BoonChest(c));
     this.urns = (this.level.urns || []).map(u => new BreakableUrn(u));
+    this.crackedWalls = (this.level.crackedWalls || []).map(w => new CrackedWall(w));
+    this.bloodAltars = (this.level.bloodAltars || []).map(a => new BloodAltar(a));
+    this.activeBloodAltar = null;
+    this.nearBloodAltar = false;
+    if (this.level.hermitOutpost) {
+      this.hermitMerchant = { ...this.level.hermitOutpost };
+    }
 
     if (window.progression) window.progression.updateHUD();
     if (this.passiveWeaponsManager) this.passiveWeaponsManager.updateHUD();
@@ -1984,6 +2030,37 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
         const orbs = u.checkHit(swordHitbox, window.soundEngine, window.particleSystem);
         if (orbs) this.soulOrbs.push(...orbs);
       }
+      if (this.crackedWalls) {
+        for (const cw of this.crackedWalls) {
+          cw.checkHit(swordHitbox, this.player.attackDamage || 25, window.soundEngine, window.particleSystem);
+        }
+      }
+    }
+
+    // 5b. Update Cracked Walls & solid barrier collisions
+    if (this.crackedWalls) {
+      for (const cw of this.crackedWalls) {
+        cw.update(dt);
+        if (!cw.isBroken) {
+          if (this.player.x + this.player.w > cw.x && this.player.x < cw.x + cw.w &&
+              this.player.y + this.player.h > cw.y + 4 && this.player.y < cw.y + cw.h - 4) {
+            if (this.player.x + this.player.w / 2 < cw.x + cw.w / 2) {
+              this.player.x = cw.x - this.player.w;
+              this.player.vx = Math.min(0, this.player.vx);
+            } else {
+              this.player.x = cw.x + cw.w;
+              this.player.vx = Math.max(0, this.player.vx);
+            }
+          }
+        }
+      }
+    }
+
+    // 5c. Update Blood Altars proximity
+    if (this.bloodAltars) {
+      for (const ba of this.bloodAltars) {
+        ba.update(dt, this.player);
+      }
     }
 
     // 6. Update Boon Chests proximity
@@ -2019,6 +2096,16 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     for (let i = this.flameWaves.length - 1; i >= 0; i--) {
       const wave = this.flameWaves[i];
       wave.update(dt, this.enemies, this.boss, window.soundEngine, window.particleSystem);
+      if (this.crackedWalls && !wave.isDead) {
+        for (const cw of this.crackedWalls) {
+          if (!cw.isBroken && Math.abs((wave.x + 13) - (cw.x + cw.w / 2)) < (cw.w / 2 + 13) &&
+              Math.abs((wave.y + 12) - (cw.y + cw.h / 2)) < (cw.h / 2 + 12)) {
+            cw.checkHit({ x: wave.x, y: wave.y, w: wave.w, h: wave.h }, wave.damage || 25, window.soundEngine, window.particleSystem);
+            wave.isDead = true;
+            break;
+          }
+        }
+      }
       if (wave.isDead) {
         this.flameWaves.splice(i, 1);
       }
@@ -2113,11 +2200,23 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
     const btnKey = this.lastInputDevice === 'gamepad' ? '[RB/B]' : '[E]';
 
-    // Interaction Badge (Chest, Slot Machine, Sanctuary, Hermit, Challenge, or NPC)
+    // Interaction Badge (Chest, Slot Machine, Sanctuary, Hermit, Challenge, Blood Altar, or NPC)
     this.nearSanctuary = false;
     this.nearSlotMachine = false;
     this.nearHermitMerchant = false;
     this.nearChallengeShrine = false;
+    this.nearBloodAltar = false;
+    this.activeBloodAltar = null;
+
+    if (this.bloodAltars && this.bloodAltars.length > 0) {
+      for (const ba of this.bloodAltars) {
+        if (!ba.isUsed && ba.isNear) {
+          this.nearBloodAltar = true;
+          this.activeBloodAltar = ba;
+          break;
+        }
+      }
+    }
 
     if (this.activeChest) {
       this.ui.interactionBadge.style.display = 'block';
@@ -2135,6 +2234,13 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       this.ui.interactionBadge.textContent = `🎒 ${btnKey} Tienda del Ermitaño`;
       const screenX = ((this.hermitMerchant.x + 14 - this.camX) / this.vWidth) * 100;
       const screenY = ((this.hermitMerchant.y - 16 - this.camY) / this.vHeight) * 100;
+      this.ui.interactionBadge.style.left = `${screenX}%`;
+      this.ui.interactionBadge.style.top = `${screenY}%`;
+    } else if (this.nearBloodAltar && this.activeBloodAltar && this.state !== 'DIALOGUE') {
+      this.ui.interactionBadge.style.display = 'block';
+      this.ui.interactionBadge.textContent = `🩸 ${btnKey} Altar de Sangre`;
+      const screenX = ((this.activeBloodAltar.x + this.activeBloodAltar.w / 2 - this.camX) / this.vWidth) * 100;
+      const screenY = ((this.activeBloodAltar.y - 16 - this.camY) / this.vHeight) * 100;
       this.ui.interactionBadge.style.left = `${screenX}%`;
       this.ui.interactionBadge.style.top = `${screenY}%`;
     } else if (this.level && this.level.challengeShrine && !this.level.challengeShrine.completed && !this.level.challengeShrine.active && Math.hypot(
@@ -2334,6 +2440,18 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     }
     for (const c of this.chests) {
       c.draw(this.ctx, finalCamX, finalCamY);
+    }
+
+    // 6b. Draw Cracked Walls & Blood Altars
+    if (this.crackedWalls) {
+      for (const cw of this.crackedWalls) {
+        cw.draw(this.ctx, finalCamX, finalCamY);
+      }
+    }
+    if (this.bloodAltars) {
+      for (const ba of this.bloodAltars) {
+        ba.draw(this.ctx, finalCamX, finalCamY);
+      }
     }
 
     // 7. Draw NPC
@@ -3995,6 +4113,154 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     }
   }
 
+  // ─── ALTAR DE SANGRE Y PACTOS OSCUROS ───
+  openBloodAltarModal(altar) {
+    if (!this.ui.bloodAltarModal) return;
+    this.state = 'BLOOD_ALTAR';
+    this.currentBloodAltar = altar;
+
+    const curses = [
+      {
+        id: 'curse_damage',
+        isCursed: true,
+        name: 'Sed Maldita',
+        desc: '+40% de daño con la espada, pero recibes +15% de daño recibido adicional.',
+        icon: '🩸'
+      },
+      {
+        id: 'curse_greed',
+        isCursed: true,
+        name: 'Avaricia Abisal',
+        desc: 'Triplica el valor de todas las almas recolectadas (x3), pero reduce tu velocidad en un 10%.',
+        icon: '🪙'
+      },
+      {
+        id: 'curse_dash',
+        isCursed: true,
+        name: 'Pacto de Sombras',
+        desc: 'El enfriamiento del Dash se reinicia instantáneamente cada vez que aniquilas a un enemigo.',
+        icon: '⚡'
+      }
+    ];
+
+    const unacquired = curses.filter(c => !window.progression || !window.progression.hasBoon(c.id));
+    this.offeredCursedBoon = unacquired.length > 0 ? unacquired[Math.floor(Math.random() * unacquired.length)] : curses[0];
+
+    // Refresh UI texts
+    const hp = this.player ? Math.round(this.player.hp) : 100;
+    const maxHp = this.player ? Math.round(this.player.maxHp) : 100;
+    const souls = window.progression ? Math.floor(window.progression.souls) : 0;
+
+    if (this.ui.bloodAltarCurrentHp) this.ui.bloodAltarCurrentHp.textContent = `${hp}/${maxHp}`;
+    if (this.ui.bloodAltarSouls) this.ui.bloodAltarSouls.textContent = souls;
+    if (this.ui.bloodAltarBoonName) {
+      this.ui.bloodAltarBoonName.innerHTML = `Recompensa: Bendición "${this.offeredCursedBoon.name}"<br><span style="font-size:11px; color:#fca5a5; font-weight:normal;">${this.offeredCursedBoon.desc}</span>`;
+    }
+
+    if (this.ui.btnPactSouls) {
+      const canPayHp = hp > 30;
+      this.ui.btnPactSouls.disabled = !canPayHp;
+      this.ui.btnPactSouls.style.opacity = canPayHp ? '1' : '0.4';
+      this.ui.btnPactSouls.style.cursor = canPayHp ? 'pointer' : 'not-allowed';
+    }
+
+    if (this.ui.btnPactCurse) {
+      const canPayMaxHp = maxHp > 25 && (!window.progression || !window.progression.hasBoon(this.offeredCursedBoon.id));
+      this.ui.btnPactCurse.disabled = !canPayMaxHp;
+      this.ui.btnPactCurse.style.opacity = canPayMaxHp ? '1' : '0.4';
+      this.ui.btnPactCurse.style.cursor = canPayMaxHp ? 'pointer' : 'not-allowed';
+      if (window.progression && window.progression.hasBoon(this.offeredCursedBoon.id)) {
+        this.ui.btnPactCurse.textContent = 'Pacto Ya Sellado';
+      } else {
+        this.ui.btnPactCurse.textContent = 'Sellar Pacto Maldito';
+      }
+    }
+
+    this.ui.bloodAltarModal.classList.remove('hidden');
+    if (window.soundEngine && window.soundEngine.playOpenSanctuary) {
+      window.soundEngine.playOpenSanctuary();
+    }
+  }
+
+  closeBloodAltarModal() {
+    if (!this.ui.bloodAltarModal) return;
+    this.ui.bloodAltarModal.classList.add('hidden');
+    this.currentBloodAltar = null;
+    this.offeredCursedBoon = null;
+    if (window.soundEngine && window.soundEngine.playCloseSanctuary) {
+      window.soundEngine.playCloseSanctuary();
+    }
+    if (this.pendingLevelUps > 0) {
+      this.state = 'PLAYING';
+      this.openLevelUpModal();
+      return;
+    }
+    this.state = 'PLAYING';
+  }
+
+  acceptBloodPactSouls() {
+    if (!this.player || this.player.hp <= 30) return;
+    this.player.hp -= 30;
+
+    if (window.progression) {
+      window.progression.addSouls(180);
+    }
+
+    if (window.particleSystem) {
+      window.particleSystem.spawnBloodExplosion(this.player.x + this.player.w / 2, this.player.y + this.player.h / 2, 45);
+      if (window.particleSystem.spawnFloatingText) {
+        window.particleSystem.spawnFloatingText('-30 HP | +180 🔮 Almas', this.player.x + this.player.w / 2, this.player.y - 15, { isMegabonk: true });
+      }
+    }
+
+    if (window.soundEngine && window.soundEngine.playHit) {
+      window.soundEngine.playHit();
+    }
+    this.triggerScreenShake(10, 0.35);
+    if (this.triggerGamepadRumble) this.triggerGamepadRumble(300, 0.7, 0.7);
+
+    if (this.currentBloodAltar) {
+      this.currentBloodAltar.use();
+    }
+    this.closeBloodAltarModal();
+  }
+
+  acceptBloodPactCurse() {
+    if (!this.player || this.player.maxHp <= 25 || !this.offeredCursedBoon) return;
+
+    if (window.progression) {
+      window.progression.bloodAltarMaxHpPenalty = (window.progression.bloodAltarMaxHpPenalty || 0) + 15;
+      window.progression.chooseBoon(this.offeredCursedBoon);
+      const stats = window.progression.getPlayerStats();
+      this.player.maxHp = stats.maxHp;
+      this.player.hp = Math.min(this.player.hp, this.player.maxHp);
+      this.player.applyProgressionStats();
+    }
+
+    if (window.particleSystem) {
+      window.particleSystem.spawnBloodExplosion(this.player.x + this.player.w / 2, this.player.y + this.player.h / 2, 60);
+      if (window.particleSystem.spawnFloatingText) {
+        window.particleSystem.spawnFloatingText(`💀 PACTO SELLADO: ${this.offeredCursedBoon.name}`, this.player.x + this.player.w / 2, this.player.y - 15, { isMegabonk: true });
+      }
+    }
+
+    if (this.showGothicAnnouncement) {
+      this.showGothicAnnouncement(`🩸 PACTO DE OBSIDIANA SELLADO`, `${this.offeredCursedBoon.name}: -15 Max HP`);
+    }
+
+    if (window.soundEngine) {
+      if (window.soundEngine.playAchievementUnlocked) window.soundEngine.playAchievementUnlocked();
+      else if (window.soundEngine.playBoonSelect) window.soundEngine.playBoonSelect();
+    }
+    this.triggerScreenShake(15, 0.5);
+    if (this.triggerGamepadRumble) this.triggerGamepadRumble(400, 0.8, 1.0);
+
+    if (this.currentBloodAltar) {
+      this.currentBloodAltar.use();
+    }
+    this.closeBloodAltarModal();
+  }
+
   getLavaPalette() {
     const theme = this.level ? this.level.lavaTheme : null;
     const levelId = this.level ? this.level.id : '';
@@ -5106,6 +5372,8 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     if (justPressed(9)) { // Start / Options -> Pause toggle
       if (this.state === 'HERMIT_SHOP') {
         this.closeHermitShopModal();
+      } else if (this.state === 'BLOOD_ALTAR') {
+        this.closeBloodAltarModal();
       } else if (this.state === 'SANCTUARY') {
         this.closeSanctuaryModal();
       } else if (this.state === 'SLOT_MACHINE') {
@@ -5142,6 +5410,12 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
           this.openSlotMachineModal();
         } else if (this.nearSanctuary) {
           this.openSanctuaryModal();
+        } else if (this.nearHermitMerchant) {
+          this.openHermitShopModal();
+        } else if (this.nearBloodAltar && this.activeBloodAltar) {
+          this.openBloodAltarModal(this.activeBloodAltar);
+        } else if (this.nearChallengeShrine) {
+          this.activateChallengeShrine(this.level.challengeShrine);
         } else {
           this.checkNpcInteraction();
         }

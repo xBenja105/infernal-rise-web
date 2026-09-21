@@ -135,6 +135,9 @@ class LevelManager {
     const bats = [];
     const urns = [];
     const chests = [];
+    const crackedWalls = [];
+    const bloodAltars = [];
+    let hermitOutpost = null;
 
     // Starting ground platform
     platforms.push({
@@ -528,6 +531,94 @@ class LevelManager {
       };
     }
 
+    // ─── SALAS SECRETAS Y PAREDES QUEBRADIZAS (SECRET ROOMS) ───
+    const secretRoomY1 = Math.floor(height * 0.62);
+    const pLeft = { x: 20, y: secretRoomY1, w: 180, h: 26, type: config.basePlatformType || 'stone', isSecretFloor: true };
+    const pLeftCeil = { x: 20, y: secretRoomY1 - 100, w: 180, h: 22, type: config.basePlatformType || 'stone' };
+    const pLeftWall = { x: 0, y: secretRoomY1 - 100, w: 22, h: 126, type: config.basePlatformType || 'stone' };
+    platforms.push(pLeft, pLeftCeil, pLeftWall);
+    
+    crackedWalls.push({
+      x: 198,
+      y: secretRoomY1 - 78,
+      w: 28,
+      h: 78,
+      hp: 50,
+      biome: config.biome
+    });
+    chests.push({
+      x: 65,
+      y: secretRoomY1 - 32,
+      isRelic: true,
+      id: `secret_relic_1_${config.id}`
+    });
+    urns.push(
+      { x: 120, y: secretRoomY1 - 26, value: 50 },
+      { x: 155, y: secretRoomY1 - 26, value: 70 }
+    );
+    torches.push({ x: 90, y: secretRoomY1 - 50, blue: true });
+
+    // Segunda Sala Secreta en el flanco derecho
+    const secretRoomY2 = Math.floor(height * 0.32);
+    const pRight = { x: width - 200, y: secretRoomY2, w: 180, h: 26, type: config.basePlatformType || 'stone', isSecretFloor: true };
+    const pRightCeil = { x: width - 200, y: secretRoomY2 - 100, w: 180, h: 22, type: config.basePlatformType || 'stone' };
+    const pRightWall = { x: width - 22, y: secretRoomY2 - 100, w: 22, h: 126, type: config.basePlatformType || 'stone' };
+    platforms.push(pRight, pRightCeil, pRightWall);
+
+    crackedWalls.push({
+      x: width - 226,
+      y: secretRoomY2 - 78,
+      w: 28,
+      h: 78,
+      hp: 60,
+      biome: config.biome
+    });
+    chests.push({
+      x: width - 150,
+      y: secretRoomY2 - 32,
+      isRelic: true,
+      id: `secret_relic_2_${config.id}`
+    });
+    urns.push(
+      { x: width - 105, y: secretRoomY2 - 26, value: 60 },
+      { x: width - 70, y: secretRoomY2 - 26, value: 85 }
+    );
+    torches.push({ x: width - 120, y: secretRoomY2 - 50, blue: true });
+
+    // ─── PUESTO DEL ERMITAÑO EN LA TORRE (MID-TOWER HAVEN OUTPOST) ───
+    const midHavenY = height * 0.48;
+    const havenCandidates = platforms.filter(p => p.isCheckpoint && p.checkpointId > 0 && Math.abs(p.y - midHavenY) < 450);
+    if (havenCandidates.length > 0) {
+      const hermitHaven = havenCandidates[0];
+      hermitHaven.isHermitOutpost = true;
+      hermitOutpost = {
+        x: hermitHaven.x + Math.floor(hermitHaven.w / 2) - 30,
+        y: hermitHaven.y - 40,
+        w: 28,
+        h: 40,
+        name: 'Ermitaño de la Torre'
+      };
+      torches.push({ x: hermitHaven.x + Math.floor(hermitHaven.w / 2) + 25, y: hermitHaven.y - 20, isCampfire: true });
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        if (Math.abs(enemies[i].y - hermitHaven.y) < 120 && Math.abs(enemies[i].x - hermitHaven.x) < hermitHaven.w + 50) {
+          enemies.splice(i, 1);
+        }
+      }
+    }
+
+    // ─── ALTAR DE SANGRE (BLOOD SACRIFICE ALTAR) ───
+    const bloodAltarTargetY = height * 0.42;
+    const altarCandidates = platforms.filter(p => !p.isSecretFloor && !p.isHermitOutpost && Math.abs(p.y - bloodAltarTargetY) < 350 && p.w >= 120);
+    if (altarCandidates.length > 0) {
+      const altarPlat = altarCandidates[0];
+      bloodAltars.push({
+        x: altarPlat.x + Math.floor(altarPlat.w / 2) - 22,
+        y: altarPlat.y - 50,
+        w: 44,
+        h: 52
+      });
+    }
+
     return {
       id: config.id,
       name: config.name,
@@ -555,6 +646,9 @@ class LevelManager {
       torches,
       npc: config.npc || null,
       challengeShrine,
+      crackedWalls,
+      bloodAltars,
+      hermitOutpost,
       enemies,
       bats,
       urns,

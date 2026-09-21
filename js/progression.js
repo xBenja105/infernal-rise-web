@@ -186,6 +186,31 @@ class ProgressionManager {
         desc: 'Los enemigos y urnas sueltan el doble de orbes de almas durante este ascenso.',
         icon: '✨'
       },
+      // ─── BENDICIONES MALDITAS (ALTAR DE SANGRE) ───
+      {
+        id: 'curse_damage',
+        isCursed: true,
+        name: 'Sed Maldita',
+        rarity: 'Maldita',
+        desc: '+40% de daño con la espada, pero recibes +15% de daño adicional.',
+        icon: '🩸'
+      },
+      {
+        id: 'curse_greed',
+        isCursed: true,
+        name: 'Avaricia Abisal',
+        rarity: 'Maldita',
+        desc: 'Triplica el valor de todas las almas recolectadas (x3), pero reduce tu velocidad en un 10%.',
+        icon: '🪙'
+      },
+      {
+        id: 'curse_dash',
+        isCursed: true,
+        name: 'Pacto de Sombras',
+        rarity: 'Maldita',
+        desc: 'El enfriamiento del Dash se reinicia instantáneamente cada vez que aniquilas a un enemigo.',
+        icon: '⚡'
+      },
       // ─── ARMAS PASIVAS (VAMPIRE SURVIVORS AUTO-ATTACK) ───
       {
         id: 'weapon_holy_cross',
@@ -699,6 +724,9 @@ class ProgressionManager {
     this.runEnemiesDefeated = (this.runEnemiesDefeated || 0) + 1;
     if (!this.bestiaryKills) this.bestiaryKills = { skeleton: 0, elite: 0, bat: 0, boss: 0 };
     this.bestiaryKills[enemyType] = (this.bestiaryKills[enemyType] || 0) + 1;
+    if (this.hasBoon('curse_dash') && window.game && window.game.player) {
+      window.game.player.dashCooldown = 0;
+    }
     this.save();
   }
 
@@ -902,8 +930,9 @@ class ProgressionManager {
   addSouls(amount) {
     const greedMult = 1.0 + (this.upgrades.soulGreed * 0.10);
     const boonMult = this.hasBoon('goldenTouch') ? 1.5 : 1.0;
+    const curseMult = this.hasBoon('curse_greed') ? 3.0 : 1.0;
     const prestigeMult = this.getPrestigeMultiplier();
-    const finalAmount = Math.max(1, Math.round(amount * greedMult * boonMult * prestigeMult));
+    const finalAmount = Math.max(1, Math.round(amount * greedMult * boonMult * prestigeMult * curseMult));
 
     this.souls += finalAmount;
     this.totalSoulsEver += finalAmount;
@@ -974,17 +1003,30 @@ class ProgressionManager {
     const bonusDmg = this.runBonusDaggerDmg || 0;
     const bonusRegen = this.runBonusRegen || 0;
 
+    let baseDmg = 16 + (this.upgrades.bladeMastery * 2.5) + bonusDmg;
+    if (this.hasBoon('curse_damage')) {
+      baseDmg *= 1.40; // +40% sword damage
+    }
+
+    let speedMult = 1.0 + (this.upgrades.agility * 0.035);
+    if (this.hasBoon('curse_greed')) {
+      speedMult *= 0.90; // -10% speed
+    }
+
+    const maxHpPenalty = this.bloodAltarMaxHpPenalty || 0;
+    const computedMaxHp = Math.max(25, 100 + (this.upgrades.vitality * 10) - maxHpPenalty);
+
     return {
-      maxHp: 100 + (this.upgrades.vitality * 10),
+      maxHp: computedMaxHp,
       hpRegen: (this.upgrades.healthRegen || 0) * 0.5 + bonusRegen,
       hasSpikeResist: this.upgrades.spikeResist > 0,
       spikeDamageRatio: Math.max(0.35, 0.70 - (this.upgrades.spikeResist * 0.07)),
-      moveSpeedMult: 1.0 + (this.upgrades.agility * 0.035),
+      moveSpeedMult: speedMult,
       jumpForceMult: 1.0 + (this.upgrades.jumpPower * 0.02),
       weaponName: 'Daga Básica',
       weaponType: 'dagger',
-      daggerDamage: 16 + (this.upgrades.bladeMastery * 2.5) + bonusDmg,
-      swordDamage: 16 + (this.upgrades.bladeMastery * 2.5) + bonusDmg,
+      daggerDamage: Math.round(baseDmg),
+      swordDamage: Math.round(baseDmg),
       hasDoubleJump: doubleJumpActive,
       magnetRadius: magnetRange
     };
@@ -1018,6 +1060,7 @@ class ProgressionManager {
     this.activeBoons = [];
     this.activeJokers = [];
     this.runRelics = [];
+    this.bloodAltarMaxHpPenalty = 0;
     this.runBonusDaggerDmg = 0;
     this.runBonusRegen = 0;
     this.runLevel = 1;
@@ -1155,6 +1198,7 @@ class ProgressionManager {
   getRandomBoons(count = 3, isRelic = false) {
     const pwm = window.game ? window.game.passiveWeaponsManager : null;
     let available = this.boonPool.filter(b => {
+      if (b.isCursed) return false;
       if (b.isWeapon) {
         if (!pwm) return true;
         const lvl = pwm.getLevel(b.weaponType);
@@ -1266,6 +1310,7 @@ class ProgressionManager {
       this.upgrades[k] = 0;
     }
     this.activeBoons = [];
+    this.bloodAltarMaxHpPenalty = 0;
     try {
       const storage = this.getStorage();
       if (storage) {
@@ -1360,8 +1405,12 @@ class ProgressionManager {
       }
       for (const b of this.activeBoons) {
         const badge = document.createElement('span');
-        badge.className = 'boon-badge';
-        badge.title = `${b.name}: ${b.desc}`;
+        badge.className = 'boon-badge' + (b.isCursed ? ' cursed-boon-badge' : '');
+        if (b.isCursed) {
+          badge.style.border = '1px solid #ef4444';
+          badge.style.boxShadow = '0 0 6px rgba(239, 68, 68, 0.6)';
+        }
+        badge.title = `${b.isCursed ? '[MALDICIÓN] ' : ''}${b.name}: ${b.desc}`;
         badge.textContent = b.icon;
         boonsContainer.appendChild(badge);
       }
