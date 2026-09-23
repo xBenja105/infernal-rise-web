@@ -5,7 +5,16 @@
 [![Release v2.0.0](https://img.shields.io/badge/Release-v2.0.0-success?style=for-the-badge&logo=github)](https://github.com/xBenja105/infernal-rise-web/releases/tag/v2.0.0)
 [![GitHub Repo](https://img.shields.io/badge/GitHub-xBenja105%2Finfernal--rise--web-181717?style=for-the-badge&logo=github)](https://github.com/xBenja105/infernal-rise-web)
 
-🎮 **Juego Nativo de Escritorio para Windows PC**: Ejecuta directamente el ejecutable compilado en `dist/Infernal Rise 2.0.0.exe` o corre el entorno de desarrollo con `npm start`.
+
+---
+
+### 📥 DESCARGA DIRECTA (SOLO PARA JUGAR)
+
+[![⬇️ DESCARGAR JUEGO COMPLETO (.EXE PARA WINDOWS)](https://img.shields.io/badge/⬇️%20DESCARGAR%20INFERNAL%20RISE-EJECUTABLE%20PORTABLE%20(.EXE)-2ea44f?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/xBenja105/infernal-rise-web/releases/download/v2.0.0/Infernal.Rise.2.0.0.exe)
+
+> 💡 **¿Solo quieres jugar sin ver el código ni instalar nada?**
+> 1. Haz clic en el botón verde de arriba para descargar directamente **`Infernal.Rise.2.0.0.exe`**.
+> 2. Haz doble clic en el archivo descargado para comenzar a jugar de inmediato (es **100% portable**, no requiere instalación, ni Node.js, ni comandos).
 
 **Autor**: Benjamín Arriagada ([@xBenja105](https://github.com/xBenja105))
 
