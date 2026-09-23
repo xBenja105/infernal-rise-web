@@ -3357,13 +3357,47 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
     ctx.save();
 
-    const isFortress = (this.level.biome === 'fortress' || this.level.id === 'tower3' || this.level.id === 'boss_demon_slime');
+    const isAbyss = (this.level.biome === 'abyss' || this.level.id === 'tower1' || this.level.id === 'boss_demon_slime');
+    const isFrozen = (this.level.biome === 'frozen_peaks' || this.level.id === 'tower2' || this.level.id === 'boss_frost_guardian');
+    const isFortress = (this.level.biome === 'fortress' || this.level.id === 'tower3' || this.level.biome === 'rocky_caverns' || this.level.id === 'boss_minotaur');
     const isHighRamparts = (this.level.id === 'tower4' || this.level.id === 'tower5');
     const isSurface = (this.level.id === 'tower6' || this.level.id === 'victory' || this.level.biome === 'surface_threshold');
 
-    // 2. FLOOR 3: Interior Gothic Castle Chamber (Jump King Image 3 Style)
-    if (isFortress) {
-      // 2a. Repeating dark brick wall facade across the tower interior
+    if (isAbyss) {
+      // ── PISO 1: EL FOSO ABISAL (Basalto y Fisuras de Magma Continuas) ──
+      ctx.globalAlpha = 0.40;
+      const colL = Math.round(130 - camX);
+      const colR = Math.round(levelW - 170 - camX);
+
+      // Deep basalt wall buttresses running continuous floor-to-ceiling
+      ctx.fillStyle = '#0a050d';
+      ctx.fillRect(colL - 25, 0, 50, this.vHeight);
+      ctx.fillRect(colR - 25, 0, 50, this.vHeight);
+
+      // Vertical molten magma conduits inside buttresses
+      ctx.fillStyle = 'rgba(255, 68, 0, 0.40)';
+      ctx.fillRect(colL - 3, 0, 6, this.vHeight);
+      ctx.fillRect(colR - 3, 0, 6, this.vHeight);
+      ctx.fillStyle = 'rgba(255, 180, 0, 0.65)';
+      ctx.fillRect(colL - 1, 0, 2, this.vHeight);
+      ctx.fillRect(colR - 1, 0, 2, this.vHeight);
+    } else if (isFrozen) {
+      // ── PISO 2: AGUJAS GLACIARES (Pilastras de Hielo y Escarcha Continua) ──
+      ctx.globalAlpha = 0.35;
+      const colL = Math.round(140 - camX);
+      const colR = Math.round(levelW - 180 - camX);
+
+      // Continuous glacial rock pillars
+      ctx.fillStyle = '#05111e';
+      ctx.fillRect(colL - 22, 0, 44, this.vHeight);
+      ctx.fillRect(colR - 22, 0, 44, this.vHeight);
+
+      // Ethereal frost sheen along pillar ridges
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.28)';
+      ctx.fillRect(colL - 2, 0, 4, this.vHeight);
+      ctx.fillRect(colR - 2, 0, 4, this.vHeight);
+    } else if (isFortress) {
+      // ── PISO 3: CAVERNAS ROCOSAS & RUINAS DEL ALBA (Muros y Columnatas Continuas) ──
       const brickPatternImg = props.castleWallsFarImg || props.castleBgImg;
       if (brickPatternImg) {
         const ptrnW = 256;
@@ -3375,7 +3409,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
         let startY = offY % ptrnH;
         if (startY > 0) startY -= ptrnH;
 
-        ctx.globalAlpha = 0.45;
+        ctx.globalAlpha = 0.40;
         for (let x = startX; x < this.vWidth; x += ptrnW) {
           for (let y = startY; y < this.vHeight; y += ptrnH) {
             ctx.drawImage(brickPatternImg, 0, 0, 512, 512, x, y, ptrnW, ptrnH);
@@ -3383,15 +3417,24 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
         }
       }
 
-      // 2b. Large Arched Windows with Candlelight Halos & Hanging Banners
-      ctx.globalAlpha = 0.70;
+      // Structural masonry pilasters running top-to-bottom behind windows & banners (NEVER floating!)
+      const rx = Math.round(levelW / 2 - camX);
+      ctx.globalAlpha = 0.55;
+      ctx.fillStyle = '#0e0a14';
+      ctx.fillRect(rx - 195, 0, 68, this.vHeight);
+      ctx.fillRect(rx + 125, 0, 68, this.vHeight);
+      ctx.fillStyle = '#1c1528';
+      ctx.fillRect(rx - 190, 0, 58, this.vHeight);
+      ctx.fillRect(rx + 130, 0, 58, this.vHeight);
+
+      // Arched Windows firmly seated into wall masonry
+      ctx.globalAlpha = 0.65;
       const windowInterval = 560;
       const startWinY = Math.floor((camY - 200) / windowInterval) * windowInterval;
       const endWinY = camY + this.vHeight + 200;
 
       for (let wy = startWinY; wy <= endWinY; wy += windowInterval) {
         if (wy < 100 || wy > levelH - 100) continue;
-        const rx = Math.round(levelW / 2 - camX);
         const ry = Math.round(wy - camY);
         if (ry < -200 || ry > this.vHeight + 200) continue;
 
@@ -3404,19 +3447,19 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
         // Candle halo behind window
         const winGlow = ctx.createRadialGradient(rx, ry + 60, 10, rx, ry + 60, 90);
-        winGlow.addColorStop(0, 'rgba(251, 146, 60, 0.45)');
+        winGlow.addColorStop(0, 'rgba(251, 146, 60, 0.38)');
         winGlow.addColorStop(1, 'rgba(251, 146, 60, 0)');
         ctx.fillStyle = winGlow;
         ctx.beginPath();
         ctx.arc(rx, ry + 60, 90, 0, Math.PI * 2);
         ctx.fill();
 
-        // Heraldic Banners flanking the window
+        // Heraldic Banners anchored directly onto the masonry pilasters
         if (props.bannerRed) {
-          ctx.drawImage(props.bannerRed, 0, 0, 96, 48, rx - 180, ry + 20, 64, 96);
+          ctx.drawImage(props.bannerRed, 0, 0, 96, 48, rx - 180, ry + 20, 48, 72);
         }
         if (props.bannerBlue) {
-          ctx.drawImage(props.bannerBlue, 0, 0, 192, 96, rx + 120, ry + 20, 64, 96);
+          ctx.drawImage(props.bannerBlue, 0, 0, 192, 96, rx + 135, ry + 20, 48, 72);
         }
       }
 
@@ -3718,6 +3761,46 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
         // Gothic crest ornament in center
         this.ctx.fillStyle = '#fbbf24';
         this.ctx.fillRect(rx + Math.floor(p.w / 2) - 8, ry + 4, 16, 4);
+      } else if (p.isThickSlab) {
+        // Multi-course cyclopean masonry blocks with relief mortar lines & heavy shadow
+        const midH = Math.floor(p.h / 2);
+        this.ctx.fillStyle = style.dark;
+        this.ctx.fillRect(rx, ry + midH - 1, p.w, 2);
+        const blockW = 54;
+        for (let bx = rx + blockW; bx < rx + p.w - 12; bx += blockW) {
+          this.ctx.fillRect(bx, ry + 2, 2, midH - 3);
+          this.ctx.fillRect(bx - Math.floor(blockW / 2), ry + midH + 1, 2, p.h - midH - 2);
+        }
+        this.ctx.fillStyle = '#050208';
+        this.ctx.fillRect(rx, ry + p.h - 4, p.w, 4);
+      } else if (p.isThinBeam) {
+        // Sleek metallic / timber bar with rivets and end-flange brackets
+        this.ctx.fillStyle = style.hi;
+        this.ctx.fillRect(rx, ry, p.w, 1);
+        this.ctx.fillStyle = '#1c1917';
+        for (let bx = rx + 14; bx < rx + p.w - 8; bx += 26) {
+          this.ctx.fillRect(bx, ry + 3, 2, 2);
+        }
+        this.ctx.fillStyle = style.dark;
+        this.ctx.fillRect(rx - 2, ry - 2, 4, p.h + 4);
+        this.ctx.fillRect(rx + p.w - 2, ry - 2, 4, p.h + 4);
+      } else if (p.isSquareBlock) {
+        // Precision square stone block / pedestal cube
+        this.ctx.fillStyle = style.hi;
+        this.ctx.fillRect(rx + 2, ry + 2, p.w - 4, 1);
+        this.ctx.fillRect(rx + 2, ry + 2, 1, p.h - 4);
+        this.ctx.fillStyle = style.dark;
+        this.ctx.fillRect(rx + p.w - 3, ry + 2, 2, p.h - 4);
+        this.ctx.fillRect(rx + 2, ry + p.h - 3, p.w - 4, 2);
+        this.ctx.strokeStyle = style.dark;
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeRect(rx + 8, ry + 8, p.w - 16, p.h - 16);
+      } else if (p.isVerticalBarShaft) {
+        // Vertical shaft iron strapping bands
+        this.ctx.fillStyle = style.dark;
+        for (let sy = ry + 18; sy < ry + p.h - 8; sy += 28) {
+          this.ctx.fillRect(rx - 1, sy, p.w + 2, 3);
+        }
       }
     }
   }
@@ -3835,42 +3918,49 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     }
 
     // 3. VERTICAL COLUMNS & SCAFFOLDING POSTS (Grounding to world/depths)
-    if (!hasSupportBelow && (p.w >= 140 || p.isVerticalStructure || p.isPillarRemnant)) {
+    // STRICT RULE: Only draw a column if there is an ACTUAL solid platform directly underneath within reachable distance (<= 240px).
+    // The column connects 100% continuously all the way to the platform below with a carved stone base plinth.
+    if (!hasSupportBelow && (p.w >= 120 || p.isVerticalStructure || p.isPillarRemnant)) {
       const colW = 20;
-      let targetBelowY = levelH - 60;
+      let foundBelowPlatform = null;
+      let targetBelowDist = 9999;
       if (this.level && this.level.platforms) {
         for (const other of this.level.platforms) {
           if (other === p || other.isMovingPlatform || other.isCrumbling) continue;
-          if (other.x < p.x + p.w && other.x + other.w > p.x && other.y > p.y + p.h + 10) {
-            if (other.y < targetBelowY) {
-              targetBelowY = other.y;
+          const overlap = Math.min(p.x + p.w, other.x + other.w) - Math.max(p.x, other.x);
+          if (overlap >= 24 && other.y > p.y + p.h + 8) {
+            const dist = other.y - (p.y + p.h);
+            if (dist < targetBelowDist) {
+              targetBelowDist = dist;
+              foundBelowPlatform = other;
             }
           }
         }
       }
-      const maxColH = Math.min(260, targetBelowY - (p.y + p.h));
 
-      if (maxColH > 30) {
-        const numCols = p.w >= 260 ? 2 : 1;
+      // Only build the column if it firmly anchors into a platform below within 240px (never float in mid-air!)
+      if (foundBelowPlatform && targetBelowDist <= 240 && targetBelowDist >= 18) {
+        const fullColH = targetBelowDist;
+        const numCols = p.w >= 240 && foundBelowPlatform.w >= 180 ? 2 : 1;
         const colXPositions = numCols === 1
           ? [rx + Math.floor(p.w / 2) - colW / 2]
-          : [rx + 32, rx + p.w - 32 - colW];
+          : [rx + 28, rx + p.w - 28 - colW];
 
         for (const cx of colXPositions) {
           ctx.save();
           if (isCave && props && props.caveMineBeam) {
-            for (let cy = ry + p.h; cy < ry + p.h + maxColH; cy += 64) {
-              const segH = Math.min(64, ry + p.h + maxColH - cy);
+            for (let cy = ry + p.h; cy < ry + p.h + fullColH - 4; cy += 64) {
+              const segH = Math.min(64, ry + p.h + fullColH - cy);
               ctx.drawImage(props.caveMineBeam, 0, 0, 48, 96, cx - 4, cy, colW + 8, segH);
             }
           } else if ((isFortress || !isCave) && props && props.timberPostV) {
-            for (let cy = ry + p.h; cy < ry + p.h + maxColH; cy += 72) {
-              const segH = Math.min(72, ry + p.h + maxColH - cy);
+            for (let cy = ry + p.h; cy < ry + p.h + fullColH - 4; cy += 72) {
+              const segH = Math.min(72, ry + p.h + fullColH - cy);
               ctx.drawImage(props.timberPostV, 0, 0, 32, 96, cx - 2, cy, colW + 4, segH);
             }
           } else if (props && props.pillarShaft) {
-            for (let cy = ry + p.h; cy < ry + p.h + maxColH; cy += 80) {
-              const segH = Math.min(80, ry + p.h + maxColH - cy);
+            for (let cy = ry + p.h; cy < ry + p.h + fullColH - 4; cy += 80) {
+              const segH = Math.min(80, ry + p.h + fullColH - cy);
               ctx.drawImage(props.pillarShaft, 0, 0, 64, 96, cx - 6, cy, colW + 12, segH);
             }
           } else {
@@ -3879,8 +3969,14 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
             grad.addColorStop(0.5, style.corbel);
             grad.addColorStop(1, style.dark);
             ctx.fillStyle = grad;
-            ctx.fillRect(cx, ry + p.h, colW, maxColH);
+            ctx.fillRect(cx, ry + p.h, colW, fullColH);
           }
+
+          // Carved stone / iron Base Plinth firmly rooted on the lower platform surface
+          ctx.fillStyle = style.dark;
+          ctx.fillRect(cx - 4, ry + p.h + fullColH - 6, colW + 8, 6);
+          ctx.fillStyle = style.corbel;
+          ctx.fillRect(cx - 2, ry + p.h + fullColH - 6, colW + 4, 2);
           ctx.restore();
         }
       }

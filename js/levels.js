@@ -209,11 +209,11 @@ class LevelManager {
           value: 25 + Math.floor((1 - currY / height) * 35)
         });
 
-        nextCkptY = currY - (680 + Math.floor(Math.random() * 100));
+        nextCkptY = currY - (750 + Math.floor(Math.random() * 120));
         continue;
       }
 
-      // Procedural platform patterns (14 Diverse Architectural Archetypes)
+      // Procedural platform patterns (19 Diverse Architectural Archetypes)
       // 0: Dual flanking platforms
       // 1: Wide center platform with stepping ledge
       // 2: Solid platform + moving platform bridge
@@ -228,9 +228,14 @@ class LevelManager {
       // 11: Vórtice / Burbuja de Ascensión Arcana (Ascension Vortex)
       // 12: Andamios Mineros y Puentes Colgantes (Mining Scaffolding & Timber Beams)
       // 13: Cornisas Escalonadas y Arcos de Sarcófago Góticos (Corbelled Ledges)
-      let pattern = Math.floor(Math.random() * 14);
+      // 14: Tríada de Bloques Cuadrados de Salto (Square Stepping Pedestals)
+      // 15: Vigas y Barras Delgadas de Hierro/Madera con Tensores (Thin Beams & Catwalks)
+      // 16: Monolito Ciclópeo Grueso y Losas Escalonadas (Thick Megalithic Foundation Slab)
+      // 17: Eje y Barra Vertical con Peldaños Voladizos (Vertical Pillar Shaft with Cantilevers)
+      // 18: Baluarte Mixto Asimétrico (Thick Slab + Thin Bar + Stepping Cube)
+      let pattern = Math.floor(Math.random() * 19);
       if (pattern === lastPattern) {
-        pattern = (pattern + 1) % 14;
+        pattern = (pattern + 1) % 19;
       }
       lastPattern = pattern;
 
@@ -559,7 +564,7 @@ class LevelManager {
 
         platforms.push(platScaff1, platScaff2, platBridge);
         layerPlatforms.push(platScaff1, platScaff2, platBridge);
-      } else {
+      } else if (pattern === 13) {
         // ── PATRÓN 13: CORNISAS ESCALONADAS Y ARCOS DE SARCÓFAGO GÓTICOS ──
         // Ménsulas voladizas embutidas en muros laterales y dintel central
         const corbelLW = 170;
@@ -575,9 +580,106 @@ class LevelManager {
         platforms.push(corbelL, platArch, corbelR);
         layerPlatforms.push(corbelL, platArch, corbelR);
 
-        torches.push({ x: 30, y: currY - 18, blue: isBlueTorch });
-        torches.push({ x: width - 30, y: currY - 102, blue: isBlueTorch });
+        torches.push({ x: 24, y: currY - 12, blue: isBlueTorch });
+        torches.push({ x: width - 24, y: currY - 96, blue: isBlueTorch });
         currY -= 50;
+      } else if (pattern === 14) {
+        // ── PATRÓN 14: TRÍADA / TETRADA DE CUBOS CUADRADOS DE SALTO ──
+        // 4 cubos cuadrados de sillería labrada (48x48px) escalonados a alturas dinámicas
+        const q1 = { x: 120 + Math.floor(Math.random() * 30), y: currY, w: 48, h: 48, type: pType, isSquareBlock: true };
+        const q2 = { x: 330 + Math.floor(Math.random() * 40), y: currY - 26, w: 48, h: 48, type: pType, isSquareBlock: true };
+        const q3 = { x: 550 + Math.floor(Math.random() * 40), y: currY - 52, w: 48, h: 48, type: pType, isSquareBlock: true };
+        const q4 = { x: width - 170 - Math.floor(Math.random() * 30), y: currY - 78, w: 48, h: 48, type: pType, isSquareBlock: true };
+
+        platforms.push(q1, q2, q3, q4);
+        layerPlatforms.push(q1, q2, q3, q4);
+
+        torches.push({ x: q1.x + 24, y: q1.y - 24, blue: isBlueTorch });
+        torches.push({ x: q4.x + 24, y: q4.y - 24, blue: isBlueTorch });
+        currY -= 65;
+      } else if (pattern === 15) {
+        // ── PATRÓN 15: VIGAS Y BARRAS DELGADAS DE HIERRO/MADERA CON TENSORES ──
+        // Pasarelas delgadas de alta tensión estructural (h: 12px)
+        const bw1 = 180 + Math.floor(Math.random() * 30);
+        const bx1 = 80 + Math.floor(Math.random() * 30);
+        const bar1 = { x: bx1, y: currY, w: bw1, h: 12, type: pType, isThinBeam: true };
+
+        const bw2 = 180 + Math.floor(Math.random() * 30);
+        const bx2 = width - bw2 - 80 - Math.floor(Math.random() * 30);
+        const bar2 = { x: bx2, y: currY - 50, w: bw2, h: 12, type: pType, isThinBeam: true };
+
+        const bwMid = 190 + Math.floor(Math.random() * 30);
+        const bxMid = Math.floor((width - bwMid) / 2);
+        const barMid = { x: bxMid, y: currY - 25, w: bwMid, h: 12, type: pType, isThinBeam: true };
+
+        platforms.push(bar1, barMid, bar2);
+        layerPlatforms.push(bar1, barMid, bar2);
+
+        torches.push({ x: bx1 + 24, y: currY - 24, blue: isBlueTorch });
+        torches.push({ x: bx2 + bw2 - 24, y: currY - 74, blue: isBlueTorch });
+        currY -= 45;
+      } else if (pattern === 16) {
+        // ── PATRÓN 16: MONOLITO CICLÓPEO GRUESO Y LOSAS ESCALONADAS ──
+        // Gran bloque de cimientos masivo (h: 52px) en el centro flanqueado por repisas
+        const mw = 260 + Math.floor(Math.random() * 40);
+        const mx = Math.floor((width - mw) / 2);
+        const monolith = { x: mx, y: currY - 20, w: mw, h: 52, type: pType, isThickSlab: true };
+
+        const sideLW = 130 + Math.floor(Math.random() * 30);
+        const sideL = { x: 80, y: currY + 14, w: sideLW, h: 22, type: pType, isRuined: true };
+
+        const sideRW = 130 + Math.floor(Math.random() * 30);
+        const sideR = { x: width - sideRW - 80, y: currY - 56, w: sideRW, h: 22, type: pType, isRuined: true };
+
+        platforms.push(monolith, sideL, sideR);
+        layerPlatforms.push(monolith, sideL, sideR);
+
+        torches.push({ x: mx + 30, y: currY - 44, blue: isBlueTorch });
+        torches.push({ x: mx + mw - 30, y: currY - 44, blue: isBlueTorch });
+        currY -= 50;
+      } else if (pattern === 17) {
+        // ── PATRÓN 17: EJE Y BARRA VERTICAL CON PELDAÑOS VOLADIZOS ──
+        // Pilar/barra vertical central (w: 22, h: 130) con ménsulas voladizas a ambos lados
+        const shaftX = Math.floor(width / 2) - 11;
+        const vertBar = { x: shaftX, y: currY - 70, w: 22, h: 130, type: pType, isVerticalBarShaft: true, isVerticalStructure: true };
+
+        const stepLW = 140;
+        const stepL = { x: shaftX - stepLW, y: currY + 18, w: stepLW, h: 20, type: pType, isCorbelLedge: true };
+
+        const stepRW = 140;
+        const stepR = { x: shaftX + 22, y: currY - 32, w: stepRW, h: 20, type: pType, isCorbelLedge: true };
+
+        const topCrest = { x: shaftX - 35, y: currY - 74, w: 92, h: 22, type: pType, isPillarRemnant: true };
+
+        platforms.push(vertBar, stepL, stepR, topCrest);
+        layerPlatforms.push(stepL, stepR, topCrest);
+
+        // Escalera de ascenso adosada al fuste vertical
+        ladders.push({
+          x: shaftX - 1,
+          y: currY - 70,
+          w: 24,
+          h: 90,
+          type: pType === 'gold' ? 'gold' : 'iron'
+        });
+
+        torches.push({ x: stepL.x + 20, y: currY - 6, blue: isBlueTorch });
+        torches.push({ x: stepR.x + stepRW - 20, y: currY - 56, blue: isBlueTorch });
+        currY -= 65;
+      } else {
+        // ── PATRÓN 18: BALUARTE MIXTO ASIMÉTRICO (BLOQUE GRUESO + BARRA + CUBO) ──
+        // Máxima variedad visual: bloque grueso a la izquierda, barra delgada al medio y cubo de salto
+        const thickBlock = { x: 80, y: currY, w: 180, h: 48, type: pType, isThickSlab: true };
+        const thinBar = { x: 330, y: currY - 26, w: 170, h: 12, type: pType, isThinBeam: true };
+        const cubeStep = { x: 570, y: currY - 54, w: 50, h: 50, type: pType, isSquareBlock: true };
+        const landingTerrace = { x: width - 210, y: currY - 78, w: 130, h: 22, type: pType };
+
+        platforms.push(thickBlock, thinBar, cubeStep, landingTerrace);
+        layerPlatforms.push(thickBlock, thinBar, cubeStep, landingTerrace);
+
+        torches.push({ x: thickBlock.x + 30, y: currY - 24, blue: isBlueTorch });
+        torches.push({ x: landingTerrace.x + landingTerrace.w - 30, y: currY - 102, blue: isBlueTorch });
+        currY -= 70;
       }
 
       // Spawn patrolling enemies and urns
@@ -835,21 +937,21 @@ class LevelManager {
       danteCircle: 'Piso 1: El Foso Abisal — Basalto y Fuego',
       biome: 'abyss',
       width: 960,
-      height: 5400,
+      height: 8400,
       musicTrack: 'abyss',
       ambientRain: true,
       hasLava: true,
       lavaTheme: 'infernal',
       lavaSpeed: 24,
       basePlatformType: 'basalt_abyss',
-      familiarCage: { id: 'ignis', y: 3200 },
+      familiarCage: { id: 'ignis', y: 4800 },
       tiers: [
-        { name: 'Foso de Lava Primordial', minY: 4000, maxY: 5400, platformType: 'basalt_abyss', mageChance: 0.0, enemyHp: 35, enemySkin: 'abyss', batTypes: ['abyss'] },
-        { name: 'Foso de Basalto Abisal', minY: 2700, maxY: 4000, platformType: 'basalt_abyss', mageChance: 0.20, enemyHp: 45, enemySkin: 'abyss', batTypes: ['abyss'] },
-        { name: 'Ascenso de Ceniza y Fuego', minY: 1400, maxY: 2700, platformType: 'basalt_abyss', mageChance: 0.30, enemyHp: 55, enemySkin: 'abyss', batTypes: ['abyss', 'blood'] },
-        { name: 'Cimientos del Averno', minY: 300, maxY: 1400, platformType: 'basalt_abyss', mageChance: 0.40, enemyHp: 65, enemySkin: 'abyss', batTypes: ['abyss', 'blood'] }
+        { name: 'Foso de Lava Primordial', minY: 6400, maxY: 8400, platformType: 'basalt_abyss', mageChance: 0.0, enemyHp: 35, enemySkin: 'abyss', batTypes: ['abyss'] },
+        { name: 'Foso de Basalto Abisal', minY: 4400, maxY: 6400, platformType: 'basalt_abyss', mageChance: 0.20, enemyHp: 45, enemySkin: 'abyss', batTypes: ['abyss'] },
+        { name: 'Ascenso de Ceniza y Fuego', minY: 2400, maxY: 4400, platformType: 'basalt_abyss', mageChance: 0.30, enemyHp: 55, enemySkin: 'abyss', batTypes: ['abyss', 'blood'] },
+        { name: 'Cimientos del Averno', minY: 300, maxY: 2400, platformType: 'basalt_abyss', mageChance: 0.40, enemyHp: 65, enemySkin: 'abyss', batTypes: ['abyss', 'blood'] }
       ],
-      wind: { force: 0.65, activeMinY: 2000, activeMaxY: 3800 },
+      wind: { force: 0.65, activeMinY: 3000, activeMaxY: 6000 },
       portalTarget: 'boss_demon_slime',
       portalLabel: 'Cámara del Abismo — Demonio de Fuego'
     });
@@ -918,18 +1020,18 @@ class LevelManager {
       danteCircle: 'Piso 2: Cumbres Glaciares — Viento y Escarcha',
       biome: 'frozen_peaks',
       width: 960,
-      height: 5800,
+      height: 9200,
       musicTrack: 'frozen',
       ambientRain: false,
       hasLava: false,
       basePlatformType: 'glacial_ice',
-      familiarCage: { id: 'aura', y: 3600 },
+      familiarCage: { id: 'aura', y: 5200 },
       tiers: [
-        { name: 'Escarcha Baja & Fosas de Hielo', minY: 3900, maxY: 5800, platformType: 'glacial_ice', mageChance: 0.25, enemyHp: 55, enemySkin: 'frost', batTypes: ['frost'] },
-        { name: 'Glaciares Colgantes & Criptas', minY: 1900, maxY: 3900, platformType: 'glacial_ice', mageChance: 0.35, enemyHp: 65, enemySkin: 'frost', batTypes: ['frost'] },
-        { name: 'Agujas Árticas & Vientos', minY: 300, maxY: 1900, platformType: 'glacial_ice', mageChance: 0.45, enemyHp: 75, enemySkin: 'frost', batTypes: ['frost'] }
+        { name: 'Escarcha Baja & Fosas de Hielo', minY: 6200, maxY: 9200, platformType: 'glacial_ice', mageChance: 0.25, enemyHp: 55, enemySkin: 'frost', batTypes: ['frost'] },
+        { name: 'Glaciares Colgantes & Criptas', minY: 3200, maxY: 6200, platformType: 'glacial_ice', mageChance: 0.35, enemyHp: 65, enemySkin: 'frost', batTypes: ['frost'] },
+        { name: 'Agujas Árticas & Vientos', minY: 300, maxY: 3200, platformType: 'glacial_ice', mageChance: 0.45, enemyHp: 75, enemySkin: 'frost', batTypes: ['frost'] }
       ],
-      wind: { force: -0.65, activeMinY: 800, activeMaxY: 4200 },
+      wind: { force: -0.65, activeMinY: 1200, activeMaxY: 6800 },
       portalTarget: 'boss_frost_guardian',
       portalLabel: 'Santuario Glaciar — Guardián de Hielo'
     });
@@ -999,19 +1101,19 @@ class LevelManager {
       danteCircle: 'Piso 3: Grutas de Piedra y Ruinas del Alba',
       biome: 'rocky_caverns',
       width: 960,
-      height: 6400,
+      height: 10200,
       musicTrack: 'caverns',
       ambientRain: false,
       hasLava: false,
       risingLava: false,
       basePlatformType: 'cavern_stone',
-      familiarCage: { id: 'borus', y: 4200 },
+      familiarCage: { id: 'borus', y: 6000 },
       tiers: [
-        { name: 'Fosas Rocosas y Cimientos Quebrados', minY: 4200, maxY: 6400, platformType: 'cavern_stone', mageChance: 0.35, enemyHp: 65, enemySkin: 'abyss', batTypes: ['gargoyle', 'toxic'] },
-        { name: 'Galerías de Escombros y Baluartes Góticos', minY: 2100, maxY: 4200, platformType: 'cavern_stone', mageChance: 0.45, enemyHp: 75, enemySkin: 'specter', batTypes: ['gargoyle', 'blood'] },
-        { name: 'Bóvedas del Alba y Umbral Solar', minY: 300, maxY: 2100, platformType: 'cavern_stone', mageChance: 0.55, enemyHp: 85, enemySkin: 'ascended', batTypes: ['gargoyle', 'celestial'] }
+        { name: 'Fosas Rocosas y Cimientos Quebrados', minY: 6800, maxY: 10200, platformType: 'cavern_stone', mageChance: 0.35, enemyHp: 65, enemySkin: 'abyss', batTypes: ['gargoyle', 'toxic'] },
+        { name: 'Galerías de Escombros y Baluartes Góticos', minY: 3400, maxY: 6800, platformType: 'cavern_stone', mageChance: 0.45, enemyHp: 75, enemySkin: 'specter', batTypes: ['gargoyle', 'blood'] },
+        { name: 'Bóvedas del Alba y Umbral Solar', minY: 300, maxY: 3400, platformType: 'cavern_stone', mageChance: 0.55, enemyHp: 85, enemySkin: 'ascended', batTypes: ['gargoyle', 'celestial'] }
       ],
-      wind: { force: 0.45, activeMinY: 1000, activeMaxY: 3600 },
+      wind: { force: 0.45, activeMinY: 1600, activeMaxY: 6200 },
       portalTarget: 'boss_minotaur',
       portalLabel: 'Cámara Ancestral — El Minotauro, Titán de las Cavernas'
     });
@@ -1256,30 +1358,34 @@ class LevelManager {
     const urns = [];
     const chests = [];
 
-    platforms.push({ x: 200, y: 2950, w: 560, h: 36, type: 'obsidian' });
+    platforms.push({ x: 160, y: 6350, w: 640, h: 42, type: 'obsidian' });
 
-    let currY = 2840;
+    let currY = 6240;
     let lastX = 480;
 
-    for (let i = 0; i < 64; i++) {
+    for (let i = 0; i < 130; i++) {
       let pType = 'stone';
-      if (i < 8) pType = 'stone';
-      else if (i < 16) pType = 'stone';
-      else if (i < 24) pType = 'bone';
-      else if (i < 32) pType = 'gold';
-      else if (i < 42) pType = 'mud';
-      else if (i < 52) pType = 'obsidian';
-      else if (i < 60) pType = 'runic';
+      if (i < 15) pType = 'stone';
+      else if (i < 30) pType = 'stone';
+      else if (i < 45) pType = 'bone';
+      else if (i < 60) pType = 'gold';
+      else if (i < 80) pType = 'mud';
+      else if (i < 100) pType = 'obsidian';
+      else if (i < 118) pType = 'runic';
       else pType = 'ice';
 
-      const w = 140 + Math.floor(Math.random() * 110);
-      const h = 20 + Math.floor(Math.random() * 6);
-      let x = lastX + (Math.random() - 0.5) * 240;
+      const isSquare = (i > 3 && i % 8 === 0);
+      const isThick = (!isSquare && i % 6 === 0);
+      const isThin = (!isSquare && !isThick && i % 5 === 0);
+
+      const w = isSquare ? 48 : (isThin ? (140 + Math.floor(Math.random() * 40)) : (140 + Math.floor(Math.random() * 100)));
+      const h = isSquare ? 48 : (isThick ? 46 : (isThin ? 12 : (20 + Math.floor(Math.random() * 6))));
+      let x = lastX + (Math.random() - 0.5) * 230;
       x = Math.max(80, Math.min(880 - w, x));
       lastX = x;
 
       const roll = Math.random();
-      if (i > 4 && roll < 0.18) {
+      if (i > 4 && roll < 0.16) {
         movingPlatforms.push({
           x: x,
           y: currY,
@@ -1290,7 +1396,7 @@ class LevelManager {
           speedX: 60 + Math.random() * 40,
           type: pType
         });
-      } else if (i > 4 && roll < 0.32) {
+      } else if (i > 4 && roll < 0.28) {
         crumblingPlatforms.push({
           x: x,
           y: currY,
@@ -1303,7 +1409,10 @@ class LevelManager {
           y: currY,
           w: w,
           h: h,
-          type: pType
+          type: pType,
+          isSquareBlock: isSquare,
+          isThickSlab: isThick,
+          isThinBeam: isThin
         });
       }
 
@@ -1337,8 +1446,8 @@ class LevelManager {
       if (i % 3 === 0) {
         torches.push({
           x: x + 16,
-          y: currY - 28,
-          blue: i > 35
+          y: currY - 24,
+          blue: i > 70
         });
       }
 
@@ -1351,7 +1460,7 @@ class LevelManager {
           isMage: isMage,
           minX: x + 8,
           maxX: x + w - 34,
-          hp: 25 + Math.floor(i * 1.1)
+          hp: 25 + Math.floor(i * 0.75)
         });
       }
 
@@ -1360,7 +1469,7 @@ class LevelManager {
           x: x + w / 2,
           y: currY - 50,
           type: 'bat',
-          speed: 3.2 + Math.min(1.2, i * 0.02)
+          speed: 3.2 + Math.min(1.2, i * 0.012)
         });
       }
 
@@ -1383,19 +1492,19 @@ class LevelManager {
       danteCircle: 'Ascenso Infinito — La Gran Torre del Inframundo',
       biome: 'dynamic_nexus',
       width: 960,
-      height: 3000,
-      spawn: { x: 480, y: 2912 },
+      height: 6400,
+      spawn: { x: 480, y: 6312 },
       isCombatScene: false,
       musicTrack: 'infernal',
       ambientRain: true,
       hasLava: true,
-      lavaY: 3080,
-      lavaSpeed: 32,
+      lavaY: 6480,
+      lavaSpeed: 30,
       wind: {
         force: 25,
         dir: 1,
-        activeMinY: 800,
-        activeMaxY: 2200
+        activeMinY: 1200,
+        activeMaxY: 4800
       },
       platforms: platforms,
       ladders: ladders,
