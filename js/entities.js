@@ -151,15 +151,17 @@ class Player {
   }
 
   getAttackHitbox() {
-    if (!this.isAttacking || this.attackFrame < 1 || this.attackFrame > 4) return null;
-    const reach = 56;
-    const boxH = Math.max(56, this.h + 20);
-    const boxY = this.y - 12;
-    const boxX = this.facing === 1 ? (this.x + this.w - 8) : (this.x - reach + 8);
+    if (!this.isAttacking) return null;
+    const reach = 64;
+    const boxH = Math.max(62, this.h + 24);
+    const boxY = this.y - 14;
+    // Cover the player's full body + forward reach in facing direction:
+    const boxX = this.facing === 1 ? (this.x - 6) : (this.x - reach + 6);
+    const boxW = this.w + reach;
     return {
       x: boxX,
       y: boxY,
-      w: reach,
+      w: boxW,
       h: boxH,
       attackId: this.attackId || 1,
       facing: this.facing
@@ -630,9 +632,6 @@ class Player {
 
   takeDamage(amount, soundEng, particleSys) {
     if (this.invulnerableTimer > 0) return;
-    this.isAttacking = false;
-    this.attackFrame = 0;
-    if (this.attackHitTargets) this.attackHitTargets.clear();
     if (window.progression && window.progression.hasBoon('ironWill')) {
       amount = Math.round(amount * 0.65);
     }
@@ -1384,6 +1383,10 @@ class SkeletonEnemy {
   update(dt, player, level, soundEng, particleSys) {
     if (this.isDead) return;
 
+    if (this.hp <= 0) {
+      this.state = 'dead';
+    }
+
     // Parameter flexibility
     if (level && !level.platforms && (level.playHit || level.audioCtx)) {
       particleSys = soundEng;
@@ -1408,8 +1411,8 @@ class SkeletonEnemy {
         const isOverlapping = (
           swordBox.x < this.x + this.w &&
           swordBox.x + swordBox.w > this.x &&
-          swordBox.y < this.y + this.h + 8 &&
-          swordBox.y + swordBox.h > this.y - 8
+          swordBox.y < this.y + this.h + 12 &&
+          swordBox.y + swordBox.h > this.y - 12
         );
         if (isOverlapping && this.lastHitAttackId !== swordBox.attackId) {
           this.lastHitAttackId = swordBox.attackId;
@@ -1422,6 +1425,7 @@ class SkeletonEnemy {
           }
           if (isCrit && particleSys) particleSys.triggerScreenShake(0.18, 5);
           this.takeDamage(dmg, player.x, soundEng, particleSys);
+          if (this.state === 'dead' || this.isDead || this.hp <= 0) return;
         }
       }
     }
@@ -1804,9 +1808,11 @@ class SkeletonEnemy {
     // Immediate render facing
     this.renderFacing = this.dir;
 
-    // Touch damage
-    if (Math.abs(player.x - this.x) < Math.max(22, this.w * 0.8) && Math.abs(player.y - this.y) < Math.max(28, this.h * 0.8)) {
-      player.takeDamage(this.touchDamage || 18, soundEng, particleSys);
+    // Touch damage (only when alive, not flinching from hit, and not dead)
+    if (this.hp > 0 && this.state !== 'dead' && this.state !== 'hit') {
+      if (Math.abs(player.x - this.x) < Math.max(20, this.w * 0.75) && Math.abs(player.y - this.y) < Math.max(24, this.h * 0.75)) {
+        player.takeDamage(this.touchDamage || 18, soundEng, particleSys);
+      }
     }
   }
 
@@ -1826,7 +1832,7 @@ class SkeletonEnemy {
     ctx.translate(-13, -34); // Center at standard frame reference base
 
     // ─── SPECIAL / ELITE RUNIC SUMMONING SEAL ON GROUND ───
-    if (this.isElite) {
+    if (this.isElite && this.hp > 0 && this.state !== 'dead') {
       ctx.save();
       ctx.translate(13, 34);
       ctx.scale(1.0, 0.35); // Isometric perspective
@@ -1857,7 +1863,7 @@ class SkeletonEnemy {
     }
 
     // ─── SPECIAL / ELITE RADIANT LIGHT AURA & CORONA BEAMS ───
-    if (this.isElite) {
+    if (this.isElite && this.hp > 0 && this.state !== 'dead') {
       ctx.save();
       const auraPulse = 0.55 + Math.sin(Date.now() * 0.004) * 0.25;
       const grad = ctx.createRadialGradient(13, 17, 4, 13, 17, 30 + Math.sin(Date.now() * 0.006) * 4);
@@ -2031,7 +2037,7 @@ class SkeletonEnemy {
     }
 
     // ─── FLOATING ALERT "!" FEEDBACK ───
-    if (this.state === 'alert' || (this.state === 'chase' && this.alertPulse > 0)) {
+    if (this.hp > 0 && this.state !== 'dead' && (this.state === 'alert' || (this.state === 'chase' && this.alertPulse > 0))) {
       ctx.save();
       const exX = rx + this.w / 2;
       const exY = ry - (this.isElite ? 22 : 14) - Math.sin(Date.now() * 0.015) * 2;
@@ -2313,8 +2319,9 @@ class SkeletonEnemy {
   }
 
   takeDamage(amount, sourceX, soundEng, particleSys) {
-    if (this.isDead || this.hp <= 0) return;
-    this.hp -= amount;
+    if (this.isDead || this.state === 'dead') return;
+    const cleanAmount = (typeof amount === 'number' && !isNaN(amount)) ? amount : 22;
+    this.hp -= cleanAmount;
     const hitDir = sourceX !== undefined ? (this.x > sourceX ? 1 : -1) : (this.dir ? -this.dir : 1);
 
     // Megabonk & Kinetic Knockback Physics
@@ -2332,7 +2339,7 @@ class SkeletonEnemy {
     this.x += hitDir * 6;
 
     // Megabonk Combo & Comic-book Floating Text
-    if (window.progression) {
+    if (window.progression && window.progression.addBonkHit) {
       window.progression.addBonkHit(isMegabonk);
 
       // Comic-book Floating Text
@@ -2364,55 +2371,59 @@ class SkeletonEnemy {
       window.game.player.hp = Math.min(window.game.player.maxHp, window.game.player.hp + 12);
     }
 
-    if (this.hp <= 0 && !this.hasDropped) {
-      this.hasDropped = true;
+    if (this.hp <= 0) {
+      this.hp = 0;
       this.state = 'dead';
       this.deathTimer = 0.9;
       this.animFrame = 0;
 
-      // Corazón de Magma (Reliquia: Ignición en Cadena)
-      if (window.progression && window.progression.hasRelic('relic_chain_burn') && window.game) {
-        window.game.spawnFlameWave(this.x + this.w / 2, this.y + 10, 1);
-        window.game.spawnFlameWave(this.x + this.w / 2, this.y + 10, -1);
-      }
+      if (!this.hasDropped) {
+        this.hasDropped = true;
 
-      if (window.progression) {
-        if (window.progression.unlockAchievement) window.progression.unlockAchievement('first_blood');
-        if (window.progression.recordEnemyKill) window.progression.recordEnemyKill(this.isElite ? 'elite' : 'skeleton');
-      }
-      if (window.game && window.game.triggerHitStop) {
-        window.game.triggerHitStop(0.04);
-      }
-      if (particleSys) particleSys.spawnBloodExplosion(this.x + this.w / 2, this.y + this.h / 2, this.isElite ? 45 : 25);
-      if (window.game) {
-        // Balanced Soul Orbs: 4 souls for normal, 14 souls for elite
-        const orbCount = 2;
-        const totalSouls = this.isElite ? 14 : 4;
-        if (window.game.spawnSoulOrbs) {
-          window.game.spawnSoulOrbs(this.x + this.w / 2, this.y + this.h / 2, orbCount, totalSouls);
+        // Corazón de Magma (Reliquia: Ignición en Cadena)
+        if (window.progression && window.progression.hasRelic('relic_chain_burn') && window.game) {
+          window.game.spawnFlameWave(this.x + this.w / 2, this.y + 10, 1);
+          window.game.spawnFlameWave(this.x + this.w / 2, this.y + 10, -1);
         }
 
-        // Balatro Scoring Engine triggered ONLY on enemy death (capped bonus tribute)
         if (window.progression) {
-          const isPlayerInAir = (window.game && window.game.player) ? !window.game.player.isGrounded : false;
-          window.progression.calculateBalatroScore(this.isElite ? 6 : 2, { isMegabonk, inAir: isPlayerInAir });
+          if (window.progression.unlockAchievement) window.progression.unlockAchievement('first_blood');
+          if (window.progression.recordEnemyKill) window.progression.recordEnemyKill(this.isElite ? 'elite' : 'skeleton');
         }
+        if (window.game && window.game.triggerHitStop) {
+          window.game.triggerHitStop(0.04);
+        }
+        if (particleSys) particleSys.spawnBloodExplosion(this.x + this.w / 2, this.y + this.h / 2, this.isElite ? 45 : 25);
+        if (window.game) {
+          // Balanced Soul Orbs: 4 souls for normal, 14 souls for elite
+          const orbCount = 2;
+          const totalSouls = this.isElite ? 14 : 4;
+          if (window.game.spawnSoulOrbs) {
+            window.game.spawnSoulOrbs(this.x + this.w / 2, this.y + this.h / 2, orbCount, totalSouls);
+          }
 
-        // Vampire Survivors In-Run XP Gems
-        if (window.game.spawnXpGems) {
-          const xpVal = this.isElite ? 30 : 15;
-          window.game.spawnXpGems(this.x + this.w / 2, this.y + this.h / 2, this.isElite ? 2 : 1, xpVal);
-        }
+          // Balatro Scoring Engine triggered ONLY on enemy death (capped bonus tribute)
+          if (window.progression) {
+            const isPlayerInAir = (window.game && window.game.player) ? !window.game.player.isGrounded : false;
+            window.progression.calculateBalatroScore(this.isElite ? 6 : 2, { isMegabonk, inAir: isPlayerInAir });
+          }
 
-        if (window.game.spawnHealthOrb && Math.random() < (this.isElite ? 0.40 : 0.15)) {
-          window.game.spawnHealthOrb(this.x + this.w / 2, this.y + this.h / 2, this.isElite ? 25 : 15);
-        }
-        // BoonChest drop from Giant / Elite enemies (35% drop chance to reward player for defeating health-bar elites)
-        if (this.isElite && window.game.spawnBoonChest && Math.random() < 0.35) {
-          window.game.spawnBoonChest(this.x + this.w / 2 - 17, this.y + this.h - 26);
+          // Vampire Survivors In-Run XP Gems
+          if (window.game.spawnXpGems) {
+            const xpVal = this.isElite ? 30 : 15;
+            window.game.spawnXpGems(this.x + this.w / 2, this.y + this.h / 2, this.isElite ? 2 : 1, xpVal);
+          }
+
+          if (window.game.spawnHealthOrb && Math.random() < (this.isElite ? 0.40 : 0.15)) {
+            window.game.spawnHealthOrb(this.x + this.w / 2, this.y + this.h / 2, this.isElite ? 25 : 15);
+          }
+          // BoonChest drop from Giant / Elite enemies (35% drop chance to reward player for defeating health-bar elites)
+          if (this.isElite && window.game.spawnBoonChest && Math.random() < 0.35) {
+            window.game.spawnBoonChest(this.x + this.w / 2 - 17, this.y + this.h - 26);
+          }
         }
       }
-    } else if (this.hp > 0) {
+    } else {
       this.state = 'hit';
       this.hitTimer = 0.35;
       this.animFrame = 0;
@@ -5580,7 +5591,10 @@ class AbyssalBat {
   }
 
   update(dt, player, level, soundEng, particleSys) {
-    if (this.isDead) return;
+    if (this.isDead || this.hp <= 0) {
+      this.isDead = true;
+      return;
+    }
 
     if (this.cooldown > 0) this.cooldown -= dt;
     if (this.alertPulse > 0) this.alertPulse -= dt * 2.0;
@@ -5593,7 +5607,7 @@ class AbyssalBat {
     if (player) {
       const swordBox = (player.getAttackHitbox && player.isAttacking) ? player.getAttackHitbox() : null;
       if (swordBox) {
-        const batBox = { x: this.x - 6, y: this.y - 8, w: this.w + 12, h: this.h + 16 };
+        const batBox = { x: this.x - 8, y: this.y - 10, w: this.w + 16, h: this.h + 20 };
         const isOverlapping = (
           swordBox.x < batBox.x + batBox.w &&
           swordBox.x + swordBox.w > batBox.x &&
@@ -5611,6 +5625,7 @@ class AbyssalBat {
           }
           if (isCrit && particleSys) particleSys.triggerScreenShake(0.18, 5);
           this.takeDamage(dmg, player.x, soundEng, particleSys);
+          if (this.isDead || this.hp <= 0) return;
           return;
         }
       }
@@ -5818,7 +5833,8 @@ class AbyssalBat {
 
   takeDamage(amount, sourceX, soundEng, particleSys) {
     if (this.isDead || this.hp <= 0) return;
-    this.hp -= amount;
+    const cleanAmount = (typeof amount === 'number' && !isNaN(amount)) ? amount : 22;
+    this.hp -= cleanAmount;
     const hitDir = sourceX !== undefined ? (this.x > sourceX ? 1 : -1) : (this.dir ? -this.dir : 1);
     this.vx = hitDir * 7.5;
     this.vy = -4.8;
@@ -5830,25 +5846,28 @@ class AbyssalBat {
       window.game.player.hp = Math.min(window.game.player.maxHp, window.game.player.hp + 5);
     }
 
-    if (this.hp <= 0 && !this.hasDropped) {
-      this.hasDropped = true;
+    if (this.hp <= 0) {
+      this.hp = 0;
       this.isDead = true;
-      if (window.progression && window.progression.recordEnemyKill) {
-        window.progression.recordEnemyKill('bat');
-      }
-      if (window.game && window.game.triggerHitStop) {
-        window.game.triggerHitStop(0.035);
-      }
-      if (particleSys) particleSys.spawnBloodExplosion(this.x + this.w / 2, this.y + this.h / 2, 20);
-      if (window.game) {
-        window.game.spawnSoulOrbs(this.x + this.w / 2, this.y + this.h / 2, 1, 2);
-        // Vampire Survivors In-Run XP Gem Drop (Fix: Bats now grant XP gems on kill!)
-        if (window.game.spawnXpGems) {
-          const xpVal = this.subType === 'gargoyle' ? 14 : 10;
-          window.game.spawnXpGems(this.x + this.w / 2, this.y + this.h / 2, 1, xpVal);
+      if (!this.hasDropped) {
+        this.hasDropped = true;
+        if (window.progression && window.progression.recordEnemyKill) {
+          window.progression.recordEnemyKill('bat');
         }
-        if (window.game.spawnHealthOrb && Math.random() < 0.25) {
-          window.game.spawnHealthOrb(this.x + this.w / 2, this.y + this.h / 2, 15);
+        if (window.game && window.game.triggerHitStop) {
+          window.game.triggerHitStop(0.035);
+        }
+        if (particleSys) particleSys.spawnBloodExplosion(this.x + this.w / 2, this.y + this.h / 2, 20);
+        if (window.game) {
+          window.game.spawnSoulOrbs(this.x + this.w / 2, this.y + this.h / 2, 1, 2);
+          // Vampire Survivors In-Run XP Gem Drop (Fix: Bats now grant XP gems on kill!)
+          if (window.game.spawnXpGems) {
+            const xpVal = this.subType === 'gargoyle' ? 14 : 10;
+            window.game.spawnXpGems(this.x + this.w / 2, this.y + this.h / 2, 1, xpVal);
+          }
+          if (window.game.spawnHealthOrb && Math.random() < 0.25) {
+            window.game.spawnHealthOrb(this.x + this.w / 2, this.y + this.h / 2, 15);
+          }
         }
       }
     }

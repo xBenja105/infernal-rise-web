@@ -2090,7 +2090,12 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     }
 
     // 4b. Update Bats
-    for (const bat of this.bats) {
+    for (let i = this.bats.length - 1; i >= 0; i--) {
+      const bat = this.bats[i];
+      if (bat.isDead) {
+        this.bats.splice(i, 1);
+        continue;
+      }
       bat.update(dt, this.player, this.level, window.soundEngine, window.particleSystem);
     }
 
