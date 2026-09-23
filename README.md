@@ -1,129 +1,119 @@
-# Infernal Rise 2.0 (Videojuego Nativo de Escritorio PC — Incremental Rogue-lite)
+# Infernal Rise 2.0 (Videojuego Nativo de Escritorio PC — Roguelite de Acción y Plataformas Vertical)
 
 [![Platform Windows](https://img.shields.io/badge/Plataforma-Windows%20PC-0078D6?style=for-the-badge&logo=windows)](https://github.com/xBenja105/infernal-rise-web)
 [![Engine Electron](https://img.shields.io/badge/Motor-Electron%20Desktop-47848F?style=for-the-badge&logo=electron)](https://github.com/xBenja105/infernal-rise-web)
 [![Release v2.0.0](https://img.shields.io/badge/Release-v2.0.0-success?style=for-the-badge&logo=github)](https://github.com/xBenja105/infernal-rise-web/releases/tag/v2.0.0)
 [![GitHub Repo](https://img.shields.io/badge/GitHub-xBenja105%2Finfernal--rise--web-181717?style=for-the-badge&logo=github)](https://github.com/xBenja105/infernal-rise-web)
 
-
 ---
 
 ### 📥 DESCARGA DIRECTA (SOLO PARA JUGAR)
 
-[![⬇️ DESCARGAR JUEGO COMPLETO (.EXE PARA WINDOWS)](https://img.shields.io/badge/⬇️%20DESCARGAR%20INFERNAL%20RISE-EJECUTABLE%20PORTABLE%20(.EXE)-2ea44f?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/xBenja105/infernal-rise-web/releases/download/v2.0.0/Infernal.Rise.2.0.0.exe)
+[![DESCARGAR JUEGO COMPLETO (.EXE PARA WINDOWS)](https://img.shields.io/badge/DESCARGAR%20INFERNAL%20RISE-EJECUTABLE%20PORTABLE%20(.EXE)-2ea44f?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/xBenja105/infernal-rise-web/releases/download/v2.0.0/Infernal.Rise.2.0.0.exe)
 
-> 💡 **¿Solo quieres jugar sin ver el código ni instalar nada?**
-> 1. Haz clic en el botón verde de arriba para descargar directamente **`Infernal.Rise.2.0.0.exe`**.
+> 💡 **¿Solo quieres jugar sin ver el código ni instalar dependencias?**
+> 1. Haz clic en el botón verde superior para descargar **`Infernal.Rise.2.0.0.exe`**.
 > 2. Haz doble clic en el archivo descargado para comenzar a jugar de inmediato (es **100% portable**, no requiere instalación, ni Node.js, ni comandos).
 
 **Autor**: Benjamín Arriagada ([@xBenja105](https://github.com/xBenja105))
 
 ---
 
-## ⚔️ Acerca del Juego
+## ⚔️ ¿Qué es Infernal Rise?
 
-*Infernal Rise 2.0* es un videojuego de plataformas vertical de alta precisión, exploración y acción rogue-lite en 2D desarrollado nativamente para PC con ambientación de fantasía oscura y dificultad desafiante. 
+**Infernal Rise** es un **Roguelite de Acción y Plataformas Verticales Hardcore** *(Vertical Precision Platformer & Action Roguelite)* en 2D ambientado en una fantasía oscura medieval inspirada en la *Divina Comedia* de Dante.
 
-Encarnas a **Kael**, un guerrero sentenciado al Inframundo que despierta en una caverna lúgubre. Para purgar su condena y salvar su alma, debe emprender un peligroso ascenso escalando **La Gran Torre del Inframundo**, una colosal estructura que se erige desde las fosas de basalto y fuego hasta la cumbre donde se abre el **Gran Portal Terrenal hacia el Mundo de los Vivos**.
+Combina la exigencia y el vértigo milimétrico del plataformeo vertical (estilo *Jump King* y *Getting Over It*) con el combate visceral cuerpo a cuerpo y la construcción de builds dinámicas in-run (estilo *Dead Cells* y *Hades*).
 
-A lo largo del ascenso, enfrentarás a los 3 Guardianes del Averno:
-1. **Azgalor, el Demonio Abrasador (Demon Slime)** — Señor de las Fosas (Piso 1)
-2. **Kranor, el Guardián Gélido (Frost Guardian)** — Custodio de las Cumbres Heladas (Piso 2)
-3. **Asterión, el Minotauro del Tártaro (Minotauro)** — Titán de las Cavernas • Jefe Final (Piso 3)
+Encarnas a **Kael**, un guerrero condenado al Inframundo que despierta en una bóveda subterránea. Para purgar sus culpas y recuperar su alma, debe emprender un ascenso vertical contrarreloj a través de **La Gran Torre del Inframundo**, una colosal aguja de piedra y hierro que se eleva sobre fosas de lava ascendente hacia el umbral del Mundo de los Vivos.
 
 ---
 
-## 🏰 Arquitectura Estructural y Visual (Inspiración *Jump King*)
+## 🏛️ La Campaña: Los Pisos de la Gran Torre
 
-El mundo de *Infernal Rise 2.0* ha sido completamente enriquecido con un sistema arquitectónico coherente donde ninguna plataforma flota sin sentido físico:
+Cada piso ofrece un bioma procedural con identidad arquitectónica única, atmósfera inmersiva y alturas a gran escala:
 
-1. **Escuadras y Puntales Diagonales a Muro:**
-   - Las plataformas próximas a las paredes laterales (`x <= 160px` o `x + w >= levelW - 160px`) extienden ménsulas y vigas diagonales de madera o piedra labrada, conectando sólidamente las repisas con los muros de la torre.
-2. **Cerchas Estructurales y Celosías Inferiores en "X":**
-   - Todas las plataformas suspendidas cuentan con vigas maestras de soporte inferior y celosías transversales de madera de mina y andamios.
-3. **Columnas de Descarga y Pilares Verticales:**
-   - Postes y pilares descendentes que conectan las plataformas con niveles inferiores, simulando andamiajes de minería y fortificaciones reales.
-4. **Fondos Atmosféricos Parallax Temáticos por Piso:**
-   - **Pisos 1 y 2 (Fosas Abisales & Cavernas):** 4 capas continuas de fondos cavernosos con estalactitas, pilares oscuros y roca basáltica.
-   - **Piso 3 (Cámaras del Castillo Gótico):** Muros de sillería de piedra oscura, ventanas ojivales iluminadas con cirios dorados y estandartes heráldicos carmesí.
-   - **Cumbres y Exteriores:** Agujas de castillos y torreones en contraluz profundo con brumas eólicas.
-   - **Cumbre Terrenal (Mundo de los Vivos):** Parallax exterior de 6 capas que revela la luz del sol del amanecer, montañas lejanas, bosques de pinos y plataformas floridas con musgo esmeralda y flores silvestres.
+### 0. Refugio del Inframundo (Lobby Cavernoso)
+- Bóveda subterránea con runas místicas, antorchas violetas envolventes y música ambiental serena.
+- **Santuario de Mejoras**: desbloquea perks permanentes (salud máxima, piel de obsidiana, doble salto, multiplicadores de daño).
+- **Ruleta de las Armas**: tragamonedas interactiva para desbloquear y evolucionar armas pasivas autónomas.
 
----
+### 1. Piso 1: El Foso Abisal (8,400 px de Ascenso)
+- **Bioma**: Basalto negro, fisuras de magma fluido continuo y lluvia ambiental.
+- **Mecánica Central**: La marea de lava primordial persigue al jugador desde el fondo, acelerando si te adelantas.
+- **Estructura**: Dividido en 4 tiers (*Foso de Lava Primordial*, *Foso de Basalto Abisal*, *Ascenso de Ceniza y Fuego*, *Cimientos del Averno*).
+- **Guardián del Piso**: **Azgalor, el Demonio Abrasador (Demon Slime)** — Coloso ígneo que invoca olas de fuego, saltos sísmicos y proyectiles de magma.
 
-## 🗺️ Exploración y Salas Especiales
+### 2. Piso 2: Las Agujas Glaciares (9,200 px de Ascenso)
+- **Bioma**: Hielo permafrost, pilastras de escarcha, antorchas de fuego azul y ventiscas gélidas.
+- **Mecánica Central**: Superficies resbalosas que conservan la inercia del movimiento y fuertes corrientes de viento ártico lateral que desvían las trayectorias aéreas.
+- **Estructura**: 3 tiers (*Escarcha Baja*, *Glaciares Colgantes & Criptas*, *Agujas Árticas & Vientos*).
+- **Guardián del Piso**: **Kranor, el Guardián Gélido (Frost Guardian)** — Centinela que lanza carámbanos teledirigidos, ráfagas congelantes y ondas gélidas.
 
-Durante el ascenso por la torre, los jugadores pueden descubrir secretos que recompensan la curiosidad y la destreza:
+### 3. Piso 3: Las Cavernas Rocosas & Ruinas del Alba (10,200 px de Ascenso)
+- **Bioma**: Baluartes de piedra, columnatas góticas continuas, escombros antiguos y resplandores del umbral solar.
+- **Mecánica Central**: Plataformas quebradizas que colapsan al pisarlas, puentes colgantes oscilantes y trampas de pinchos combinadas con enemigos de élite.
+- **Estructura**: 3 tiers (*Fosas Rocosas*, *Galerías de Escombros & Baluartes Góticos*, *Bóvedas del Alba & Umbral Solar*).
+- **Jefe Final**: **Asterión, el Minotauro del Tártaro** — Titán legendario con embestidas destructivas, golpes de martillo sísmico y auras de poder ancestral.
 
-- 🧱 **Paredes Quebradizas y Salas Secretas:**
-  - En los flancos de la torre existen muros agrietados que pueden destruirse con golpes de espada o proyectiles de fuego. Al romperlos, se accede a estancias ocultas con cofres de reliquias legendarias y urnas de almas.
-- 🏕️ **Puesto de Avanzada del Ermitaño (Haven Outpost):**
-  - En las zonas de descanso a mitad de la torre, el Ermitaño ofrece una hoguera segura libre de enemigos y una tienda para comprar reliquias pasivas y pociones de salud usando almas.
-- 🩸 **Altares de Sangre (Blood Altars):**
-  - Antiguos monolitos donde puedes realizar pactos oscuros: entrega salud máxima o vitalidad actual a cambio de cientos de almas y bendiciones de combate de alto nivel.
-- 🧰 **Monolitos de Desafío del Averno:**
-  - Activa un desafío voluntario de oleadas enemigas; superarlo libera cofres de reliquias especiales y orbes de experiencia.
-
----
-
-## 🎰 Ruleta de Armas y Armas Pasivas (Estilo *Vampire Survivors*)
-
-En el vestíbulo de la caverna se encuentra la **Ruleta de las Armas**, una máquina tragamonedas interactiva que permite obtener y evolucionar armamento pasivo autónomo:
-
-- ✝️ **Cruz Sagrada (Holy Cross):** Órbita protectora de cruces consagradas que repelen enemigos y destruyen proyectiles.
-- 🔮 **Orbes del Averno (Hellfire Orbs):** Proyectiles de fuego teledirigidos que buscan automáticamente a los enemigos cercanos.
-- 🧄 **Aura de Ajo Purificador:** Área continua de daño que castiga a cualquier enemigo que intente aproximarse a Kael.
-- ⚡ **Relámpago de Juicio:** Rayos descendentes que caen sobre los enemigos con mayor vida.
-- 🌀 **Chakrams y Guadañas:** Cuchillas giratorias y armas perforantes de largo alcance.
-- 🔄 **Evolución de Armas:** Al subir las armas al nivel máximo con los tomos adecuados, evolucionan a sus versiones divinas (*Cruz de San Miguel*, *Supernova Infernal*, etc.).
+### 4. Modo Infernal (Supervivencia Roguelite Infinita — 6,400 px)
+- Ascenso extremo procedural con 130 plataformas consecutivas, marea de lava acelerada y mezcla dinámica de todos los tipos de bioma.
 
 ---
 
-## 🧗 Mecánicas Hardcore de Precisión
+## 🧱 Arquitectura y Variedad de Plataformas (Cero Texturas Flotando)
 
-- **Escaleras Trepables ([W] / [S]):** Permite trepar escaleras verticales para salvar abismos y saltar en cualquier dirección con [Espacio].
-- **Superficies Resbalosas:** Plataformas de hielo glacial que conservan la inercia del movimiento, exigiendo calcular saltos con anticipación.
-- **Plataformas Quebradizas:** Tiemblan 0.55s tras ser pisadas antes de colapsar; reaparecen tras unos segundos.
-- **Plataformas Móviles:** Oscilan vertical y horizontalmente transfiriendo inercia al personaje.
-- **Corrientes de Viento:** Ráfagas eólicas en niveles superiores que desvían la trayectoria del salto en el aire.
-- **Techos de Pinchos con Salto Dosificado:** Control analógico del salto cargado para evitar golpear techos letales.
+El mundo ha sido diseñado bajo una estricta coherencia física y visual donde cada elemento tiene anclaje arquitectónico:
 
----
-
-## 🔮 Sistema de Economía Incremental y Prestigio
-
-El juego posee una economía balanceada de tres divisas interconectadas:
-
-1. **Almas (🔮):**
-   - Obtenidas por ascender altura, derrotar enemigos, romper urnas o pasivamente mediante el *Altar del Tormento*.
-   - Se utilizan para adquirir mejoras permanentes en el Santuario y comprar objetos al Ermitaño.
-2. **Fragmentos de Humanidad (💠):**
-   - Divisa sagrada obtenida al derrotar a los Guardianes de la Torre.
-   - Permite desbloquear el **Doble Salto en el aire**, el cual es permanente y nunca se pierde tras morir o reiniciar.
-3. **Cenizas de Penitencia (🔥):**
-   - Divisa de prestigio obtenida al sacrificar almas acumuladas en el Santuario.
-   - Cada Ceniza otorga un **multiplicador acumulativo (+15%)** al daño, la salud y la generación de almas.
+- 🪨 **Bloques Ciclópeos Gruesos (`h: 44-56px`):** Losas monolíticas masivas con hiladas de sillería de piedra labrada, llagas de mortero y sombras profundas.
+- ⛓️ **Vigas y Pasarelas Delgadas (`h: 10-14px`):** Barras esbeltas de hierro forjado o madera minera con pernos de sujeción cada 26px y pletinas de anclaje.
+- ⬛ **Cubos Cuadrados de Salto (`44x44px` a `50x50px`):** Peldaños cúbicos de precisión con biseles cuadrangulares tallados para saltos ágiles.
+- 🏛️ **Ejes y Fustes Verticales (`w: 20-24px`, `h: 100-140px`):** Columnas divisorias con flejes de hierro y cornisas voladizas a ambos lados.
+- 📐 **Cerchas y Ménsulas Diagonales:** Plataformas próximas a los muros extienden puntales diagonales empotrados en la piedra.
+- 🏛️ **Pilares de Descarga Continuos:** Las columnas verticales solo se construyen si conectan de forma continua con una plataforma inferior (`<= 240px`), asentándose sobre un plinto labrado (cero columnas cortadas en el aire).
+- 🕯️ **Pebeteros y Antorchas Ancladas:** Cada antorcha se apoya sobre el piso con su trípode de forja o se incrusta en los muros laterales de mampostería.
 
 ---
 
-## ⛩️ Santuario de Mejoras Permanentes ([P] o Botón en HUD)
+## ⚔️ Combate, Progresión In-Run y Armamento
 
-- **Vitalidad de Kael:** Salud máxima incrementada y regeneración pasiva.
-- **Piel de Obsidiana:** Sobrevive al contacto con pinchos con daño reducido y rebote seguro en vez de muerte instantánea.
-- **Reflejos Infernales:** Aumenta la velocidad de carga del salto (+12% por nivel).
-- **Impulso Titánico:** Mayor potencia y altura máxima de salto.
-- **Filo del Purgatorio:** Daño incrementado para todos los ataques y tajos de espada.
-- **Codicia del Condenado:** Almas adicionales obtenidas por altura y muertes.
-- **Altar del Tormento:** Generación pasiva continua de **Almas por Segundo (APS)**.
-- **Doble Salto (Gracia Sagrada):** Desbloqueo de salto libre en el aire.
+- **Dash Táctico con i-frames**: Permite esquivar proyectiles, atravesar enemigos y saltar sobre trampas sin recibir daño durante la esquiva.
+- **Hitbox 360° y Combate Visceral**: Cobertura frontal extendida e inmediata desde el fotograma 0 de ataque, impidiendo stunlocks enemigos por contacto.
+- **Subida de Nivel y Bendiciones Roguelite**: Recolectar gemas de XP liberadas por enemigos permite elegir 1 de 3 bendiciones pasivas (ondas ígneas, aumento de alcance, vampirismo, escudos temporales).
+- **Ruleta de Armas Pasivas**:
+  - ✝️ *Cruz Sagrada*: Órbita protectora que repele enemigos y destruye proyectiles.
+  - 🔮 *Orbes del Averno*: Bolas de fuego teledirigidas autónomas.
+  - 🧄 *Aura Purificadora*: Campo de daño continuo de proximidad.
+  - ⚡ *Relámpagos de Juicio*: Rayos descendentes sobre los objetivos más resistentes.
+  - 🔄 *Evolución de Armas*: Al alcanzar el nivel máximo con sus catalizadores, se transforman en versiones divinas.
+- **Mascotas y Familiares Rescatables**: Rescata a *Ignis*, *Aura* y *Borus* enjaulados en la torre para recibir apoyo autónomo en combate.
+
+---
+
+## 🗺️ Secretos y Encuentros Especiales
+
+- 🧱 **Paredes Quebradizas y Salas Secretas**: Muros agrietados que se rompen con golpes de espada, revelando cofres de reliquias legendarias y urnas de almas.
+- 🏕️ **Puesto de Avanzada del Ermitaño**: Zonas seguras a mitad de camino con hogueras sin enemigos, pociones de salud y compra de reliquias.
+- 🩸 **Altares de Sangre**: Sacrifica salud máxima o vida actual a cambio de cientos de almas y bendiciones prohibidas.
+- 🧰 **Monolitos de Desafío**: Eventos opcionales de oleadas enemigas con recompensas de alto valor.
+
+---
+
+## ⚙️ Menús, Audio y Calidad de Vida
+
+- **Menú Principal Standalone**: Pantalla de título independiente y limpia; al salir al menú principal, la partida se desmonta por completo en memoria (sin juego pausado en fondo).
+- **Control de Volumen en Tiempo Real**: Sliders dedicados para Maestro, Efectos (SFX) y Música de fondo con respuesta inmediata y sincronización visual.
+- **Tipografía Limpia**: Textos claros y legibles sin ruido visual ni saturación de emojis.
+- **Soporte Multilingüe**: Alterna en tiempo real entre Español e Inglés con localización completa.
+- **Reasignación de Teclas**: Personaliza todas las teclas de juego desde el menú de opciones.
 
 ---
 
 ## 🕹️ Controles
 
-El juego cuenta con detección automática de dispositivos (Teclado, Ratón y Gamepad):
+Compatible con detección automática de Teclado, Ratón y Mandos (Xbox, PlayStation y genéricos):
 
-| Acción | Teclado | Ratón | Gamepad (Xbox / PS) |
+| Acción | Teclado | Ratón | Mando (Xbox / PlayStation) |
 | :--- | :--- | :--- | :--- |
 | **Moverse / Apuntar** | `[A]` / `[D]` o Flechas | — | Stick Izquierdo / D-Pad |
 | **Trepar Escaleras** | `[W]` / `[S]` o Flechas Arriba/Abajo | — | Stick Izquierdo / D-Pad Arriba/Abajo |
@@ -132,25 +122,41 @@ El juego cuenta con detección automática de dispositivos (Teclado, Ratón y Ga
 | **Atacar con Espada** | `[Z]`, `[J]` o `[Click Izquierdo]` | Clic Izquierdo | `[X]` (Xbox) / `[▢]` (PS) |
 | **Dash Táctico (i-frames)** | `[Shift]` o `[K]` | Clic Derecho | `[LT]` / `[L2]` |
 | **Interactuar / Hablar** | `[E]` | Clic en Prompt | `[RB]` / `[B]` / `[◯]` |
-| **Avanzar Diálogos** | `[Espacio]`, `[Enter]`, `[E]`, `[Z]`, etc. | Clic en Diálogo o Pantalla | `[A]`, `[B]`, `[X]` |
-| **Santuario de Mejoras** | `[P]` | Clic en Botón HUD | `[Y]` (en el lobby) |
-| **Pausar / Menú** | `[Escape]` | Botón Pausa en HUD | `[Start]` / `[Options]` |
+| **Avanzar Diálogos** | `[Espacio]`, `[Enter]`, `[E]`, `[Z]` | Clic en Diálogo | `[A]`, `[B]`, `[X]` |
+| **Santuario de Mejoras** | `[P]` | Botón HUD | `[Y]` (en el lobby) |
+| **Pausar / Menú** | `[Escape]` | Botón HUD | `[Start]` / `[Options]` |
 | **Pantalla Completa** | `[F11]` | — | — |
 
 ---
 
-## 🚀 Cómo Jugar en PC (Escritorio Local)
+## 🚀 Cómo Jugar o Desarrollar en PC
 
-- **Inicio Inmediato**: Ejecuta directamente el binario compilado `dist/Infernal Rise 2.0.0.exe`.
-- **Modo Desarrollo**: Ejecuta `npm start` en la terminal para iniciar el entorno Electron.
-- **Compilar Ejecutable Portátil**: Ejecuta `npm run dist:portable` para empaquetar el binario autónomo `.exe` en la carpeta `dist/`.
+### Modo Jugador (Sin Instalar Nada)
+1. Descarga el ejecutable desde [GitHub Releases](https://github.com/xBenja105/infernal-rise-web/releases/tag/v2.0.0).
+2. Ejecuta `Infernal.Rise.2.0.0.exe` directamente.
+
+### Modo Desarrollador (Node.js & Electron)
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/xBenja105/infernal-rise-web.git
+cd infernal-rise-web
+
+# 2. Instalar dependencias
+npm install
+
+# 3. Iniciar el juego en modo desarrollo
+npm start
+
+# 4. Compilar ejecutable portable para Windows (.exe)
+npm run dist:portable
+```
 
 ---
 
-## 📦 Tecnologías Utilizadas
+## 📦 Tecnologías y Rendimiento
 
-- **Runtime & Desktop App:** [Electron](https://www.electronjs.org/) (Arquitectura nativa Windows x64).
-- **Motor Gráfico:** Canvas 2D HTML5 con renderizado optimizado por capas, doble búfer y 60 FPS estables.
-- **Motor de Audio:** Web Audio API con síntesis procedural polifónica, filtros pasa-bajos dinámicos (lowpass) al pausar y ambientación de lluvia y viento.
-- **Físicas y Detección de Colisiones:** AABB con respuesta inercial para plataformas móviles, escaleras trepables, muros quebradizos y rebotes elásticos.
-- **Persistencia:** Almacenamiento local seguro (`localStorage`) con soporte para exportar e importar partidas guardadas en formato JSON.
+- **Runtime de Escritorio:** [Electron 34](https://www.electronjs.org/) nativo para Windows x64.
+- **Motor Gráfico:** Canvas 2D HTML5 optimizado con renderizado por capas, doble búfer y 60 FPS estables sin dependencias pesadas.
+- **Motor de Audio:** Web Audio API procedural con síntesis polifónica, reverberación de caverna, ambientación de lluvia/viento y filtro pasa-bajos (*lowpass*) dinámico en menús y pausas.
+- **Físicas:** AABB con inercia cinemática para plataformas móviles, rebotes elásticos, escaleras y muros destructibles.
+- **Persistencia:** Almacenamiento local seguro (`localStorage`) con soporte para exportar e importar partidas en formato JSON.
