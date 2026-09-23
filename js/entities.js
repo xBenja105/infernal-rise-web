@@ -3860,6 +3860,10 @@ class SpectralPlatform {
     return this.activeTimer > 0;
   }
 
+  get active() {
+    return this.activeTimer > 0;
+  }
+
   activate(duration = 5.5) {
     this.activeTimer = duration;
     this.maxDuration = duration;
@@ -3947,15 +3951,23 @@ class RunicBell {
     this.swingVel = 8.0;
     this.ringTime = 1.0;
 
-    if (soundEngine && soundEngine.play) {
-      soundEngine.play('altar_use', 1.2);
+    if (soundEngine) {
+      if (soundEngine.playBell) soundEngine.playBell(587.33);
+      else if (soundEngine.play) soundEngine.play('altar_use', 1.2);
+    }
+    if (particleSys) {
+      if (particleSys.triggerScreenShake) particleSys.triggerScreenShake(0.35, 8);
+      if (particleSys.spawnSparks) {
+        particleSys.spawnSparks(this.x + this.w / 2, this.y + this.h / 2, 16, '#38bdf8');
+      }
     }
     if (camera && camera.shake) {
       camera.shake(3, 0.25);
     }
-    if (particleSys && particleSys.spawnSparks) {
-      particleSys.spawnSparks(this.x + this.w / 2, this.y + this.h / 2, 16, '#38bdf8');
-    }
+  }
+
+  ring(soundEngine, particleSys, camera) {
+    this.strike(soundEngine, particleSys, camera);
   }
 
   update(dt, spectralPlatforms) {
@@ -4178,8 +4190,9 @@ class AscensionVortex {
       player.isGrounded = false;
       this.cooldown = 1.0;
 
-      if (soundEngine && soundEngine.play) {
-        soundEngine.play('whoosh', 1.4);
+      if (soundEngine) {
+        if (soundEngine.playJump) soundEngine.playJump();
+        else if (soundEngine.play) soundEngine.play('whoosh', 1.4);
       }
       if (particleSys && particleSys.spawnSparks) {
         particleSys.spawnSparks(this.x, this.y, 22, '#38bdf8');
@@ -4255,8 +4268,9 @@ class FamiliarCage {
       this.hp -= swordHitbox.damage || 25;
       this.shakeTimer = 0.25;
 
-      if (soundEngine && soundEngine.play) {
-        soundEngine.play('clank', 1.0);
+      if (soundEngine) {
+        if (soundEngine.playSwordSlash) soundEngine.playSwordSlash();
+        else if (soundEngine.play) soundEngine.play('clank', 1.0);
       }
       if (particleSys && particleSys.spawnSparks) {
         particleSys.spawnSparks(this.x + this.w / 2, this.y + this.h / 2, 10, '#fbbf24');
@@ -4264,8 +4278,12 @@ class FamiliarCage {
 
       if (this.hp <= 0) {
         this.isBroken = true;
-        if (soundEngine && soundEngine.play) {
-          soundEngine.play('secret_found', 1.2);
+        if (soundEngine) {
+          if (soundEngine.playAchievementUnlock) soundEngine.playAchievementUnlock();
+          else if (soundEngine.play) soundEngine.play('secret_found', 1.2);
+        }
+        if (particleSys && particleSys.triggerScreenShake) {
+          particleSys.triggerScreenShake(0.4, 10);
         }
         if (camera && camera.shake) {
           camera.shake(5, 0.4);
