@@ -25,7 +25,7 @@
 html, body {
   background-color: var(--bg);
   color: var(--text);
-  font-family: 'MedievalSharp', cursive, serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   overflow: hidden;
   width: 100vw;
   width: 100dvw;
@@ -293,13 +293,15 @@ body.cursor-hidden *,
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(15, 8, 14, 0.9);
-  border: 1px solid #4a1520;
+  background: rgba(14, 7, 14, 0.92);
+  border: 1px solid rgba(212, 175, 55, 0.3);
   border-radius: 4px;
-  padding: 5px 10px;
-  font-family: 'VT323', monospace;
-  font-size: 21px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+  padding: 4px 10px;
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
   user-select: none;
 }
 
@@ -577,6 +579,13 @@ body.cursor-hidden *,
   transition: opacity 0.35s ease;
 }
 
+#main-menu.screen-overlay {
+  background: radial-gradient(circle at center, #180914 0%, #080309 85%, #030104 100%);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  opacity: 1;
+}
+
 .screen-overlay.hidden {
   display: none;
   pointer-events: none;
@@ -596,10 +605,11 @@ body.cursor-hidden *,
 }
 
 .game-subtitle {
-  font-family: 'MedievalSharp', cursive;
-  font-size: clamp(16px, 2.5vw, 24px);
+  font-family: 'Cinzel', serif;
+  font-size: clamp(14px, 2vw, 18px);
   color: var(--gold);
-  letter-spacing: 3px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
   margin-bottom: 20px;
   text-shadow: 0 0 10px rgba(244, 208, 111, 0.5);
 }
@@ -681,10 +691,12 @@ body.cursor-hidden *,
 }
 
 .menu-subtitle-text {
-  font-family: 'MedievalSharp', cursive;
-  font-size: clamp(14px, 2vw, 17px);
-  color: #f4d06f;
-  text-shadow: 0 0 8px rgba(244, 208, 111, 0.4);
+  font-family: 'Cinzel', serif;
+  font-size: clamp(12px, 1.6vw, 15px);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #d4af37;
+  text-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
 }
 
 /* Organized Main Action Buttons */
@@ -703,35 +715,34 @@ body.cursor-hidden *,
 }
 
 .btn-infernal {
-  background: linear-gradient(180deg, rgba(32, 14, 22, 0.95), rgba(16, 7, 12, 0.95));
-  border: 2px solid #854d0e;
+  background: linear-gradient(180deg, rgba(28, 14, 22, 0.95), rgba(14, 7, 12, 0.98));
+  border: 1.5px solid rgba(212, 175, 55, 0.45);
   border-radius: 4px;
-  color: #fef08a;
+  color: #f5eedc;
   font-family: 'Cinzel', serif;
-  font-size: 17px;
-  font-weight: 800;
-  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 11px 22px;
   cursor: pointer;
   letter-spacing: 2px;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.8), inset 0 1px 0 rgba(254, 240, 138, 0.15);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   text-align: center;
   text-transform: uppercase;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 /* Primary CTA Button */
 .btn-primary-cta {
-  background: linear-gradient(135deg, rgba(38, 10, 18, 0.95), rgba(70, 15, 25, 0.95));
-  border: 2px solid #ffaa00;
-  color: #fff4d0;
-  font-size: 20px;
-  padding: 14px 26px;
-  box-shadow: 0 0 20px rgba(255, 170, 0, 0.35), inset 0 0 15px rgba(255, 60, 0, 0.2);
-  animation: pulseCtaGlow 2.6s ease-in-out infinite alternate;
+  background: linear-gradient(135deg, rgba(48, 12, 22, 0.95), rgba(80, 18, 28, 0.95));
+  border: 1.5px solid #d4af37;
+  color: #fff9e6;
+  font-size: 17px;
+  padding: 13px 26px;
+  box-shadow: 0 0 18px rgba(212, 175, 55, 0.3), inset 0 0 12px rgba(255, 60, 0, 0.15);
 }
 
 @keyframes pulseCtaGlow {
@@ -813,11 +824,11 @@ body.cursor-hidden *,
   font-size: 17px;
 }
 
-/* Hover yellow for general buttons */
+/* Hover gold for general buttons */
 .btn-infernal:hover {
-  color: #ffe600 !important;
-  border-color: #ffe600 !important;
-  box-shadow: 0 0 25px rgba(255, 230, 0, 0.7) !important;
+  color: #ffd700 !important;
+  border-color: #ffd700 !important;
+  box-shadow: 0 0 18px rgba(255, 215, 0, 0.45) !important;
   transform: translateY(-2px);
 }
 
@@ -826,15 +837,16 @@ body.cursor-hidden *,
 }
 
 .btn-infernal.btn-danger {
-  border-color: #ff3344;
-  color: #ff6677;
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
+  background: linear-gradient(180deg, rgba(38, 12, 16, 0.95), rgba(20, 6, 8, 0.98));
 }
 
 .btn-infernal.btn-danger:hover {
   color: #ffffff !important;
-  border-color: #ff2233 !important;
-  background: rgba(180, 20, 30, 0.75) !important;
-  box-shadow: 0 0 25px rgba(255, 34, 51, 0.75) !important;
+  border-color: #ef4444 !important;
+  background: rgba(153, 27, 27, 0.85) !important;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.5) !important;
   transform: translateY(-2px);
 }
 
@@ -843,27 +855,36 @@ body.cursor-hidden *,
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 16px;
   margin-top: 22px;
-  padding: 7px 18px;
-  background: rgba(12, 6, 12, 0.88);
-  border: 1px solid #4a1520;
-  border-radius: 20px;
-  font-family: 'VT323', monospace;
-  font-size: 19px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+  padding: 8px 22px;
+  background: rgba(14, 7, 14, 0.92);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 4px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
   flex-wrap: wrap;
 }
 
 .menu-summary-chip {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   color: #e5d8cb;
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+
+.chip-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #94a3b8;
 }
 
 .menu-summary-chip b {
   color: #ffd700;
+  font-size: 14px;
 }
 
 /* Subview Headers & Footers */
@@ -882,9 +903,12 @@ body.cursor-hidden *,
 }
 
 .subview-subtitle {
-  font-family: 'MedievalSharp', cursive;
-  font-size: 14px;
-  color: #b0a0b2;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: #94a3b8;
+  max-width: 620px;
+  margin: 0 auto;
 }
 
 .subview-footer {

@@ -178,7 +178,7 @@ class SoundEngine {
 
     this.rainSource.connect(filter);
     filter.connect(this.rainGain);
-    this.rainGain.connect(this.ctx.destination);
+    this.rainGain.connect(this.masterGain || this.ctx.destination);
     this.rainSource.start();
   }
 

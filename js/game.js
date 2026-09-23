@@ -163,12 +163,12 @@ class Game {
       // Settings Audio Sliders & Controls
       sliderVolMaster: document.getElementById('slider-vol-master'),
       sliderVolSfx: document.getElementById('slider-vol-sfx'),
-      sliderVolBgm: document.getElementById('slider-vol-bgm'),
-      valVolMaster: document.getElementById('val-vol-master'),
-      valVolSfx: document.getElementById('val-vol-sfx'),
-      valVolBgm: document.getElementById('val-vol-bgm'),
-      toggleFullscreen: document.getElementById('toggle-fullscreen'),
-      toggleRumble: document.getElementById('toggle-rumble'),
+      sliderVolMusic: document.getElementById('slider-vol-music') || document.getElementById('slider-vol-bgm'),
+      valVolMaster: document.getElementById('label-vol-master') || document.getElementById('val-vol-master'),
+      valVolSfx: document.getElementById('label-vol-sfx') || document.getElementById('val-vol-sfx'),
+      valVolMusic: document.getElementById('label-vol-music') || document.getElementById('val-vol-bgm'),
+      toggleFullscreen: document.getElementById('toggle-fullscreen') || document.getElementById('btn-toggle-fullscreen'),
+      toggleRumble: document.getElementById('toggle-rumble') || document.getElementById('btn-toggle-rumble'),
       btnExportSave: document.getElementById('btn-export-save'),
       btnImportSaveTrigger: document.getElementById('btn-import-save-trigger'),
       inputImportSave: document.getElementById('input-import-save'),
@@ -179,10 +179,10 @@ class Game {
       btnCloseIngameSettings: document.getElementById('btn-close-ingame-settings'),
       pauseSliderVolMaster: document.getElementById('pause-slider-vol-master'),
       pauseSliderVolSfx: document.getElementById('pause-slider-vol-sfx'),
-      pauseSliderVolBgm: document.getElementById('pause-slider-vol-bgm'),
-      pauseValVolMaster: document.getElementById('pause-val-vol-master'),
-      pauseValVolSfx: document.getElementById('pause-val-vol-sfx'),
-      pauseValVolBgm: document.getElementById('pause-val-vol-bgm'),
+      pauseSliderVolMusic: document.getElementById('pause-slider-vol-music') || document.getElementById('pause-slider-vol-bgm'),
+      pauseValVolMaster: document.getElementById('pause-label-vol-master') || document.getElementById('pause-val-vol-master'),
+      pauseValVolSfx: document.getElementById('pause-label-vol-sfx') || document.getElementById('pause-val-vol-sfx'),
+      pauseValVolMusic: document.getElementById('pause-label-vol-music') || document.getElementById('pause-val-vol-bgm'),
 
       // Achievements Toast Container
       achievementToastContainer: document.getElementById('achievement-toast-container'),
@@ -815,7 +815,7 @@ class Game {
       this.ui.btnCopyVictoryRecord.addEventListener('click', () => this.copyRunRecordToClipboard(true));
     }
 
-    // Settings Sliders (Master, SFX, BGM)
+    // Settings Sliders (Master, SFX, BGM / Music)
     const handleMasterSlider = (e) => {
       const val = parseFloat(e.target.value) / 100;
       if (window.soundEngine) window.soundEngine.setMasterVolume(val);
@@ -823,22 +823,30 @@ class Game {
     };
     const handleSfxSlider = (e) => {
       const val = parseFloat(e.target.value) / 100;
-      if (window.soundEngine) window.soundEngine.setSfxVolume(val);
+      if (window.soundEngine) {
+        window.soundEngine.setSfxVolume(val);
+      }
       this.syncSettingsUI();
     };
-    const handleBgmSlider = (e) => {
+    const handleMusicSlider = (e) => {
       const val = parseFloat(e.target.value) / 100;
       if (window.soundEngine) window.soundEngine.setMusicVolume(val);
       this.syncSettingsUI();
     };
 
-    if (this.ui.sliderVolMaster) this.ui.sliderVolMaster.addEventListener('input', handleMasterSlider);
-    if (this.ui.sliderVolSfx) this.ui.sliderVolSfx.addEventListener('input', handleSfxSlider);
-    if (this.ui.sliderVolBgm) this.ui.sliderVolBgm.addEventListener('input', handleBgmSlider);
+    const attachSliderEvents = (el, handler) => {
+      if (!el) return;
+      el.addEventListener('input', handler);
+      el.addEventListener('change', handler);
+    };
 
-    if (this.ui.pauseSliderVolMaster) this.ui.pauseSliderVolMaster.addEventListener('input', handleMasterSlider);
-    if (this.ui.pauseSliderVolSfx) this.ui.pauseSliderVolSfx.addEventListener('input', handleSfxSlider);
-    if (this.ui.pauseSliderVolBgm) this.ui.pauseSliderVolBgm.addEventListener('input', handleBgmSlider);
+    attachSliderEvents(this.ui.sliderVolMaster, handleMasterSlider);
+    attachSliderEvents(this.ui.sliderVolSfx, handleSfxSlider);
+    attachSliderEvents(this.ui.sliderVolMusic, handleMusicSlider);
+
+    attachSliderEvents(this.ui.pauseSliderVolMaster, handleMasterSlider);
+    attachSliderEvents(this.ui.pauseSliderVolSfx, handleSfxSlider);
+    attachSliderEvents(this.ui.pauseSliderVolMusic, handleMusicSlider);
 
     // Fullscreen Toggle
     if (this.ui.toggleFullscreen) {
@@ -1090,8 +1098,34 @@ class Game {
     this.ui.bossHud.style.display = 'none';
     if (this.ui.playerHealthWrap) this.ui.playerHealthWrap.style.display = 'none';
     this.ui.interactionBadge.style.display = 'none';
+
+    // Completely tear down and unload active in-game level and entities
+    this.level = null;
+    this.player = null;
+    this.enemies = [];
+    this.bats = [];
+    this.boss = null;
+    this.bossProjectiles = [];
+    this.enemyProjectiles = [];
+    this.flameWaves = [];
+    this.soulOrbs = [];
     this.xpGems = [];
+    this.healthOrbs = [];
+    this.chests = [];
+    this.urns = [];
+    this.crackedWalls = [];
+    this.bloodAltars = [];
+    this.ladders = [];
+    this.movingPlatforms = [];
+    this.crumblingPlatforms = [];
     this.pendingLevelUps = 0;
+    this.shakeX = 0;
+    this.shakeY = 0;
+    this.nearBloodAltar = false;
+    this.activeBloodAltar = null;
+    this.nearHermitMerchant = false;
+    this.nearChallengeShrine = false;
+
     if (this.passiveWeaponsManager) {
       this.passiveWeaponsManager.reset();
     }
@@ -1103,6 +1137,7 @@ class Game {
       if (window.soundEngine.setPauseFilter) window.soundEngine.setPauseFilter(false);
       window.soundEngine.playMusic('menu');
     }
+    this.syncSettingsUI();
   }
 
   startStoryMode() {
@@ -2581,6 +2616,12 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
   // ─── RENDERING ───
   render() {
     this.ctx.clearRect(0, 0, this.vWidth, this.vHeight);
+
+    if (this.state === 'MENU') {
+      this.ctx.fillStyle = '#080309';
+      this.ctx.fillRect(0, 0, this.vWidth, this.vHeight);
+      return;
+    }
 
     const shakeX = (window.particleSystem ? window.particleSystem.shakeX : 0) + this.shakeX;
     const shakeY = (window.particleSystem ? window.particleSystem.shakeY : 0) + this.shakeY;
@@ -6080,22 +6121,22 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
   syncSettingsUI() {
     if (!window.soundEngine) return;
     const master = Math.round((window.soundEngine.masterVolume ?? 0.8) * 100);
-    const sfx = Math.round((window.soundEngine.sfxVolume ?? 0.85) * 100);
-    const bgm = Math.round((window.soundEngine.musicVolume ?? 0.45) * 100);
+    const sfx = Math.round((window.soundEngine.sfxVolume ?? 0.65) * 100);
+    const music = Math.round((window.soundEngine.musicVolume ?? 0.40) * 100);
 
     if (this.ui.sliderVolMaster) this.ui.sliderVolMaster.value = master;
     if (this.ui.valVolMaster) this.ui.valVolMaster.textContent = `${master}%`;
     if (this.ui.sliderVolSfx) this.ui.sliderVolSfx.value = sfx;
     if (this.ui.valVolSfx) this.ui.valVolSfx.textContent = `${sfx}%`;
-    if (this.ui.sliderVolBgm) this.ui.sliderVolBgm.value = bgm;
-    if (this.ui.valVolBgm) this.ui.valVolBgm.textContent = `${bgm}%`;
+    if (this.ui.sliderVolMusic) this.ui.sliderVolMusic.value = music;
+    if (this.ui.valVolMusic) this.ui.valVolMusic.textContent = `${music}%`;
 
     if (this.ui.pauseSliderVolMaster) this.ui.pauseSliderVolMaster.value = master;
     if (this.ui.pauseValVolMaster) this.ui.pauseValVolMaster.textContent = `${master}%`;
     if (this.ui.pauseSliderVolSfx) this.ui.pauseSliderVolSfx.value = sfx;
     if (this.ui.pauseValVolSfx) this.ui.pauseValVolSfx.textContent = `${sfx}%`;
-    if (this.ui.pauseSliderVolBgm) this.ui.pauseSliderVolBgm.value = bgm;
-    if (this.ui.pauseValVolBgm) this.ui.pauseValVolBgm.textContent = `${bgm}%`;
+    if (this.ui.pauseSliderVolMusic) this.ui.pauseSliderVolMusic.value = music;
+    if (this.ui.pauseValVolMusic) this.ui.pauseValVolMusic.textContent = `${music}%`;
 
     if (this.ui.toggleFullscreen) {
       this.ui.toggleFullscreen.checked = !!document.fullscreenElement;
