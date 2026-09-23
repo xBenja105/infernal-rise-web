@@ -2320,7 +2320,7 @@ class SkeletonEnemy {
 
   takeDamage(amount, sourceX, soundEng, particleSys) {
     if (this.isDead || this.state === 'dead') return;
-    const cleanAmount = (typeof amount === 'number' && !isNaN(amount)) ? amount : 22;
+    const cleanAmount = (typeof amount === 'number' && !Number.isNaN(amount)) ? amount : 22;
     this.hp -= cleanAmount;
     const hitDir = sourceX !== undefined ? (this.x > sourceX ? 1 : -1) : (this.dir ? -this.dir : 1);
 
@@ -5833,7 +5833,7 @@ class AbyssalBat {
 
   takeDamage(amount, sourceX, soundEng, particleSys) {
     if (this.isDead || this.hp <= 0) return;
-    const cleanAmount = (typeof amount === 'number' && !isNaN(amount)) ? amount : 22;
+    const cleanAmount = (typeof amount === 'number' && !Number.isNaN(amount)) ? amount : 22;
     this.hp -= cleanAmount;
     const hitDir = sourceX !== undefined ? (this.x > sourceX ? 1 : -1) : (this.dir ? -this.dir : 1);
     this.vx = hitDir * 7.5;

@@ -1887,15 +1887,15 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       this.pollGamepad();
 
       // Timer sanitization
-      if (isNaN(this.hitStopTimer) || this.hitStopTimer < 0) {
+      if (Number.isNaN(this.hitStopTimer) || this.hitStopTimer < 0) {
         this.hitStopTimer = 0;
       } else {
         this.hitStopTimer = Math.min(0.35, this.hitStopTimer);
       }
-      if (isNaN(this.slowMoTimer) || this.slowMoTimer < 0) {
+      if (Number.isNaN(this.slowMoTimer) || this.slowMoTimer < 0) {
         this.slowMoTimer = 0;
       }
-      if (isNaN(this.timeScale) || this.timeScale <= 0) {
+      if (Number.isNaN(this.timeScale) || this.timeScale <= 0) {
         this.timeScale = 1.0;
       }
 
