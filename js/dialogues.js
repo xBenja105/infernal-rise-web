@@ -246,7 +246,13 @@ class DialogueManager {
   startDialogue(key, onComplete) {
     const lines = this.dialogueTrees[key];
     if (!lines || lines.length === 0) {
-      if (onComplete) onComplete();
+      if (onComplete && typeof onComplete === 'function') {
+        try {
+          onComplete();
+        } catch (err) {
+          console.error('Error in dialogue fallback callback:', err);
+        }
+      }
       return;
     }
 
@@ -254,7 +260,9 @@ class DialogueManager {
     this.currentLines = lines;
     this.lineIndex = 0;
     this.onCompleteCallback = onComplete;
-    this.modal.style.display = 'block';
+    if (this.modal) {
+      this.modal.style.display = 'block';
+    }
 
     this.displayCurrentLine();
   }
@@ -265,10 +273,15 @@ class DialogueManager {
       return;
     }
 
-    if (this.typingTimer) clearInterval(this.typingTimer);
+    if (this.typingTimer) {
+      clearInterval(this.typingTimer);
+      this.typingTimer = null;
+    }
 
     const line = this.currentLines[this.lineIndex];
-    this.speakerEl.textContent = line.speaker;
+    if (this.speakerEl) {
+      this.speakerEl.textContent = line.speaker || '';
+    }
 
     // Draw Portrait
     if (this.portraitCtx && window.spriteManager && window.spriteManager.portraits) {
@@ -280,13 +293,17 @@ class DialogueManager {
     }
 
     // Typewriter effect
-    this.textEl.textContent = '';
+    if (this.textEl) {
+      this.textEl.textContent = '';
+    }
     this.charIndex = 0;
-    const fullText = line.text;
+    const fullText = line.text || '';
 
     this.typingTimer = setInterval(() => {
       if (this.charIndex < fullText.length) {
-        this.textEl.textContent += fullText[this.charIndex];
+        if (this.textEl) {
+          this.textEl.textContent += fullText[this.charIndex];
+        }
         if (this.charIndex % 2 === 0 && window.soundEngine) {
           window.soundEngine.playDialogueBlip();
         }
@@ -305,7 +322,9 @@ class DialogueManager {
     if (this.typingTimer) {
       clearInterval(this.typingTimer);
       this.typingTimer = null;
-      this.textEl.textContent = this.currentLines[this.lineIndex].text;
+      if (this.textEl && this.currentLines[this.lineIndex]) {
+        this.textEl.textContent = this.currentLines[this.lineIndex].text;
+      }
       return;
     }
 
@@ -320,12 +339,21 @@ class DialogueManager {
 
   closeDialogue() {
     this.active = false;
-    if (this.typingTimer) clearInterval(this.typingTimer);
-    this.modal.style.display = 'none';
-    if (this.onCompleteCallback) {
-      const cb = this.onCompleteCallback;
-      this.onCompleteCallback = null;
-      cb();
+    if (this.typingTimer) {
+      clearInterval(this.typingTimer);
+      this.typingTimer = null;
+    }
+    if (this.modal) {
+      this.modal.style.display = 'none';
+    }
+    const cb = this.onCompleteCallback;
+    this.onCompleteCallback = null;
+    if (cb && typeof cb === 'function') {
+      try {
+        cb();
+      } catch (err) {
+        console.error('Error in dialogue onComplete callback:', err);
+      }
     }
   }
 }

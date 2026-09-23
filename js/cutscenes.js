@@ -216,22 +216,37 @@ class CutsceneManager {
     this.whiteoutAlpha = 0;
     this.bossBannerAlpha = 0;
 
+    const previousType = this.type;
+    this.type = null;
+
     if (this.game) {
       if (this.game.player) {
         this.game.player.isFrozen = false;
         this.game.player.cutscenePose = null;
       }
-      if (this.type === 'awakening') {
+      if (previousType === 'awakening') {
         this.game.state = 'PLAYING';
       }
     }
 
     const cb = this.onComplete;
     this.onComplete = null;
-    this.type = null;
 
     if (cb && typeof cb === 'function') {
-      cb();
+      try {
+        cb();
+      } catch (err) {
+        console.error('[Cutscene] Error in cutscene onComplete callback:', err);
+        if (this.game) {
+          this.game.state = 'PLAYING';
+          if (this.game.player) this.game.player.isFrozen = false;
+        }
+      }
+    } else {
+      if (this.game && this.game.state === 'CUTSCENE') {
+        this.game.state = 'PLAYING';
+        if (this.game.player) this.game.player.isFrozen = false;
+      }
     }
   }
 

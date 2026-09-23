@@ -495,6 +495,22 @@ class Game {
           this.renderKeyRemapUI();
           return;
         }
+
+        // Emergency fail-safe unfreeze & cutscene/dialogue break on Escape
+        if (window.dialogueManager && window.dialogueManager.active) {
+          window.dialogueManager.closeDialogue();
+          this.state = 'PLAYING';
+          if (this.player) this.player.isFrozen = false;
+          return;
+        }
+        if (this.cutsceneManager && this.cutsceneManager.active) {
+          this.cutsceneManager.skip();
+          return;
+        }
+        if (this.state === 'PLAYING' && this.player && this.player.isFrozen) {
+          this.player.isFrozen = false;
+        }
+
         if (this.state === 'HERMIT_SHOP') {
           this.closeHermitShopModal();
         } else if (this.state === 'BLOOD_ALTAR') {
@@ -504,15 +520,15 @@ class Game {
         } else if (this.state === 'SLOT_MACHINE') {
           this.closeSlotMachineModal();
         } else if (this.state === 'BOON_SELECT') {
-          if (!this.ui.boonModal || this.ui.boonModal.classList.contains('hidden')) {
-            // Fail-safe auto-recovery: modal DOM is hidden but state remained BOON_SELECT
-            this.closeBoonSelectionModal();
-          }
+          this.closeBoonSelectionModal();
         } else if (this.state === 'LEVEL_UP') {
-          if (!this.ui.levelUpModal || this.ui.levelUpModal.classList.contains('hidden')) {
-            // Fail-safe auto-recovery: modal DOM is hidden but state remained LEVEL_UP
-            this.closeLevelUpModal();
-          }
+          this.closeLevelUpModal();
+        } else if (this.state === 'DIALOGUE') {
+          this.state = 'PLAYING';
+          if (this.player) this.player.isFrozen = false;
+        } else if (this.state === 'CUTSCENE') {
+          this.state = 'PLAYING';
+          if (this.player) this.player.isFrozen = false;
         } else {
           this.togglePause();
         }
@@ -1804,22 +1820,26 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       this.cutsceneManager.bossBannerAlpha = 0;
     }
     // Re-center camera smoothly on the player
-    if (this.player && this.level) {
-      const targetCamX = this.player.x + this.player.w / 2 - this.vWidth / 2;
-      const targetCamY = this.player.y + this.player.h / 2 - this.vHeight / 2;
-      if (this.level.width <= this.vWidth) {
-        this.camX = (this.level.width - this.vWidth) / 2;
-      } else {
-        this.camX = Math.max(0, Math.min(this.level.width - this.vWidth, targetCamX));
+    try {
+      if (this.player && this.level) {
+        const targetCamX = this.player.x + this.player.w / 2 - this.vWidth / 2;
+        const targetCamY = this.player.y + this.player.h / 2 - this.vHeight / 2;
+        if (this.level.width <= this.vWidth) {
+          this.camX = (this.level.width - this.vWidth) / 2;
+        } else {
+          this.camX = Math.max(0, Math.min(this.level.width - this.vWidth, targetCamX));
+        }
+        if (this.level.height <= this.vHeight) {
+          this.camY = (this.level.height - this.vHeight) / 2;
+        } else {
+          this.camY = Math.max(0, Math.min(this.level.height - this.vHeight, targetCamY));
+        }
       }
-      if (this.level.height <= this.vHeight) {
-        this.camY = (this.level.height - this.vHeight) / 2;
-      } else {
-        this.camY = Math.max(0, Math.min(this.level.height - this.vHeight, targetCamY));
-      }
+      this.updateMouseCursor();
+      this.updateVirtualControlsVisibility();
+    } catch (err) {
+      console.error('[Boss Dialogue] Camera / UI update error:', err);
     }
-    this.updateMouseCursor();
-    this.updateVirtualControlsVisibility();
   }
 
   // ─── MAIN LOOP ───
@@ -1828,56 +1848,107 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     const realDt = Math.min((timestamp - this.lastTime) / 1000, 0.1);
     this.lastTime = timestamp;
 
-    this.pollGamepad();
+    try {
+      this.pollGamepad();
 
-    // Hit-stop processing: freezes game world simulation for high impact
-    if (this.hitStopTimer > 0) {
-      this.hitStopTimer -= realDt;
+      // Timer sanitization
+      if (isNaN(this.hitStopTimer) || this.hitStopTimer < 0) {
+        this.hitStopTimer = 0;
+      } else {
+        this.hitStopTimer = Math.min(0.35, this.hitStopTimer);
+      }
+      if (isNaN(this.slowMoTimer) || this.slowMoTimer < 0) {
+        this.slowMoTimer = 0;
+      }
+      if (isNaN(this.timeScale) || this.timeScale <= 0) {
+        this.timeScale = 1.0;
+      }
+
+      // Hit-stop processing: freezes game world simulation for high impact
+      if (this.hitStopTimer > 0) {
+        this.hitStopTimer -= realDt;
+        this.render();
+        return;
+      }
+
+      // Slow-motion processing (e.g. boss defeat cinematic)
+      let simDt = realDt;
+      if (this.slowMoTimer > 0) {
+        this.slowMoTimer -= realDt;
+        this.timeScale = 0.25;
+        simDt = realDt * this.timeScale;
+      } else {
+        this.timeScale = 1.0;
+      }
+
+      // ─── STATE WATCHDOG & FAIL-SAFE AUTO-RECOVERY ───
+      if (this.state === 'DIALOGUE') {
+        if (!window.dialogueManager || !window.dialogueManager.active) {
+          this.state = 'PLAYING';
+          if (this.player) this.player.isFrozen = false;
+        }
+      } else if (this.state === 'CUTSCENE') {
+        if (!this.cutsceneManager || !this.cutsceneManager.active) {
+          this.state = 'PLAYING';
+          if (this.player) this.player.isFrozen = false;
+        }
+      } else if (this.state === 'SANCTUARY' && (!this.ui.sanctuaryModal || this.ui.sanctuaryModal.classList.contains('hidden'))) {
+        this.state = 'PLAYING';
+      } else if (this.state === 'HERMIT_SHOP' && (!this.ui.hermitShopModal || this.ui.hermitShopModal.classList.contains('hidden'))) {
+        this.state = 'PLAYING';
+      } else if (this.state === 'BLOOD_ALTAR' && (!this.ui.bloodAltarModal || this.ui.bloodAltarModal.classList.contains('hidden'))) {
+        this.state = 'PLAYING';
+      } else if (this.state === 'SLOT_MACHINE' && (!this.ui.slotMachineModal || this.ui.slotMachineModal.classList.contains('hidden'))) {
+        this.state = 'PLAYING';
+      } else if (this.state === 'BOON_SELECT' && (!this.ui.boonModal || this.ui.boonModal.classList.contains('hidden'))) {
+        this.state = 'PLAYING';
+      } else if (this.state === 'LEVEL_UP' && (!this.ui.levelUpModal || this.ui.levelUpModal.classList.contains('hidden'))) {
+        this.state = 'PLAYING';
+      }
+
+      // Fail-safe player unfreeze: If state is PLAYING but player is frozen without any active dialogue or cutscene
+      if (this.state === 'PLAYING' && this.player && this.player.isFrozen) {
+        const isDialogueActive = window.dialogueManager && window.dialogueManager.active;
+        const isCutsceneActive = this.cutsceneManager && this.cutsceneManager.active;
+        if (!isDialogueActive && !isCutsceneActive) {
+          this.player.isFrozen = false;
+        }
+      }
+
+      // Screen shake decay
+      if (this.shakeDuration > 0) {
+        this.shakeDuration -= realDt;
+        const progress = Math.max(0, this.shakeDuration / (this.shakeMaxDuration || 0.3));
+        const effectiveIntensity = this.shakeIntensity * progress * (this.shakeSetting !== undefined ? this.shakeSetting : 1.0);
+        this.shakeX = (Math.random() * 2 - 1) * effectiveIntensity;
+        this.shakeY = (Math.random() * 2 - 1) * effectiveIntensity;
+      } else {
+        this.shakeX = 0;
+        this.shakeY = 0;
+      }
+
+      // White flash decay
+      if (this.whiteFlashAlpha > 0) {
+        this.whiteFlashAlpha = Math.max(0, this.whiteFlashAlpha - realDt * 1.5);
+      }
+
+      if (this.state === 'PLAYING') {
+        this.update(simDt);
+      } else if (this.state === 'CUTSCENE') {
+        if (this.cutsceneManager) {
+          this.cutsceneManager.update(simDt);
+        }
+        if (window.particleSystem) {
+          window.particleSystem.update(simDt);
+        }
+      }
+
       this.render();
+    } catch (err) {
+      console.error('[Engine Watchdog] Caught unhandled exception in game loop:', err);
+    } finally {
       requestAnimationFrame((ts) => this.loop(ts));
-      return;
     }
-
-    // Slow-motion processing (e.g. boss defeat cinematic)
-    let simDt = realDt;
-    if (this.slowMoTimer > 0) {
-      this.slowMoTimer -= realDt;
-      this.timeScale = 0.25;
-      simDt = realDt * this.timeScale;
-    } else {
-      this.timeScale = 1.0;
-    }
-
-    // Screen shake decay
-    if (this.shakeDuration > 0) {
-      this.shakeDuration -= realDt;
-      const progress = Math.max(0, this.shakeDuration / (this.shakeMaxDuration || 0.3));
-      const effectiveIntensity = this.shakeIntensity * progress * (this.shakeSetting !== undefined ? this.shakeSetting : 1.0);
-      this.shakeX = (Math.random() * 2 - 1) * effectiveIntensity;
-      this.shakeY = (Math.random() * 2 - 1) * effectiveIntensity;
-    } else {
-      this.shakeX = 0;
-      this.shakeY = 0;
-    }
-
-    // White flash decay
-    if (this.whiteFlashAlpha > 0) {
-      this.whiteFlashAlpha = Math.max(0, this.whiteFlashAlpha - realDt * 1.5);
-    }
-
-    if (this.state === 'PLAYING') {
-      this.update(simDt);
-    } else if (this.state === 'CUTSCENE') {
-      if (this.cutsceneManager) {
-        this.cutsceneManager.update(simDt);
-      }
-      if (window.particleSystem) {
-        window.particleSystem.update(simDt);
-      }
-    }
-
-    this.render();
-    requestAnimationFrame((ts) => this.loop(ts));
   }
 
   update(dt) {
