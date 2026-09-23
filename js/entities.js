@@ -69,6 +69,7 @@ class Player {
     this.attackCooldown = 0;
     this.attackFrame = 0;
     this.attackTimer = 0;
+    this.attackId = 0;
     this.invulnerableTimer = 0;
     this.attackHitTargets = new Set();
     this.attackComboStep = 1;
@@ -145,7 +146,24 @@ class Player {
     this.lastActivatedCheckpoint = null;
     this.attackComboStep = 1;
     this.comboResetTimer = 0;
+    this.attackId = 0;
     if (this.attackHitTargets) this.attackHitTargets.clear();
+  }
+
+  getAttackHitbox() {
+    if (!this.isAttacking || this.attackFrame < 1 || this.attackFrame > 4) return null;
+    const reach = 56;
+    const boxH = Math.max(56, this.h + 20);
+    const boxY = this.y - 12;
+    const boxX = this.facing === 1 ? (this.x + this.w - 8) : (this.x - reach + 8);
+    return {
+      x: boxX,
+      y: boxY,
+      w: reach,
+      h: boxH,
+      attackId: this.attackId || 1,
+      facing: this.facing
+    };
   }
 
   update(dt, input, level, particleSys, soundEng) {
@@ -174,6 +192,9 @@ class Player {
     const cdMax = hasHermes ? 0.38 : this.dashCooldownMax;
 
     if (input.dash && this.dashCooldown <= 0 && !this.isClimbing && !this.isFrozen) {
+      this.isAttacking = false;
+      this.attackFrame = 0;
+      if (this.attackHitTargets) this.attackHitTargets.clear();
       this.isDashing = true;
       this.dashTimer = this.dashDuration;
       this.dashCooldown = cdMax;
@@ -250,6 +271,7 @@ class Player {
       this.isAttacking = true;
       this.attackFrame = 0;
       this.attackTimer = 0;
+      this.attackId = (this.attackId || 0) + 1;
       this.attackComboStep = (this.attackComboStep === 1) ? 2 : 1;
       this.comboResetTimer = 0.55;
       this.attackCooldown = this.attackComboStep === 2 ? 0.28 : 0.22;
@@ -608,6 +630,9 @@ class Player {
 
   takeDamage(amount, soundEng, particleSys) {
     if (this.invulnerableTimer > 0) return;
+    this.isAttacking = false;
+    this.attackFrame = 0;
+    if (this.attackHitTargets) this.attackHitTargets.clear();
     if (window.progression && window.progression.hasBoon('ironWill')) {
       amount = Math.round(amount * 0.65);
     }
@@ -1260,6 +1285,7 @@ class SkeletonEnemy {
     this.attackTimer = 0;
     this.attackHasHit = false;
     this.hitTimer = 0;
+    this.lastHitAttackId = 0;
     this.deathTimer = 0;
     this.wobbleTimer = Math.random() * 10;
     this.wobbleAngle = 0;
@@ -1375,6 +1401,31 @@ class SkeletonEnemy {
       return;
     }
 
+    // 1. Sword attack hit detection (using attackId for responsive combos and no invulnerability leaks)
+    if (player) {
+      const swordBox = (player.getAttackHitbox && player.isAttacking) ? player.getAttackHitbox() : null;
+      if (swordBox) {
+        const isOverlapping = (
+          swordBox.x < this.x + this.w &&
+          swordBox.x + swordBox.w > this.x &&
+          swordBox.y < this.y + this.h + 8 &&
+          swordBox.y + swordBox.h > this.y - 8
+        );
+        if (isOverlapping && this.lastHitAttackId !== swordBox.attackId) {
+          this.lastHitAttackId = swordBox.attackId;
+          const stats = window.progression ? window.progression.getPlayerStats() : null;
+          let dmg = stats ? (stats.daggerDamage || stats.swordDamage || 22) : 22;
+          let isCrit = false;
+          if (window.progression && window.progression.hasBoon('critStrike') && Math.random() < 0.3) {
+            dmg = Math.round(dmg * 2.5);
+            isCrit = true;
+          }
+          if (isCrit && particleSys) particleSys.triggerScreenShake(0.18, 5);
+          this.takeDamage(dmg, player.x, soundEng, particleSys);
+        }
+      }
+    }
+
     // Hit reaction playback (Megabonk Domino Collisions & Overkill)
     if (this.state === 'hit') {
       this.hitTimer -= dt;
@@ -1384,12 +1435,10 @@ class SkeletonEnemy {
         this.y = this.onPlatform.y - this.h;
         this.vy = 0;
         this.isGrounded = true;
-        const minX = this.onPlatform.x + 4;
-        const maxX = this.onPlatform.x + this.onPlatform.w - this.w - 4;
-        if (minX <= maxX) {
-          this.x = Math.max(minX, Math.min(maxX, this.x + this.currentVx));
-        } else {
-          this.x += this.currentVx;
+        this.x += this.currentVx;
+        if (this.x + this.w < this.onPlatform.x || this.x > this.onPlatform.x + this.onPlatform.w) {
+          this.onPlatform = null;
+          this.isGrounded = false;
         }
       } else {
         this.x += this.currentVx;
@@ -1512,27 +1561,7 @@ class SkeletonEnemy {
       }
     }
 
-    // 2. Dagger attack hit detection (1 hit per attack swing)
-    if (player.isAttacking && (player.attackFrame >= 1 && player.attackFrame <= 3)) {
-      const hitX = player.x + (player.facing === 1 ? player.w : -32);
-      if (Math.abs(hitX - this.x) < 42 && Math.abs(player.y - this.y) < 34) {
-        if (!player.attackHitTargets || !player.attackHitTargets.has(this)) {
-          if (player.attackHitTargets) player.attackHitTargets.add(this);
-          const stats = window.progression ? window.progression.getPlayerStats() : null;
-          let dmg = stats ? (stats.daggerDamage || stats.swordDamage || 16) : 16;
-          let isCrit = false;
-          if (window.progression && window.progression.hasBoon('critStrike') && Math.random() < 0.3) {
-            dmg = Math.round(dmg * 2.5);
-            isCrit = true;
-          }
-          if (isCrit && particleSys) particleSys.triggerScreenShake(0.15, 4);
-          this.takeDamage(dmg, player.x, soundEng, particleSys);
-          return;
-        }
-      }
-    }
-
-    // 3. Platform Gravity & Collision
+    // 2. Platform Gravity & Collision
     const prevY = this.y;
     if (!this.isGrounded) {
       this.vy += this.gravity;
@@ -2297,22 +2326,10 @@ class SkeletonEnemy {
     const baseForce = this.isElite ? 4.8 : 6.8;
     const finalForce = baseForce * knockbackMult * (isMegabonk ? 1.75 : 1.0);
     this.currentVx = hitDir * finalForce;
-    if (this.onPlatform) {
-      this.vy = 0;
-      this.isGrounded = true;
-      this.y = this.onPlatform.y - this.h;
-      const minX = this.onPlatform.x + 4;
-      const maxX = this.onPlatform.x + this.onPlatform.w - this.w - 4;
-      if (minX <= maxX) {
-        this.x = Math.max(minX, Math.min(maxX, this.x + hitDir * 4));
-      } else {
-        this.x += hitDir * 4;
-      }
-    } else {
-      this.vy = isMegabonk ? -5.2 : -3.2;
-      this.isGrounded = false;
-      this.x += hitDir * 4;
-    }
+    this.vy = isMegabonk ? -4.8 : -3.2;
+    this.isGrounded = false;
+    this.onPlatform = null;
+    this.x += hitDir * 6;
 
     // Megabonk Combo & Comic-book Floating Text
     if (window.progression) {
@@ -2438,6 +2455,7 @@ class Boss {
     this.dialogueKey = data.dialogueKey;
     this.nextLevel = data.nextLevel;
     this.invulnerableTimer = 0;
+    this.lastHitAttackId = 0;
     this.armor = data.armor !== undefined ? data.armor : 0.20;
     this.touchDamage = data.touchDamage || 50;
 
@@ -2795,6 +2813,31 @@ class Boss {
     if (this.isDead || this.hp <= 0) return;
     if (this.invulnerableTimer > 0) this.invulnerableTimer = Math.max(0, this.invulnerableTimer - dt);
 
+    // Player melee sword hit on boss (hit processed before contact damage so player hits land reliably)
+    if (player) {
+      const swordBox = (player.getAttackHitbox && player.isAttacking) ? player.getAttackHitbox() : null;
+      if (swordBox) {
+        const isOverlapping = (
+          swordBox.x < this.x + this.w &&
+          swordBox.x + swordBox.w > this.x &&
+          swordBox.y < this.y + this.h &&
+          swordBox.y + swordBox.h > this.y
+        );
+        if (isOverlapping && this.lastHitAttackId !== swordBox.attackId && this.invulnerableTimer <= 0) {
+          this.lastHitAttackId = swordBox.attackId;
+          const stats = window.progression ? window.progression.getPlayerStats() : null;
+          let dmg = stats ? (stats.daggerDamage || stats.swordDamage || 22) : 22;
+          let isCrit = false;
+          if (window.progression && window.progression.hasBoon('critStrike') && Math.random() < 0.3) {
+            dmg = Math.round(dmg * 2.5);
+            isCrit = true;
+          }
+          if (isCrit && particleSys) particleSys.triggerScreenShake(0.2, 5);
+          this.takeDamage(dmg, player.x, soundEng, particleSys);
+        }
+      }
+    }
+
     // Check Enrage (< 50% HP)
     if (this.hp <= this.maxHp * 0.5 && !this.isEnraged) {
       this.triggerEnrage(soundEng, particleSys);
@@ -2992,24 +3035,6 @@ class Boss {
     this.scaleX += (1.0 - this.scaleX) * Math.min(1.0, dt * 7.0);
     this.scaleY += (1.0 - this.scaleY) * Math.min(1.0, dt * 7.0);
 
-    // Player melee dagger hit on boss (1 hit per attack swing, respecting i-frames)
-    if (player.isAttacking && (player.attackFrame >= 1 && player.attackFrame <= 3)) {
-      const hitX = player.x + (player.facing === 1 ? player.w : -32);
-      if (Math.abs(hitX - (this.x + this.w / 2)) < 58 && Math.abs(player.y - this.y) < 58) {
-        if (!player.attackHitTargets || (!player.attackHitTargets.has(this) && this.invulnerableTimer <= 0)) {
-          if (player.attackHitTargets) player.attackHitTargets.add(this);
-          const stats = window.progression ? window.progression.getPlayerStats() : null;
-          let dmg = stats ? (stats.daggerDamage || stats.swordDamage || 16) : 16;
-          let isCrit = false;
-          if (window.progression && window.progression.hasBoon('critStrike') && Math.random() < 0.3) {
-            dmg = Math.round(dmg * 2.5);
-            isCrit = true;
-          }
-          if (isCrit && particleSys) particleSys.triggerScreenShake(0.2, 5);
-          this.takeDamage(dmg, player.x, soundEng, particleSys);
-        }
-      }
-    }
 
     if (this.state !== this.lastState) {
       this.lastState = this.state;
@@ -5542,7 +5567,7 @@ class AbyssalBat {
     this.isDead = false;
     this.hasDropped = false;
 
-    // States: 'roost', 'alert', 'swoop', 'return'
+    // States: 'roost', 'alert', 'swoop', 'return', 'recoil'
     this.state = 'roost';
     this.alertTimer = 0;
     this.animTimer = 0;
@@ -5550,6 +5575,8 @@ class AbyssalBat {
     this.swoopPhase = Math.random() * Math.PI * 2;
     this.cooldown = 0;
     this.alertPulse = 0;
+    this.lastHitAttackId = 0;
+    this.recoilTimer = 0;
   }
 
   update(dt, player, level, soundEng, particleSys) {
@@ -5562,14 +5589,27 @@ class AbyssalBat {
     const dy = (player.y + player.h / 2) - (this.y + this.h / 2);
     const dist = Math.hypot(dx, dy);
 
-    // Player dagger strike hit (1 hit per attack swing)
-    if (player.isAttacking && (player.attackFrame >= 1 && player.attackFrame <= 3)) {
-      const hitX = player.x + (player.facing === 1 ? player.w : -30);
-      if (Math.abs(hitX - (this.x + this.w / 2)) < 38 && Math.abs(player.y - this.y) < 34) {
-        if (!player.attackHitTargets || !player.attackHitTargets.has(this)) {
-          if (player.attackHitTargets) player.attackHitTargets.add(this);
+    // Player sword strike hit detection (using attackId and generous bounding box)
+    if (player) {
+      const swordBox = (player.getAttackHitbox && player.isAttacking) ? player.getAttackHitbox() : null;
+      if (swordBox) {
+        const batBox = { x: this.x - 6, y: this.y - 8, w: this.w + 12, h: this.h + 16 };
+        const isOverlapping = (
+          swordBox.x < batBox.x + batBox.w &&
+          swordBox.x + swordBox.w > batBox.x &&
+          swordBox.y < batBox.y + batBox.h &&
+          swordBox.y + swordBox.h > batBox.y
+        );
+        if (isOverlapping && this.lastHitAttackId !== swordBox.attackId) {
+          this.lastHitAttackId = swordBox.attackId;
           const stats = window.progression ? window.progression.getPlayerStats() : null;
-          let dmg = stats ? (stats.daggerDamage || stats.swordDamage || 16) : 16;
+          let dmg = stats ? (stats.daggerDamage || stats.swordDamage || 22) : 22;
+          let isCrit = false;
+          if (window.progression && window.progression.hasBoon('critStrike') && Math.random() < 0.3) {
+            dmg = Math.round(dmg * 2.5);
+            isCrit = true;
+          }
+          if (isCrit && particleSys) particleSys.triggerScreenShake(0.18, 5);
           this.takeDamage(dmg, player.x, soundEng, particleSys);
           return;
         }
@@ -5577,7 +5617,17 @@ class AbyssalBat {
     }
 
     // State Machine
-    if (this.state === 'roost') {
+    if (this.state === 'recoil') {
+      this.recoilTimer -= dt;
+      this.vx *= 0.91;
+      this.vy += 0.22;
+      this.x += this.vx;
+      this.y += this.vy;
+      if (this.recoilTimer <= 0) {
+        this.state = 'return';
+        this.cooldown = 0.45;
+      }
+    } else if (this.state === 'roost') {
       // Senses player from high distance
       if (dist < 700 && this.cooldown <= 0) {
         this.state = 'alert';
@@ -5770,8 +5820,10 @@ class AbyssalBat {
     if (this.isDead || this.hp <= 0) return;
     this.hp -= amount;
     const hitDir = sourceX !== undefined ? (this.x > sourceX ? 1 : -1) : (this.dir ? -this.dir : 1);
-    this.vx = hitDir * 3.5;
-    this.vy = -2.5;
+    this.vx = hitDir * 7.5;
+    this.vy = -4.8;
+    this.state = 'recoil';
+    this.recoilTimer = 0.32;
     if (particleSys) particleSys.spawnSlashSparks(this.x + this.w / 2, this.y + this.h / 2, hitDir);
     if (soundEng && soundEng.playHit) soundEng.playHit();
     if (window.progression && window.progression.hasBoon('vampirism') && window.game && window.game.player) {

@@ -2122,9 +2122,9 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       }
     }
 
-    // Sword attack hitbox for urns, bats, and projectiles
-    let swordHitbox = null;
-    if (this.player.isAttacking && (this.player.attackFrame === 1 || this.player.attackFrame === 2)) {
+    // Sword attack hitbox for urns, bells, cages, and projectiles
+    let swordHitbox = (this.player && this.player.getAttackHitbox) ? this.player.getAttackHitbox() : null;
+    if (!swordHitbox && this.player && this.player.isAttacking && (this.player.attackFrame === 1 || this.player.attackFrame === 2)) {
       swordHitbox = {
         x: this.player.x + (this.player.facing === 1 ? this.player.w : -34),
         y: this.player.y,

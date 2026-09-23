@@ -648,9 +648,11 @@ class SoundEngine {
 
     let tempo = 120;
     if (trackName === 'menu') tempo = 65;
-    else if (trackName === 'tower') tempo = 80;
+    else if (trackName === 'lobby') tempo = 60;
+    else if (trackName === 'abyss' || trackName === 'tower') tempo = 84;
     else if (trackName === 'necropolis') tempo = 72;
-    else if (trackName === 'frozen') tempo = 66;
+    else if (trackName === 'frozen') tempo = 68;
+    else if (trackName === 'caverns') tempo = 104;
     else if (trackName === 'summit') tempo = 96;
     else if (trackName === 'boss') tempo = 135;
     else if (trackName === 'infernal') tempo = 150;
@@ -680,34 +682,58 @@ class SoundEngine {
       if (step === 0 || step === 14) {
         this.playBell(midiToFreq(62 + (step === 0 ? 0 : 7)));
       }
-    } else if (track === 'tower') {
-      // Deep brooding underworld rhythm (Torre 1: Abismo)
-      const roots = [38, 38, 34, 36];
-      if (step % 4 === 0) {
-        this.playBassHit(midiToFreq(roots[bar]), 0.4);
-      }
-      if (step % 8 === 4) {
-        this.playPadNote(midiToFreq(roots[bar] + 19), 0.8, 'sine', 0.08);
-      }
-    } else if (track === 'necropolis') {
-      // Eerie subterranean Styx ambiance (Torre 2: Nexo Hundido)
-      const necRoots = [43, 39, 41, 38]; // G, Eb, F, D
+    } else if (track === 'lobby') {
+      // Peaceful sanctuary refuge & cathedral organ pads in A minor (60 BPM)
+      const lobbyChords = [45, 41, 38, 40]; // Am, F, Dm, Em
       if (step % 8 === 0) {
-        this.playPadNote(midiToFreq(necRoots[bar]), 1.6, 'triangle', 0.16);
-        this.playPadNote(midiToFreq(necRoots[bar] + 7), 1.4, 'sine', 0.12);
+        this.playPadNote(midiToFreq(lobbyChords[bar]), 2.4, 'triangle', 0.16);
+        this.playPadNote(midiToFreq(lobbyChords[bar] + 7), 2.2, 'sine', 0.12);
+        this.playPadNote(midiToFreq(lobbyChords[bar] + 15), 1.8, 'sine', 0.09);
       }
-      if (step % 4 === 2) {
-        this.playBell(midiToFreq(necRoots[bar] + 24 + (step % 3) * 3));
+      if (step === 0) {
+        this.playBell(midiToFreq(lobbyChords[bar] + 24)); // Warm sanctuary toll
+      } else if (step === 16) {
+        this.playBell(midiToFreq(lobbyChords[bar] + 19)); // Fifth harmonic chime
+      }
+    } else if (track === 'abyss' || track === 'tower') {
+      // Deep brooding underworld rhythm (Piso 1: Foso Abisal / 84 BPM)
+      const abyssRoots = [38, 34, 36, 33]; // D, Bb, C, A
+      if (step % 4 === 0) {
+        this.playBassHit(midiToFreq(abyssRoots[bar]), 0.44);
+      }
+      if (step % 8 === 2) {
+        this.playPadNote(midiToFreq(abyssRoots[bar] + 7), 1.3, 'sawtooth', 0.10);
+      }
+      if (step === 0 || step === 16) {
+        this.playBell(midiToFreq(abyssRoots[bar] + 12));
       }
     } else if (track === 'frozen') {
-      // Crystalline frost chimes and arctic wind drone (Torre 3: Cocito)
-      const fzRoots = [45, 41, 43, 40]; // A, F, G, E
+      // Crystalline frost chimes and arctic wind drone (Piso 2: Agujas Glaciares / 68 BPM)
+      const fzRoots = [40, 36, 38, 35]; // Em, C, D, Bm
       if (step % 16 === 0) {
-        this.playPadNote(midiToFreq(fzRoots[bar]), 2.2, 'sine', 0.2);
-        this.playPadNote(midiToFreq(fzRoots[bar] + 12), 1.9, 'triangle', 0.1);
+        this.playPadNote(midiToFreq(fzRoots[bar]), 2.8, 'sine', 0.20);
+        this.playPadNote(midiToFreq(fzRoots[bar] + 12), 2.4, 'triangle', 0.12);
       }
       if (step % 4 === 0) {
-        this.playBell(midiToFreq(fzRoots[bar] + 24 + (step === 0 ? 12 : 7)));
+        const chimeOffsets = [24, 28, 31, 36];
+        this.playBell(midiToFreq(fzRoots[bar] + chimeOffsets[(step / 4) % 4]));
+      }
+    } else if (track === 'caverns' || track === 'necropolis') {
+      // Driving rocky caverns dungeon ostinato & war percussion (Piso 3: Cavernas Rocosas / 104 BPM)
+      const cavRoots = [43, 39, 36, 38]; // Gm, Eb, Cm, D
+      if (step % 2 === 0) {
+        const notePitch = (step % 4 === 2) ? cavRoots[bar] + 7 : cavRoots[bar];
+        this.playBassHit(midiToFreq(notePitch), 0.22);
+      }
+      if (step % 4 === 2) {
+        this.playHihatHit();
+      }
+      if (step % 8 === 4) {
+        this.playSnareHit();
+      }
+      if (step % 8 === 0 || step % 8 === 6) {
+        const leadPitch = cavRoots[bar] + 24 + (step % 8 === 6 ? 3 : 0);
+        this.playLeadSynth(midiToFreq(leadPitch), 0.22);
       }
     } else if (track === 'summit') {
       // Epic triumphant dawn chords breaking into the human world (Cúspide / Superficie)
