@@ -3837,6 +3837,708 @@ class BloodAltar {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 3d. RUNIC BELL & SPECTRAL PLATFORMS (Interactive Platform Puzzle)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class SpectralPlatform {
+  constructor(data) {
+    this.id = data.id || ('spectral_' + Math.random().toString(36).substr(2, 9));
+    this.x = data.x;
+    this.y = data.y;
+    this.w = data.w || 96;
+    this.h = data.h || 16;
+    this.activeTimer = 0;
+    this.maxDuration = data.duration || 5.5;
+    this.pulseTime = 0;
+    this.color = data.color || '#38bdf8';
+    this.isSpectral = true;
+    this.isSemiSolid = true;
+  }
+
+  get isSolid() {
+    return this.activeTimer > 0;
+  }
+
+  activate(duration = 5.5) {
+    this.activeTimer = duration;
+    this.maxDuration = duration;
+  }
+
+  update(dt) {
+    this.pulseTime += dt;
+    if (this.activeTimer > 0) {
+      this.activeTimer = Math.max(0, this.activeTimer - dt);
+    }
+  }
+
+  draw(ctx, camX, camY) {
+    const rx = Math.round(this.x - camX);
+    const ry = Math.round(this.y - camY);
+
+    ctx.save();
+    if (this.activeTimer > 0) {
+      let alpha = 0.85;
+      if (this.activeTimer < 1.5) {
+        alpha = Math.floor(this.activeTimer * 8) % 2 === 0 ? 0.3 : 0.9;
+      }
+
+      ctx.fillStyle = `rgba(14, 165, 233, ${alpha * 0.35})`;
+      ctx.fillRect(rx, ry, this.w, this.h);
+
+      ctx.strokeStyle = `rgba(56, 189, 248, ${alpha})`;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(rx, ry, this.w, this.h);
+
+      // Top glowing bar
+      ctx.fillStyle = `rgba(224, 242, 254, ${alpha})`;
+      ctx.fillRect(rx + 2, ry + 1, this.w - 4, 3);
+
+      // Runic glyphs along the body
+      ctx.fillStyle = `rgba(186, 230, 253, ${alpha * 0.9})`;
+      ctx.font = '10px monospace';
+      ctx.textAlign = 'center';
+      const step = 24;
+      for (let gx = rx + step; gx < rx + this.w; gx += step) {
+        ctx.fillText('ᚱ', gx, ry + 12);
+      }
+    } else {
+      const ghostPulse = (Math.sin(this.pulseTime * 2) * 0.12) + 0.15;
+      ctx.strokeStyle = `rgba(56, 189, 248, ${ghostPulse})`;
+      ctx.setLineDash([4, 4]);
+      ctx.lineWidth = 1;
+      ctx.strokeRect(rx, ry, this.w, this.h);
+      ctx.setLineDash([]);
+    }
+    ctx.restore();
+  }
+}
+
+class RunicBell {
+  constructor(data) {
+    this.id = data.id || ('bell_' + Math.random().toString(36).substr(2, 9));
+    this.x = data.x;
+    this.y = data.y;
+    this.w = data.w || 36;
+    this.h = data.h || 48;
+    this.swingAngle = 0;
+    this.swingVel = 0;
+    this.cooldown = 0;
+    this.targetPlatformIds = data.targetPlatformIds || [];
+    this.ringTime = 0;
+  }
+
+  checkHit(swordHitbox, soundEngine, particleSys, camera) {
+    if (this.cooldown > 0) return false;
+    if (
+      swordHitbox.x < this.x + this.w &&
+      swordHitbox.x + swordHitbox.w > this.x &&
+      swordHitbox.y < this.y + this.h &&
+      swordHitbox.y + swordHitbox.h > this.y
+    ) {
+      this.strike(soundEngine, particleSys, camera);
+      return true;
+    }
+    return false;
+  }
+
+  strike(soundEngine, particleSys, camera) {
+    this.cooldown = 0.6;
+    this.swingVel = 8.0;
+    this.ringTime = 1.0;
+
+    if (soundEngine && soundEngine.play) {
+      soundEngine.play('altar_use', 1.2);
+    }
+    if (camera && camera.shake) {
+      camera.shake(3, 0.25);
+    }
+    if (particleSys && particleSys.spawnSparks) {
+      particleSys.spawnSparks(this.x + this.w / 2, this.y + this.h / 2, 16, '#38bdf8');
+    }
+  }
+
+  update(dt, spectralPlatforms) {
+    if (this.cooldown > 0) this.cooldown -= dt;
+    if (this.ringTime > 0) {
+      this.ringTime -= dt;
+      if (spectralPlatforms) {
+        for (const sp of spectralPlatforms) {
+          if (this.targetPlatformIds.includes(sp.id)) {
+            sp.activate(5.5);
+          }
+        }
+      }
+    }
+
+    const springK = 35.0;
+    const damping = 4.5;
+    const accel = -springK * this.swingAngle - damping * this.swingVel;
+    this.swingVel += accel * dt;
+    this.swingAngle += this.swingVel * dt;
+  }
+
+  draw(ctx, camX, camY) {
+    const rx = Math.round(this.x + this.w / 2 - camX);
+    const ry = Math.round(this.y - camY);
+
+    ctx.save();
+    ctx.translate(rx, ry);
+
+    ctx.strokeStyle = '#52525b';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, -20);
+    ctx.lineTo(0, 0);
+    ctx.stroke();
+
+    ctx.rotate(this.swingAngle);
+
+    const bellGrad = ctx.createLinearGradient(-14, 0, 14, this.h);
+    bellGrad.addColorStop(0, '#f59e0b');
+    bellGrad.addColorStop(0.5, '#b45309');
+    bellGrad.addColorStop(1, '#78350f');
+
+    ctx.fillStyle = bellGrad;
+    ctx.beginPath();
+    ctx.moveTo(-6, 0);
+    ctx.lineTo(6, 0);
+    ctx.quadraticCurveTo(12, 18, 16, this.h - 6);
+    ctx.lineTo(-16, this.h - 6);
+    ctx.quadraticCurveTo(-12, 18, -6, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = '#fef08a';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.fillStyle = '#fde047';
+    ctx.fillRect(-18, this.h - 6, 36, 6);
+
+    ctx.fillStyle = '#451a03';
+    ctx.beginPath();
+    ctx.arc(0, this.h + 2, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (this.ringTime > 0) {
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.4)';
+      ctx.beginPath();
+      ctx.arc(0, this.h / 2, 28, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 3e. SEESAW TILTING PLATFORM (Báscula / Balancín Dinámico)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class SeesawPlatform {
+  constructor(data) {
+    this.id = data.id || ('seesaw_' + Math.random().toString(36).substr(2, 9));
+    this.pivotX = data.x;
+    this.pivotY = data.y;
+    this.w = data.w || 180;
+    this.h = 14;
+    this.angle = 0;
+    this.angleVel = 0;
+    this.maxAngle = 0.42;
+    this.isSemiSolid = true;
+    this.isSeesaw = true;
+  }
+
+  get bounds() {
+    return {
+      x: this.pivotX - this.w / 2 - 10,
+      y: this.pivotY - 40,
+      w: this.w + 20,
+      h: 80
+    };
+  }
+
+  update(dt, player) {
+    const springK = 8.0;
+    const damping = 4.0;
+    let torque = -springK * this.angle - damping * this.angleVel;
+
+    if (player) {
+      const pCenterX = player.x + player.w / 2;
+      const pBottom = player.y + player.h;
+      const beamHalf = this.w / 2;
+
+      if (pCenterX >= this.pivotX - beamHalf && pCenterX <= this.pivotX + beamHalf) {
+        const relX = pCenterX - this.pivotX;
+        const beamSurfaceY = this.pivotY + relX * Math.tan(this.angle) - 4;
+
+        if (pBottom >= beamSurfaceY - 8 && pBottom <= beamSurfaceY + 18 && player.vy >= 0) {
+          player.y = beamSurfaceY - player.h;
+          player.vy = 0;
+          player.isGrounded = true;
+
+          const playerWeightTorque = (relX / beamHalf) * 45.0;
+          torque += playerWeightTorque;
+
+          if (Math.abs(this.angle) > 0.22) {
+            player.x += Math.sin(this.angle) * 110 * dt;
+          }
+        }
+      }
+    }
+
+    this.angleVel += torque * dt;
+    this.angle += this.angleVel * dt;
+
+    if (this.angle > this.maxAngle) {
+      this.angle = this.maxAngle;
+      this.angleVel = 0;
+    } else if (this.angle < -this.maxAngle) {
+      this.angle = -this.maxAngle;
+      this.angleVel = 0;
+    }
+  }
+
+  draw(ctx, camX, camY) {
+    const rx = Math.round(this.pivotX - camX);
+    const ry = Math.round(this.pivotY - camY);
+
+    ctx.save();
+
+    // Pivot Stand
+    ctx.fillStyle = '#27272a';
+    ctx.beginPath();
+    ctx.moveTo(rx - 14, ry + 22);
+    ctx.lineTo(rx + 14, ry + 22);
+    ctx.lineTo(rx, ry);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#71717a';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Rotating Beam
+    ctx.translate(rx, ry);
+    ctx.rotate(this.angle);
+
+    ctx.fillStyle = '#451a03';
+    ctx.fillRect(-this.w / 2, -this.h / 2, this.w, this.h);
+
+    ctx.strokeStyle = '#92400e';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(-this.w / 2, -this.h / 2, this.w, this.h);
+
+    ctx.fillStyle = '#52525b';
+    ctx.fillRect(-8, -this.h / 2 - 2, 16, this.h + 4);
+    ctx.fillRect(-this.w / 2, -this.h / 2 - 1, 8, this.h + 2);
+    ctx.fillRect(this.w / 2 - 8, -this.h / 2 - 1, 8, this.h + 2);
+
+    ctx.fillStyle = '#fbbf24';
+    ctx.beginPath();
+    ctx.arc(0, 0, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 3f. ASCENSION VORTEX (Esferas / Vórtices de Salto Arcana)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class AscensionVortex {
+  constructor(data) {
+    this.id = data.id || ('vortex_' + Math.random().toString(36).substr(2, 9));
+    this.x = data.x;
+    this.y = data.y;
+    this.baseY = data.y;
+    this.radius = data.radius || 24;
+    this.boostPower = data.boostPower || 13.5;
+    this.cooldown = 0;
+    this.floatTimer = Math.random() * Math.PI * 2;
+  }
+
+  update(dt, player, soundEngine, particleSys) {
+    this.floatTimer += dt * 2.5;
+    this.y = this.baseY + Math.sin(this.floatTimer) * 6;
+    if (this.cooldown > 0) {
+      this.cooldown -= dt;
+      return;
+    }
+
+    if (!player) return;
+    const pCenterX = player.x + player.w / 2;
+    const pCenterY = player.y + player.h / 2;
+    const dist = Math.hypot(pCenterX - this.x, pCenterY - this.y);
+
+    if (dist < this.radius + 12) {
+      player.vy = -this.boostPower;
+      player.vx *= 0.6;
+      player.isGrounded = false;
+      this.cooldown = 1.0;
+
+      if (soundEngine && soundEngine.play) {
+        soundEngine.play('whoosh', 1.4);
+      }
+      if (particleSys && particleSys.spawnSparks) {
+        particleSys.spawnSparks(this.x, this.y, 22, '#38bdf8');
+      }
+      if (particleSys && particleSys.spawnHealingCrosses) {
+        particleSys.spawnHealingCrosses(this.x, this.y, 6);
+      }
+    }
+  }
+
+  draw(ctx, camX, camY) {
+    const rx = Math.round(this.x - camX);
+    const ry = Math.round(this.y - camY);
+
+    ctx.save();
+    const ready = this.cooldown <= 0;
+    const alpha = ready ? 0.75 : 0.25;
+
+    const grad = ctx.createRadialGradient(rx, ry, 4, rx, ry, this.radius);
+    grad.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
+    grad.addColorStop(0.4, `rgba(56, 189, 248, ${alpha * 0.8})`);
+    grad.addColorStop(0.8, `rgba(99, 102, 241, ${alpha * 0.4})`);
+    grad.addColorStop(1, 'rgba(79, 70, 229, 0)');
+
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(rx, ry, this.radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = ready ? '#bae6fd' : '#64748b';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    const rot = this.floatTimer * 3;
+    for (let i = 0; i < 3; i++) {
+      const angle = rot + (i * Math.PI * 2) / 3;
+      const cx = rx + Math.cos(angle) * (this.radius * 0.55);
+      const cy = ry + Math.sin(angle) * (this.radius * 0.55);
+      ctx.moveTo(rx, ry);
+      ctx.lineTo(cx, cy);
+    }
+    ctx.stroke();
+
+    ctx.restore();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 3g. FAMILIAR CAGE & FAMILIAR COMPANIONS (Mascotas Rescatables)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class FamiliarCage {
+  constructor(data) {
+    this.id = data.id || ('cage_' + Math.random().toString(36).substr(2, 9));
+    this.x = data.x;
+    this.y = data.y;
+    this.w = 36;
+    this.h = 44;
+    this.familiarId = data.familiarId || 'ignis'; // 'ignis', 'aura', or 'borus'
+    this.hp = 25;
+    this.maxHp = 25;
+    this.isBroken = false;
+    this.shakeTimer = 0;
+  }
+
+  checkHit(swordHitbox, soundEngine, particleSys, camera, progression) {
+    if (this.isBroken) return false;
+    if (
+      swordHitbox.x < this.x + this.w &&
+      swordHitbox.x + swordHitbox.w > this.x &&
+      swordHitbox.y < this.y + this.h &&
+      swordHitbox.y + swordHitbox.h > this.y
+    ) {
+      this.hp -= swordHitbox.damage || 25;
+      this.shakeTimer = 0.25;
+
+      if (soundEngine && soundEngine.play) {
+        soundEngine.play('clank', 1.0);
+      }
+      if (particleSys && particleSys.spawnSparks) {
+        particleSys.spawnSparks(this.x + this.w / 2, this.y + this.h / 2, 10, '#fbbf24');
+      }
+
+      if (this.hp <= 0) {
+        this.isBroken = true;
+        if (soundEngine && soundEngine.play) {
+          soundEngine.play('secret_found', 1.2);
+        }
+        if (camera && camera.shake) {
+          camera.shake(5, 0.4);
+        }
+        if (particleSys && particleSys.spawnLevelUpFireworks) {
+          particleSys.spawnLevelUpFireworks(this.x + this.w / 2, this.y + this.h / 2);
+        }
+        if (progression && progression.unlockFamiliar) {
+          progression.unlockFamiliar(this.familiarId);
+        }
+      }
+      return true;
+    }
+    return false;
+  }
+
+  update(dt) {
+    if (this.shakeTimer > 0) this.shakeTimer -= dt;
+  }
+
+  draw(ctx, camX, camY) {
+    if (this.isBroken) return;
+    const rx = Math.round(this.x - camX + (this.shakeTimer > 0 ? (Math.random() - 0.5) * 4 : 0));
+    const ry = Math.round(this.y - camY);
+
+    ctx.save();
+    ctx.strokeStyle = '#71717a';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(rx + this.w / 2, ry - 30);
+    ctx.lineTo(rx + this.w / 2, ry);
+    ctx.stroke();
+
+    const glowColor = this.familiarId === 'ignis' ? '#ef4444' : (this.familiarId === 'aura' ? '#fbbf24' : '#94a3b8');
+    ctx.fillStyle = glowColor;
+    ctx.shadowColor = glowColor;
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(rx + this.w / 2, ry + this.h / 2, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = '#18181b';
+    ctx.fillRect(rx, ry, this.w, 4);
+    ctx.fillRect(rx, ry + this.h - 4, this.w, 4);
+
+    ctx.strokeStyle = '#a1a1aa';
+    ctx.lineWidth = 2;
+    for (let bx = rx + 6; bx < rx + this.w; bx += 8) {
+      ctx.beginPath();
+      ctx.moveTo(bx, ry);
+      ctx.lineTo(bx, ry + this.h);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+}
+
+class Familiar {
+  constructor(familiarId = null) {
+    this.id = familiarId; // 'ignis', 'aura', 'borus' or null
+    this.x = 0;
+    this.y = 0;
+    this.vx = 0;
+    this.vy = 0;
+    this.bobTimer = 0;
+    this.attackCooldown = 0;
+    this.projectiles = [];
+  }
+
+  setFamiliar(familiarId) {
+    this.id = familiarId;
+  }
+
+  update(dt, player, enemies, bats, soulOrbs, soundEngine, particleSys) {
+    if (!this.id || !player) return;
+    this.bobTimer += dt * 3.5;
+
+    const targetX = player.x + (player.facing === 'right' ? -22 : player.w + 14);
+    const targetY = player.y - 18 + Math.sin(this.bobTimer) * 5;
+
+    if (this.x === 0 && this.y === 0) {
+      this.x = targetX;
+      this.y = targetY;
+    }
+
+    const dx = targetX - this.x;
+    const dy = targetY - this.y;
+    this.vx += (dx * 12.0 - this.vx * 6.0) * dt;
+    this.vy += (dy * 12.0 - this.vy * 6.0) * dt;
+    this.x += this.vx * dt;
+    this.y += this.vy * dt;
+
+    // Update active projectiles
+    for (let i = this.projectiles.length - 1; i >= 0; i--) {
+      const p = this.projectiles[i];
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.life -= dt;
+
+      let hit = false;
+      const allTargets = (enemies || []).concat(bats || []);
+      for (const t of allTargets) {
+        if (!t || t.isDead || t.hp <= 0) continue;
+        if (Math.hypot(p.x - (t.x + (t.w || 24) / 2), p.y - (t.y + (t.h || 24) / 2)) < 24) {
+          if (t.takeDamage) {
+            t.takeDamage(p.damage, 0, particleSys, soundEngine);
+          } else {
+            t.hp -= p.damage;
+          }
+          hit = true;
+          if (particleSys && particleSys.spawnSparks) {
+            particleSys.spawnSparks(p.x, p.y, 8, '#ef4444');
+          }
+          break;
+        }
+      }
+
+      if (hit || p.life <= 0) {
+        this.projectiles.splice(i, 1);
+      }
+    }
+
+    if (this.id === 'ignis') {
+      if (this.attackCooldown > 0) {
+        this.attackCooldown -= dt;
+      } else {
+        const allTargets = (enemies || []).concat(bats || []);
+        let closest = null;
+        let closestDist = 220;
+        for (const t of allTargets) {
+          if (!t || t.isDead || t.hp <= 0) continue;
+          const d = Math.hypot(this.x - (t.x + (t.w || 24) / 2), this.y - (t.y + (t.h || 24) / 2));
+          if (d < closestDist) {
+            closestDist = d;
+            closest = t;
+          }
+        }
+
+        if (closest) {
+          const tX = closest.x + (closest.w || 24) / 2;
+          const tY = closest.y + (closest.h || 24) / 2;
+          const angle = Math.atan2(tY - this.y, tX - this.x);
+          this.projectiles.push({
+            x: this.x,
+            y: this.y,
+            vx: Math.cos(angle) * 320,
+            vy: Math.sin(angle) * 320,
+            damage: 18,
+            life: 1.2
+          });
+          this.attackCooldown = 1.8;
+          if (soundEngine && soundEngine.play) soundEngine.play('fireball', 0.8);
+        }
+      }
+
+      if (soulOrbs) {
+        for (const orb of soulOrbs) {
+          if (!orb || orb.collected) continue;
+          const d = Math.hypot(this.x - orb.x, this.y - orb.y);
+          if (d < 140 && d > 4) {
+            const pullAngle = Math.atan2(this.y - orb.y, this.x - orb.x);
+            orb.vx = (orb.vx || 0) + Math.cos(pullAngle) * 350 * dt;
+            orb.vy = (orb.vy || 0) + Math.sin(pullAngle) * 350 * dt;
+          }
+        }
+      }
+    } else if (this.id === 'aura') {
+      if (Math.random() < 0.2 && particleSys && particleSys.spawnSparks) {
+        particleSys.spawnSparks(this.x + (Math.random() - 0.5) * 8, this.y + (Math.random() - 0.5) * 8, 1, '#fde047');
+      }
+    } else if (this.id === 'borus') {
+      if (player.vy > 6.0 && !player.isGrounded) {
+        player.vy = Math.min(player.vy, 4.2);
+        if (Math.random() < 0.25 && particleSys && particleSys.spawnSparks) {
+          particleSys.spawnSparks(player.x + player.w / 2, player.y + player.h, 2, '#94a3b8');
+        }
+      }
+    }
+  }
+
+  draw(ctx, camX, camY) {
+    if (!this.id) return;
+    const rx = Math.round(this.x - camX);
+    const ry = Math.round(this.y - camY);
+
+    ctx.save();
+
+    for (const p of this.projectiles) {
+      const px = Math.round(p.x - camX);
+      const py = Math.round(p.y - camY);
+      ctx.fillStyle = '#ef4444';
+      ctx.shadowColor = '#f97316';
+      ctx.shadowBlur = 6;
+      ctx.beginPath();
+      ctx.arc(px, py, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+
+    if (this.id === 'ignis') {
+      ctx.fillStyle = '#dc2626';
+      ctx.beginPath();
+      ctx.arc(rx, ry, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      const wingFlap = Math.sin(this.bobTimer * 4) * 5;
+      ctx.fillStyle = '#991b1b';
+      ctx.beginPath();
+      ctx.moveTo(rx - 6, ry);
+      ctx.lineTo(rx - 14, ry - wingFlap);
+      ctx.lineTo(rx - 8, ry + 4);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(rx + 6, ry);
+      ctx.lineTo(rx + 14, ry - wingFlap);
+      ctx.lineTo(rx + 8, ry + 4);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = '#fde047';
+      ctx.fillRect(rx - 3, ry - 2, 2, 2);
+      ctx.fillRect(rx + 1, ry - 2, 2, 2);
+    } else if (this.id === 'aura') {
+      const grad = ctx.createRadialGradient(rx, ry, 2, rx, ry, 16);
+      grad.addColorStop(0, '#ffffff');
+      grad.addColorStop(0.3, '#fde047');
+      grad.addColorStop(0.8, 'rgba(234, 179, 8, 0.4)');
+      grad.addColorStop(1, 'rgba(234, 179, 8, 0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(rx, ry, 16, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(rx, ry, 4, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (this.id === 'borus') {
+      ctx.fillStyle = '#64748b';
+      ctx.beginPath();
+      ctx.arc(rx, ry, 7, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#334155';
+      ctx.beginPath();
+      ctx.moveTo(rx - 4, ry - 5);
+      ctx.lineTo(rx - 6, ry - 11);
+      ctx.lineTo(rx - 1, ry - 6);
+      ctx.moveTo(rx + 4, ry - 5);
+      ctx.lineTo(rx + 6, ry - 11);
+      ctx.lineTo(rx + 1, ry - 6);
+      ctx.fill();
+
+      const wingFlap = Math.sin(this.bobTimer * 3) * 4;
+      ctx.fillStyle = '#475569';
+      ctx.beginPath();
+      ctx.moveTo(rx - 5, ry);
+      ctx.lineTo(rx - 12, ry - wingFlap);
+      ctx.lineTo(rx - 6, ry + 5);
+      ctx.moveTo(rx + 5, ry);
+      ctx.lineTo(rx + 12, ry - wingFlap);
+      ctx.lineTo(rx + 6, ry + 5);
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+}
+
 // 4. FLAME WAVE PROJECTILE (From Flame Blade Boon)
 class FlameWave {
   constructor(x, y, dir, damage = 25) {
@@ -5264,4 +5966,10 @@ if (typeof window !== 'undefined') {
   window.BoonChest = BoonChest;
   window.BreakableUrn = BreakableUrn;
   window.HealthOrb = HealthOrb;
+  window.RunicBell = RunicBell;
+  window.SpectralPlatform = SpectralPlatform;
+  window.SeesawPlatform = SeesawPlatform;
+  window.AscensionVortex = AscensionVortex;
+  window.FamiliarCage = FamiliarCage;
+  window.Familiar = Familiar;
 }

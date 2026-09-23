@@ -76,6 +76,10 @@ class ProgressionManager {
     this.bestiaryKills = { skeleton: 0, elite: 0, bat: 0, boss: 0 };
     this.selectedSkin = 'soldier';
 
+    // ─── FAMILIARS & COMPANIONS (PET SYSTEM) ───
+    this.unlockedFamiliars = [];
+    this.activeFamiliar = null;
+
     // ─── RELIQUIAS PASIVAS Y MEJORAS DE TIENDA EN RUN ───
     this.runRelics = [];
     this.runBonusDaggerDmg = 0;
@@ -517,6 +521,13 @@ class ProgressionManager {
           this.selectedSkin = data.selectedSkin;
         }
 
+        if (Array.isArray(data.unlockedFamiliars)) {
+          this.unlockedFamiliars = data.unlockedFamiliars;
+        }
+        if (typeof data.activeFamiliar === 'string') {
+          this.activeFamiliar = data.activeFamiliar;
+        }
+
         if (neededSanitizing) {
           this.save();
         }
@@ -539,12 +550,41 @@ class ProgressionManager {
         upgrades: this.upgrades,
         achievements: this.achievements,
         bestiaryKills: this.bestiaryKills,
-        selectedSkin: this.selectedSkin
+        selectedSkin: this.selectedSkin,
+        unlockedFamiliars: this.unlockedFamiliars,
+        activeFamiliar: this.activeFamiliar
       };
       storage.setItem(this.SAVE_KEY, JSON.stringify(data));
     } catch (e) {
       console.warn('Could not save data', e);
     }
+  }
+
+  unlockFamiliar(familiarId) {
+    if (!familiarId) return false;
+    if (!this.unlockedFamiliars) this.unlockedFamiliars = [];
+    if (!this.unlockedFamiliars.includes(familiarId)) {
+      this.unlockedFamiliars.push(familiarId);
+      this.activeFamiliar = familiarId; // Auto-equip newly rescued companion
+      this.save();
+      if (window.game && window.game.familiar) {
+        window.game.familiar.setFamiliar(familiarId);
+      }
+      return true;
+    }
+    return false;
+  }
+
+  setActiveFamiliar(familiarId) {
+    if (familiarId === null || (this.unlockedFamiliars && this.unlockedFamiliars.includes(familiarId))) {
+      this.activeFamiliar = familiarId;
+      this.save();
+      if (window.game && window.game.familiar) {
+        window.game.familiar.setFamiliar(familiarId);
+      }
+      return true;
+    }
+    return false;
   }
 
   unlockAchievement(id) {

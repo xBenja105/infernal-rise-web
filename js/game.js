@@ -1223,6 +1223,20 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     this.urns = (this.level.urns || []).map(u => new BreakableUrn(u));
     this.crackedWalls = (this.level.crackedWalls || []).map(w => new CrackedWall(w));
     this.bloodAltars = (this.level.bloodAltars || []).map(a => new BloodAltar(a));
+    this.runicBells = (this.level.runicBells || []).map(b => (b instanceof RunicBell ? b : new RunicBell(b)));
+    this.spectralPlatforms = (this.level.spectralPlatforms || []).map(sp => (sp instanceof SpectralPlatform ? sp : new SpectralPlatform(sp)));
+    this.seesawPlatforms = (this.level.seesawPlatforms || []).map(s => (s instanceof SeesawPlatform ? s : new SeesawPlatform(s)));
+    this.ascensionVortices = (this.level.ascensionVortices || []).map(v => (v instanceof AscensionVortex ? v : new AscensionVortex(v)));
+    this.familiarCages = (this.level.familiarCages || []).map(c => (c instanceof FamiliarCage ? c : new FamiliarCage(c)));
+
+    // Active familiar / companion
+    if (!this.familiar) {
+      const activeFId = (window.progression && window.progression.activeFamiliar) ? window.progression.activeFamiliar : null;
+      this.familiar = new Familiar(activeFId);
+    } else if (window.progression && window.progression.activeFamiliar) {
+      this.familiar.setFamiliar(window.progression.activeFamiliar);
+    }
+
     this.activeBloodAltar = null;
     this.nearBloodAltar = false;
     if (this.level.hermitOutpost) {
@@ -2068,7 +2082,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       }
     }
 
-    // 5. Update Urns on player sword strike
+    // 5. Update Urns, Bells, Cages & Walls on player sword strike
     if (swordHitbox) {
       for (const u of this.urns) {
         const orbs = u.checkHit(swordHitbox, window.soundEngine, window.particleSystem);
@@ -2077,6 +2091,16 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       if (this.crackedWalls) {
         for (const cw of this.crackedWalls) {
           cw.checkHit(swordHitbox, this.player.attackDamage || 25, window.soundEngine, window.particleSystem);
+        }
+      }
+      if (this.runicBells) {
+        for (const bell of this.runicBells) {
+          bell.checkHit(swordHitbox, window.soundEngine, window.particleSystem, this);
+        }
+      }
+      if (this.familiarCages) {
+        for (const cage of this.familiarCages) {
+          cage.checkHit(swordHitbox, window.soundEngine, window.particleSystem, this, window.progression);
         }
       }
     }
@@ -2107,11 +2131,61 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       }
     }
 
+    // 5d. Update Runic Bells & Spectral Platforms
+    if (this.runicBells) {
+      for (const bell of this.runicBells) {
+        bell.update(dt, this.spectralPlatforms);
+      }
+    }
+    if (this.spectralPlatforms) {
+      for (const sp of this.spectralPlatforms) {
+        sp.update(dt);
+        if (sp.isSolid) {
+          if (!this.level.platforms.includes(sp)) this.level.platforms.push(sp);
+        } else {
+          const idx = this.level.platforms.indexOf(sp);
+          if (idx !== -1) this.level.platforms.splice(idx, 1);
+        }
+      }
+    }
+
+    // 5e. Update Seesaw Platforms & Ascension Vortices
+    if (this.seesawPlatforms) {
+      for (const ss of this.seesawPlatforms) {
+        ss.update(dt, this.player);
+      }
+    }
+    if (this.ascensionVortices) {
+      for (const av of this.ascensionVortices) {
+        av.update(dt, this.player, window.soundEngine, window.particleSystem);
+      }
+    }
+
+    // 5f. Update Familiar Cages & Active Companion
+    if (this.familiarCages) {
+      for (const cage of this.familiarCages) {
+        cage.update(dt);
+      }
+    }
+    if (this.familiar) {
+      this.familiar.update(
+        dt,
+        this.player,
+        this.enemies,
+        this.bats,
+        this.soulOrbs,
+        window.soundEngine,
+        window.particleSystem
+      );
+    }
+
     // 6. Update Boon Chests proximity
     let nearChest = null;
-    for (const ch of this.chests) {
-      ch.update(dt, this.player, window.soundEngine);
-      if (ch.isNear) nearChest = ch;
+    for (const c of this.chests) {
+      c.update(dt, this.player);
+      if (c.isNear && !c.isOpened) {
+        nearChest = c;
+      }
     }
     this.activeChest = nearChest;
 
@@ -2119,7 +2193,13 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     for (let i = this.soulOrbs.length - 1; i >= 0; i--) {
       const orb = this.soulOrbs[i];
       orb.update(dt, this.player, window.soundEngine, window.particleSystem);
-      if (orb.isCollected || orb.life > orb.maxLife) {
+      if (orb.isCollected) {
+        // Aura bonus: +20% extra souls
+        if (this.familiar && this.familiar.id === 'aura' && window.progression) {
+          window.progression.addSouls(Math.max(1, Math.ceil((orb.value || 10) * 0.20)));
+        }
+        this.soulOrbs.splice(i, 1);
+      } else if (orb.life > orb.maxLife) {
         this.soulOrbs.splice(i, 1);
       }
     }
@@ -2498,6 +2578,33 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       }
     }
 
+    // 6c. Draw Spectral Platforms, Seesaw Platforms, Ascension Vortices, Runic Bells & Cages
+    if (this.spectralPlatforms) {
+      for (const sp of this.spectralPlatforms) {
+        sp.draw(this.ctx, finalCamX, finalCamY);
+      }
+    }
+    if (this.seesawPlatforms) {
+      for (const ss of this.seesawPlatforms) {
+        ss.draw(this.ctx, finalCamX, finalCamY);
+      }
+    }
+    if (this.ascensionVortices) {
+      for (const av of this.ascensionVortices) {
+        av.draw(this.ctx, finalCamX, finalCamY);
+      }
+    }
+    if (this.runicBells) {
+      for (const bell of this.runicBells) {
+        bell.draw(this.ctx, finalCamX, finalCamY);
+      }
+    }
+    if (this.familiarCages) {
+      for (const cage of this.familiarCages) {
+        cage.draw(this.ctx, finalCamX, finalCamY);
+      }
+    }
+
     // 7. Draw NPC
     if (this.level.npc) {
       this.drawNpc(this.level.npc, finalCamX, finalCamY);
@@ -2548,9 +2655,12 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       f.draw(this.ctx, finalCamX, finalCamY);
     }
 
-    // 11. Draw Player
+    // 11. Draw Player & Familiar Companion
     if (this.player) {
       this.player.draw(this.ctx, finalCamX, finalCamY);
+    }
+    if (this.familiar) {
+      this.familiar.draw(this.ctx, finalCamX, finalCamY);
     }
 
     // 11b. Draw Vampire Survivors Passive Weapons (Crosses, Lightning, Orbs, Scythes, Garlic)
@@ -3455,6 +3565,42 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
         this.ctx.lineTo(rx + p.w, ry + p.h);
         this.ctx.closePath();
         this.ctx.fill();
+      } else if (p.isWoodScaffold) {
+        // Mining timber reinforcement bands and iron rivets
+        this.ctx.fillStyle = '#78350f';
+        this.ctx.fillRect(rx, ry + 2, p.w, 3);
+        this.ctx.fillStyle = '#27272a';
+        for (let bx = rx + 16; bx < rx + p.w; bx += 24) {
+          this.ctx.fillRect(bx, ry + 4, 3, 3);
+        }
+      } else if (p.isRopeBridge) {
+        // Wooden slats with suspension rope outline
+        this.ctx.fillStyle = '#92400e';
+        for (let bx = rx + 4; bx < rx + p.w - 6; bx += 14) {
+          this.ctx.fillRect(bx, ry + 2, 10, p.h - 4);
+        }
+        // Suspension catenary rope
+        this.ctx.strokeStyle = '#d97706';
+        this.ctx.lineWidth = 1.5;
+        this.ctx.beginPath();
+        this.ctx.moveTo(rx, ry);
+        this.ctx.quadraticCurveTo(rx + p.w / 2, ry + 6, rx + p.w, ry);
+        this.ctx.stroke();
+      } else if (p.isCorbelLedge) {
+        // Tiered corbel stepping downwards into wall
+        const isLeft = p.x <= 40;
+        this.ctx.fillStyle = style.dark;
+        if (isLeft) {
+          this.ctx.fillRect(rx, ry + p.h, Math.floor(p.w * 0.7), 8);
+          this.ctx.fillRect(rx, ry + p.h + 8, Math.floor(p.w * 0.4), 8);
+        } else {
+          this.ctx.fillRect(rx + Math.floor(p.w * 0.3), ry + p.h, Math.floor(p.w * 0.7), 8);
+          this.ctx.fillRect(rx + Math.floor(p.w * 0.6), ry + p.h + 8, Math.floor(p.w * 0.4), 8);
+        }
+      } else if (p.isSarcophagus) {
+        // Gothic crest ornament in center
+        this.ctx.fillStyle = '#fbbf24';
+        this.ctx.fillRect(rx + Math.floor(p.w / 2) - 8, ry + 4, 16, 4);
       }
     }
   }
