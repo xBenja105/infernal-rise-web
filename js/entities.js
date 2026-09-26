@@ -55,9 +55,9 @@ class Player {
     this.coyoteMax = 0.16; // 160ms grace
     this.jumpBufferMax = 0.16;
 
-    // Instant Responsive Jump System (Smooth, comfortable ~151px peak)
-    this.baseJumpForce = 9.2;
-    this.jumpForce = 9.2;
+    // Instant Responsive Jump System (Smooth, athletic ~162px peak)
+    this.baseJumpForce = 9.6;
+    this.jumpForce = 9.6;
     this.isJumping = false;
     this.jumpCutApplied = false;
     this.prevJumpInput = false;
