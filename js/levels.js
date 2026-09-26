@@ -182,9 +182,10 @@ class LevelManager {
     };
 
     while (currY > 640) {
-      // Step delta strictly calibrated between 142 and 153px (player jump reach with baseJumpForce 9.6 is ~162.1px)
-      // Demands committed, deliberate single jumps, prevents skipping tiers, and creates clean vertical breathing room
-      const stepY = 142 + Math.floor(Math.random() * 12);
+      // Step delta calibrated between 114 and 123px (player jump reach with baseJumpForce 9.6 is ~162.1px)
+      // Provides ample clearance (~44px headroom) for single jumps and horizontal travel at level 1 from 0
+      // Double tiers (228-246px) remain completely unskippable with a single jump
+      const stepY = 114 + Math.floor(Math.random() * 10);
       currY -= stepY;
 
       const tier = getTier(currY);
@@ -356,23 +357,26 @@ class LevelManager {
         }
       } else if (pattern === 5) {
         // ── PATRÓN 5: ARCO GÓTICO COLAPSADO / DINTEL QUEBRADO ──
-        // Losas de piedra fracturada a ambos lados con gran brecha central
-        const archBaseX = Math.floor((width - 560) / 2) + Math.floor((Math.random() - 0.5) * 40);
-        const slab1 = { x: archBaseX, y: currY, w: 145, h: 24, type: pType, isRuined: true };
-        const slab2 = { x: archBaseX + 415, y: currY, w: 145, h: 24, type: pType, isArch: true };
+        // Losas de piedra fracturada a ambos lados y piedra clave caída en el centro para cruce alcanzable
+        const archBaseX = Math.floor((width - 600) / 2) + Math.floor((Math.random() - 0.5) * 40);
+        const slab1 = { x: archBaseX, y: currY, w: 155, h: 24, type: pType, isRuined: true };
+        const slabMid = { x: Math.floor(width / 2) - 45, y: currY, w: 90, h: 24, type: pType, isArch: true };
+        const slab2 = { x: archBaseX + 600 - 155, y: currY, w: 155, h: 24, type: pType, isArch: true };
 
-        platforms.push(slab1, slab2);
-        layerPlatforms.push(slab1, slab2);
+        platforms.push(slab1, slabMid, slab2);
+        layerPlatforms.push(slab1, slabMid, slab2);
       } else if (pattern === 6) {
         // ── PATRÓN 6: PILARES TRUNCADOS Y CAPITELES DE SALTO ──
-        // Columnas quebradas rematadas por capiteles de piedra sobre el vacío
-        const col1X = 130 + Math.floor(Math.random() * 50);
-        const col2X = width - 260 - Math.floor(Math.random() * 50);
+        // Columnas quebradas rematadas por capiteles de piedra sobre el vacío con pilar intermedio
+        const col1X = 140 + Math.floor(Math.random() * 40);
+        const colMidX = Math.floor(width / 2) - 60;
+        const col2X = width - 270 - Math.floor(Math.random() * 40);
         const col1 = { x: col1X, y: currY, w: 130, h: 26, type: pType, isPillarRemnant: true };
+        const colMid = { x: colMidX, y: currY, w: 120, h: 26, type: pType, isPillarRemnant: true };
         const col2 = { x: col2X, y: currY, w: 130, h: 26, type: pType, isPillarRemnant: true };
 
-        platforms.push(col1, col2);
-        layerPlatforms.push(col1, col2);
+        platforms.push(col1, colMid, col2);
+        layerPlatforms.push(col1, colMid, col2);
       } else if (pattern === 7) {
         // ── PATRÓN 7: BALUARTE ALMENADO Y PLATAFORMA DEFENSIVA ──
         // Plataforma defensiva con almenas y antorchas guardianas (sin repisas flotantes secundarias)
@@ -539,30 +543,34 @@ class LevelManager {
         torches.push({ x: width - 24, y: currY - 30, blue: isBlueTorch });
       } else if (pattern === 14) {
         // ── PATRÓN 14: PEDESTALES CÚBICOS DE PRECISIÓN ──
-        // 2 cubos cuadrados de sillería labrada (48x48px) en ambos flancos
-        const q1X = 160 + Math.floor(Math.random() * 40);
-        const q2X = width - 210 - Math.floor(Math.random() * 40);
+        // Cubos cuadrados de sillería labrada (48x48px) con apoyo central
+        const q1X = 220 + Math.floor(Math.random() * 40);
+        const qMidX = Math.floor(width / 2) - 24;
+        const q2X = width - 268 - Math.floor(Math.random() * 40);
         const q1 = { x: q1X, y: currY, w: 48, h: 48, type: pType, isSquareBlock: true };
+        const qMid = { x: qMidX, y: currY, w: 48, h: 48, type: pType, isSquareBlock: true };
         const q2 = { x: q2X, y: currY, w: 48, h: 48, type: pType, isSquareBlock: true };
 
-        platforms.push(q1, q2);
-        layerPlatforms.push(q1, q2);
+        platforms.push(q1, qMid, q2);
+        layerPlatforms.push(q1, qMid, q2);
 
         torches.push({ x: q1.x + 24, y: q1.y - 24, blue: isBlueTorch });
         torches.push({ x: q2.x + 24, y: q2.y - 24, blue: isBlueTorch });
       } else if (pattern === 15) {
         // ── PATRÓN 15: VIGAS Y BARRAS DELGADAS DE HIERRO/MADERA CON TENSORES ──
-        // 2 pasarelas esbeltas con gran brecha central de vacío
-        const bw1 = 150 + Math.floor(Math.random() * 20);
+        // Pasarelas esbeltas con travesaño de conexión central
+        const bw1 = 160 + Math.floor(Math.random() * 20);
         const bx1 = 70 + Math.floor(Math.random() * 20);
         const bar1 = { x: bx1, y: currY, w: bw1, h: 12, type: pType, isThinBeam: true };
 
-        const bw2 = 150 + Math.floor(Math.random() * 20);
+        const barMid = { x: Math.floor(width / 2) - 45, y: currY, w: 90, h: 12, type: pType, isThinBeam: true };
+
+        const bw2 = 160 + Math.floor(Math.random() * 20);
         const bx2 = width - bw2 - 70 - Math.floor(Math.random() * 20);
         const bar2 = { x: bx2, y: currY, w: bw2, h: 12, type: pType, isThinBeam: true };
 
-        platforms.push(bar1, bar2);
-        layerPlatforms.push(bar1, bar2);
+        platforms.push(bar1, barMid, bar2);
+        layerPlatforms.push(bar1, barMid, bar2);
 
         torches.push({ x: bx1 + 24, y: currY - 24, blue: isBlueTorch });
         torches.push({ x: bx2 + bw2 - 24, y: currY - 24, blue: isBlueTorch });
@@ -1361,7 +1369,7 @@ class LevelManager {
           x: Math.min(860, Math.max(100, x + w / 2 - 12)),
           y: currY,
           w: 24,
-          h: 152,
+          h: 126,
           type: pType === 'gold' ? 'gold' : 'iron'
         });
       }
@@ -1422,7 +1430,7 @@ class LevelManager {
         });
       }
 
-      currY -= (140 + Math.random() * 14);
+      currY -= (114 + Math.random() * 10);
       if (currY < 380) break;
     }
 

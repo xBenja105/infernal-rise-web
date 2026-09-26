@@ -18,11 +18,11 @@ class Player {
     this.gravity = this.baseGravity;
 
     // Fluid, Controlled Movement & Soft Air Steering
-    this.baseWalkSpeed = 2.60;
-    this.maxWalkSpeed = 2.60;
-    this.groundAccel = 0.12;  // Responsive, fluid start
+    this.baseWalkSpeed = 2.80;
+    this.maxWalkSpeed = 2.80;
+    this.groundAccel = 0.13;  // Responsive, fluid start
     this.groundDecel = 0.10;  // Gentle progressive braking
-    this.airAccel = 0.13;     // Smooth mid-air steering
+    this.airAccel = 0.15;     // Smooth mid-air steering
     this.airDecel = 0.06;     // Gentle air braking (silky, non-abrupt float)
 
     // Organic Visual Transforms (No harsh snaps)
@@ -106,8 +106,8 @@ class Player {
     this.hp = Math.min(this.hp, this.maxHp);
     const moveMult = stats ? (stats.moveSpeedMult || 1.0) : 1.0;
     this.maxWalkSpeed = this.baseWalkSpeed * moveMult;
-    this.groundAccel = 0.12 * moveMult;
-    this.airAccel = 0.13 * moveMult;
+    this.groundAccel = 0.13 * moveMult;
+    this.airAccel = 0.15 * moveMult;
     this.jumpForce = stats ? (this.baseJumpForce * stats.jumpForceMult) : this.baseJumpForce;
     this.daggerDamage = stats ? (stats.daggerDamage || 16) : 16;
     this.hasDoubleJumpUsed = false;
