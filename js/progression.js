@@ -42,7 +42,8 @@ class ProgressionManager {
     // ─── BALATRO CHIPS × MULT ENGINE ───
     this.activeJokers = [];
     this.maxJokers = 5;
-    this.lastBalatroScore = { chips: 0, mult: 1, xMult: 1, totalSouls: 0 };
+    this.lastBalatroScore = null;
+    this.balatroScoreTimeout = null;
     this.rerollCost = 15;
 
     // ─── IN-GAME ACHIEVEMENTS (LOGROS DEL AVERNO) ───
@@ -1108,6 +1109,11 @@ class ProgressionManager {
     this.runXpToNext = 30;
     this.bonkCombo = 0;
     this.bonkComboTimer = 0;
+    this.lastBalatroScore = null;
+    if (this.balatroScoreTimeout) {
+      clearTimeout(this.balatroScoreTimeout);
+      this.balatroScoreTimeout = null;
+    }
     if (window.game && window.game.resetPassiveWeapons) {
       window.game.resetPassiveWeapons();
     }
@@ -1194,6 +1200,11 @@ class ProgressionManager {
 
     this.addSouls(totalSouls);
     this.lastBalatroScore = { chips: finalChips, mult: finalMult, xMult: xMult, totalSouls: totalSouls };
+    if (this.balatroScoreTimeout) clearTimeout(this.balatroScoreTimeout);
+    this.balatroScoreTimeout = setTimeout(() => {
+      this.lastBalatroScore = null;
+      this.updateHUD();
+    }, 3500);
     this.updateHUD();
 
     return {
@@ -1406,10 +1417,15 @@ class ProgressionManager {
 
     // Tributo del Averno (Esencia × Fervor × Cólera = Almas)
     const balatroEl = document.getElementById('hud-balatro-score');
-    if (balatroEl && this.lastBalatroScore) {
-      balatroEl.classList.remove('hidden');
-      const xMultText = this.lastBalatroScore.xMult > 1.05 ? ` <span class="xmult-val">(×${this.lastBalatroScore.xMult.toFixed(1)} 🟣)</span>` : '';
-      balatroEl.innerHTML = `<span class="chips-val" title="Esencia Base">${this.lastBalatroScore.chips} 🔵</span> × <span class="mult-val" title="+Fervor">+${this.lastBalatroScore.mult} 🔴</span>${xMultText} = <b style="color:#f4d06f;" title="Almas Ganadas">+${this.lastBalatroScore.totalSouls} 🔮</b>`;
+    if (balatroEl) {
+      const isPrologue = window.game && window.game.level && window.game.level.id === 'prologue';
+      if (!isPrologue && this.lastBalatroScore && this.lastBalatroScore.totalSouls > 0) {
+        balatroEl.classList.remove('hidden');
+        const xMultText = this.lastBalatroScore.xMult > 1.05 ? ` <span class="xmult-val">(×${this.lastBalatroScore.xMult.toFixed(1)} 🟣)</span>` : '';
+        balatroEl.innerHTML = `<span class="chips-val" title="Esencia Base">${this.lastBalatroScore.chips} 🔵</span> × <span class="mult-val" title="+Fervor">+${this.lastBalatroScore.mult} 🔴</span>${xMultText} = <b style="color:#f4d06f;" title="Almas Ganadas">+${this.lastBalatroScore.totalSouls} 🔮</b>`;
+      } else {
+        balatroEl.classList.add('hidden');
+      }
     }
 
     // Arcanos del Averno Activos

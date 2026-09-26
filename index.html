@@ -46,13 +46,16 @@
             </div>
           </div>
         </div>
-
-        <!-- Dynamic Scores: Frenesí de Impactos & Tributo del Averno -->
-        <div id="hud-combo-container" class="hud-combo-wrapper">
-          <div id="hud-bonk-combo" class="hud-bonk-pill hidden">🔥 IMPACTO ×1!</div>
-          <div id="hud-balatro-score" class="hud-balatro-pill hidden" title="Tributo del Averno: Esencia 🔵 × Fervor 🔴 (×Cólera 🟣)">0 🔵 × +1 🔴</div>
-          <!-- Arcanos del Averno Activos -->
-          <div id="hud-jokers-container" class="hud-jokers-row" title="Arcanos del Averno Activos"></div>
+        <!-- Center Section: Dedicated Floor Badge & Dynamic Combat Pills below it -->
+        <div class="hud-top-center">
+          <div id="hud-floor-badge" class="hud-floor-pill"></div>
+          <!-- Dynamic Scores: Frenesí de Impactos & Tributo del Averno -->
+          <div id="hud-combo-container" class="hud-combo-wrapper">
+            <div id="hud-bonk-combo" class="hud-bonk-pill hidden">🔥 IMPACTO ×1!</div>
+            <div id="hud-balatro-score" class="hud-balatro-pill hidden" title="Tributo del Averno: Esencia 🔵 × Fervor 🔴 (×Cólera 🟣)">0 🔵 × +1 🔴</div>
+            <!-- Arcanos del Averno Activos -->
+            <div id="hud-jokers-container" class="hud-jokers-row" title="Arcanos del Averno Activos"></div>
+          </div>
         </div>
 
         <div class="hud-top-right">
@@ -683,21 +686,21 @@
       </div>
     </div>
 
-    <!-- Slot Machine Modal (Ruleta de Armas del Averno) -->
+    <!-- Slot Machine Modal (Sagrario de Armas — Forja de Almas) -->
     <div id="slot-machine-modal" class="screen-overlay hidden" style="z-index: 9500;">
       <div class="slot-machine-container">
         <div class="slot-header">
           <div class="slot-title-wrap">
-            <h2 class="game-title" style="font-size: 26px; margin: 0; color: #ffd166; text-shadow: 0 0 20px rgba(255, 209, 102, 0.8);">🎰 Ruleta de Armas del Averno</h2>
-            <div class="slot-subtitle">Paga 80 Almas y tienta al azar. ¡3 runas iguales forjan un arma inicial, y 2 coincidencias otorgan premio de consuelo!</div>
+            <h2 class="game-title" style="font-size: 26px; margin: 0; color: #ffd166; text-shadow: 0 0 20px rgba(255, 209, 102, 0.8);">⚔️ Sagrario de Armas — Forja de Almas</h2>
+            <div class="slot-subtitle">Ofrenda 80 Almas a la forja del averno. ¡Alinea 3 sellos rúnicos para manifestar un arma inicial para tu ascenso!</div>
           </div>
           <button id="btn-close-slot" class="btn-modal-close" title="Cerrar">✕</button>
         </div>
 
         <div class="slot-wallet-bar">
           <div class="slot-wallet-item"><span>🔮 Tus Almas:</span> <b id="slot-player-souls">0</b></div>
-          <div class="slot-wallet-item slot-cost-badge"><span>Costo por Giro:</span> <b>80 🔮</b></div>
-          <div class="slot-wallet-item"><span>Armas Actuales:</span> <b id="slot-current-weapons">0 equipadas</b></div>
+          <div class="slot-wallet-item slot-cost-badge"><span>Ofrenda Requerida:</span> <b>80 🔮</b></div>
+          <div class="slot-wallet-item"><span>Armas Forjadas:</span> <b id="slot-current-weapons">0 equipadas</b></div>
         </div>
 
         <!-- The Slot Machine Cabinet -->
@@ -729,7 +732,7 @@
             </div>
 
             <!-- Mechanical Lever -->
-            <div class="slot-lever-container" id="slot-lever-hitbox" title="¡Tira de la Palanca!">
+            <div class="slot-lever-container" id="slot-lever-hitbox" title="¡Accionar el Mecanismo!">
               <div class="slot-lever-base"></div>
               <div class="slot-lever-shaft" id="slot-lever-shaft">
                 <div class="slot-lever-knob"></div>
@@ -738,17 +741,17 @@
           </div>
 
           <div id="slot-status-box" class="slot-status-box">
-            Tira de la palanca o pulsa Girar para probar tu suerte (80 🔮). 3 iguales = Arma | 2 iguales = Consuelo 25 🔮
+            Acciona la palanca del relicario u ofrenda tus almas (80 🔮). 3 sellos idénticos = Arma forjada | 2 sellos = Consuelo de 25 🔮
           </div>
         </div>
 
         <div class="slot-footer-actions">
-          <button id="btn-spin-slot" class="btn-infernal btn-gold" style="font-size: 15px; padding: 12px 28px;">🎰 Girar Ruleta (80 🔮)</button>
+          <button id="btn-spin-slot" class="btn-infernal btn-gold" style="font-size: 15px; padding: 12px 28px;">⚔️ Forjar Ofrenda (80 🔮)</button>
           <button id="btn-slot-start-run" class="btn-infernal btn-secondary">Comenzar Run ➔</button>
         </div>
 
         <div class="slot-disclaimer-note">
-          ⚠️ <b>Nota de Permadeath:</b> Si mueres en la run, el arma se pierde para siempre. El uso de la ruleta es 100% opcional; puedes entrar al portal sin usarla.
+          ⚠️ <b>Nota de Permadeath:</b> Si caes en el averno, el armamento forjado se extingue. El uso del sagrario es opcional; puedes franquear el portal directamente.
         </div>
       </div>
     </div>

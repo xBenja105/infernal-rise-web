@@ -2789,42 +2789,133 @@ class SpriteManager {
   }
 
   // 6. BIOME: PROLOGUE (Santuario del Averno — Cavernas Subterráneas Muy Oscuras y Tenebrosas)
+  // 6. BIOME: PROLOGUE (Santuario del Despertar — Bóveda Gótica del Umbral Subterráneo)
   generatePrologueBg() {
     const { canvas: ch, ctx: cctx } = this.createCanvas(960, 540);
 
-    // 1. Base Pitch-Black Cavern Void
+    // 1. Deep Abyssal Obsidian & Void Gradient
     const caveGrad = cctx.createLinearGradient(0, 0, 0, 540);
-    caveGrad.addColorStop(0, '#020104');
-    caveGrad.addColorStop(0.35, '#040308');
-    caveGrad.addColorStop(0.70, '#090712');
-    caveGrad.addColorStop(1, '#0e0b1c');
+    caveGrad.addColorStop(0, '#030206');
+    caveGrad.addColorStop(0.35, '#06040b');
+    caveGrad.addColorStop(0.70, '#0d0918');
+    caveGrad.addColorStop(1, '#140c22');
     cctx.fillStyle = caveGrad;
     cctx.fillRect(0, 0, 960, 540);
 
-    // 2. Subterranean Basalt Strata & Textured Rock Fissures
-    cctx.fillStyle = 'rgba(16, 12, 28, 0.6)';
-    for (let y = 60; y < 500; y += 36) {
+    // 2. Distant Gothic Ashlar Masonry Wall (Ancient underground cathedral blocks)
+    cctx.strokeStyle = 'rgba(28, 19, 44, 0.45)';
+    cctx.lineWidth = 1;
+    const rowH = 26;
+    for (let y = 30; y < 490; y += rowH) {
       cctx.beginPath();
       cctx.moveTo(0, y);
-      for (let x = 0; x <= 960; x += 40) {
-        const jagged = (Math.sin(x * 0.05 + y * 0.08) * 8) + ((x * 13 + y * 17) % 7);
-        cctx.lineTo(x, y + jagged);
+      cctx.lineTo(960, y);
+      cctx.stroke();
+
+      const isOdd = Math.floor(y / rowH) % 2 === 1;
+      const blockW = 68;
+      const startX = isOdd ? (blockW / 2) : 0;
+      for (let x = startX; x < 960; x += blockW) {
+        cctx.beginPath();
+        cctx.moveTo(x, y);
+        cctx.lineTo(x, y + rowH);
+        cctx.stroke();
+
+        // Subtle block shading variation
+        if ((x + y) % 3 === 0) {
+          cctx.fillStyle = 'rgba(18, 12, 28, 0.22)';
+          cctx.fillRect(x + 1, y + 1, blockW - 2, rowH - 2);
+        }
       }
-      cctx.lineTo(960, y + 24);
-      cctx.lineTo(0, y + 24);
+    }
+
+    // 3. Majestic Gothic Ribbed Vault Arches (Crucería Gótica) spanning the ceiling
+    const archCount = 5;
+    const archSpacing = 960 / archCount;
+    for (let a = 0; a < archCount; a++) {
+      const centerX = (a + 0.5) * archSpacing;
+      const archSpan = archSpacing * 0.96;
+
+      // Dark shadow recess behind arch
+      cctx.fillStyle = 'rgba(2, 1, 4, 0.7)';
+      cctx.beginPath();
+      cctx.moveTo(centerX - archSpan / 2, 240);
+      cctx.quadraticCurveTo(centerX - archSpan / 4, 45, centerX, 35);
+      cctx.quadraticCurveTo(centerX + archSpan / 4, 45, centerX + archSpan / 2, 240);
       cctx.closePath();
+      cctx.fill();
+
+      // Stone Moulding Ribs (Arco ojival de sillería)
+      cctx.strokeStyle = '#181224';
+      cctx.lineWidth = 10;
+      cctx.beginPath();
+      cctx.moveTo(centerX - archSpan / 2, 240);
+      cctx.quadraticCurveTo(centerX - archSpan / 4, 45, centerX, 35);
+      cctx.quadraticCurveTo(centerX + archSpan / 4, 45, centerX + archSpan / 2, 240);
+      cctx.stroke();
+
+      // Inner stone highlight line
+      cctx.strokeStyle = 'rgba(92, 64, 133, 0.35)';
+      cctx.lineWidth = 2;
+      cctx.beginPath();
+      cctx.moveTo(centerX - archSpan / 2, 240);
+      cctx.quadraticCurveTo(centerX - archSpan / 4, 45, centerX, 35);
+      cctx.quadraticCurveTo(centerX + archSpan / 4, 45, centerX + archSpan / 2, 240);
+      cctx.stroke();
+
+      // Carved Gothic Keystone at apex of arch
+      cctx.fillStyle = '#221a33';
+      cctx.strokeStyle = '#432f63';
+      cctx.lineWidth = 1.5;
+      cctx.fillRect(centerX - 9, 28, 18, 22);
+      cctx.strokeRect(centerX - 9, 28, 18, 22);
+
+      // Keystone relief gem
+      cctx.fillStyle = '#7b2cbf';
+      cctx.beginPath();
+      cctx.arc(centerX, 39, 3.5, 0, Math.PI * 2);
       cctx.fill();
     }
 
-    // 3. Eerie Spectral Purple Veins in Deep Rock Fractures
-    cctx.strokeStyle = 'rgba(147, 51, 234, 0.15)';
-    cctx.lineWidth = 1.5;
+    // 4. Clustered Gothic Wall Piers (Pilares Fasciculados de Piedra) between arches
+    for (let p = 0; p <= archCount; p++) {
+      const px = p * archSpacing;
+      // Shadow behind pier
+      cctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      cctx.fillRect(px - 16, 30, 32, 450);
+
+      // Pier body
+      cctx.fillStyle = '#120d1c';
+      cctx.fillRect(px - 12, 35, 24, 445);
+
+      // Fluted shaft columns
+      cctx.fillStyle = '#1c152a';
+      cctx.fillRect(px - 10, 35, 6, 445);
+      cctx.fillRect(px + 4, 35, 6, 445);
+
+      // Pier Capital (Capitel gótico moldurado)
+      cctx.fillStyle = '#261c38';
+      cctx.strokeStyle = '#4d3772';
+      cctx.lineWidth = 1;
+      cctx.fillRect(px - 18, 210, 36, 14);
+      cctx.strokeRect(px - 18, 210, 36, 14);
+      cctx.fillRect(px - 15, 224, 30, 8);
+      cctx.strokeRect(px - 15, 224, 30, 8);
+
+      // Pier Base Plinth
+      cctx.fillStyle = '#1e162c';
+      cctx.fillRect(px - 18, 460, 36, 20);
+      cctx.strokeRect(px - 18, 460, 36, 20);
+    }
+
+    // 5. Subtle Ethereal Abyssal Veins in Deep Bedrock (Smooth organic fissures, NO Unicode letters)
+    cctx.strokeStyle = 'rgba(168, 85, 247, 0.18)';
+    cctx.lineWidth = 1.2;
     const fissureSpans = [
-      [[80, 110], [130, 180], [150, 260], [120, 340]],
-      [[260, 90], [290, 160], [330, 240]],
-      [[440, 80], [470, 150], [500, 210], [530, 310]],
-      [[640, 120], [670, 190], [700, 270]],
-      [[810, 90], [840, 170], [870, 280], [850, 360]]
+      [[90, 260], [130, 300], [160, 360], [140, 420]],
+      [[310, 240], [335, 290], [320, 350], [350, 410]],
+      [[610, 250], [640, 310], [625, 370], [655, 430]],
+      [[830, 260], [860, 320], [845, 380], [870, 435]]
     ];
     for (const line of fissureSpans) {
       cctx.beginPath();
@@ -2835,126 +2926,42 @@ class SpriteManager {
       cctx.stroke();
     }
 
-    // 4. Stalactites Hanging from High Cavern Vault (3 Staggered Depths)
-    const drawStalactites = (pts, fillCol, hiCol) => {
-      for (const [x, w, h] of pts) {
-        cctx.fillStyle = fillCol;
-        cctx.beginPath();
-        cctx.moveTo(x - w / 2, 0);
-        cctx.lineTo(x + w / 2, 0);
-        cctx.lineTo(x + (Math.sin(x) * 3), h);
-        cctx.closePath();
-        cctx.fill();
+    // 6. Natural Subterranean Vault Arch Trim on Ceiling (Gentle stone trim, no spikes)
+    cctx.fillStyle = '#080510';
+    cctx.fillRect(0, 0, 960, 26);
+    cctx.strokeStyle = '#221834';
+    cctx.lineWidth = 2;
+    cctx.beginPath();
+    cctx.moveTo(0, 26);
+    cctx.lineTo(960, 26);
+    cctx.stroke();
 
-        if (hiCol) {
-          cctx.strokeStyle = hiCol;
-          cctx.lineWidth = 1;
-          cctx.beginPath();
-          cctx.moveTo(x, 0);
-          cctx.lineTo(x + (Math.sin(x) * 3), h);
-          cctx.stroke();
-        }
-      }
-    };
-
-    // Far stalactites
-    drawStalactites([
-      [40, 24, 80], [90, 30, 110], [140, 20, 70], [190, 32, 130],
-      [250, 26, 95], [310, 36, 140], [370, 24, 85], [430, 32, 120],
-      [500, 30, 135], [560, 22, 75], [620, 34, 145], [680, 26, 90],
-      [740, 36, 130], [800, 22, 80], [860, 32, 115], [920, 28, 100]
-    ], '#0a0815', null);
-
-    // Mid stalactites
-    drawStalactites([
-      [65, 32, 135], [165, 42, 175], [280, 38, 160], [395, 46, 190],
-      [480, 52, 210], [580, 40, 165], [710, 48, 185], [830, 38, 150], [895, 34, 140]
-    ], '#130f24', '#261e40');
-
-    // Foreground Massive Sharp Stalactite Teeth
-    const foreStalactites = [
-      [115, 48, 190], [340, 54, 230], [640, 50, 220], [775, 46, 195]
-    ];
-    drawStalactites(foreStalactites, '#1a1430', '#3b2d5c');
-
-    // Glistening Water Drops at Stalactite Tips
-    cctx.fillStyle = 'rgba(192, 132, 252, 0.7)';
-    for (const [sx, , sh] of foreStalactites) {
-      cctx.beginPath();
-      cctx.arc(sx, sh + 3, 2.5, 0, Math.PI * 2);
-      cctx.fill();
-    }
-
-    // 5. Ancient Abyssal Carved Glyphs / Runes in the Cavern Face
-    cctx.save();
-    cctx.shadowColor = 'rgba(168, 85, 247, 0.7)';
-    cctx.shadowBlur = 10;
-    cctx.fillStyle = 'rgba(216, 180, 254, 0.38)';
-    cctx.font = 'bold 15px sans-serif';
-    cctx.textAlign = 'center';
-    const runes = [
-      ['ᛉ', 200, 340], ['ᛏ', 235, 325], ['ᚱ', 270, 340],
-      ['ᚦ', 450, 270], ['ᛟ', 480, 250], ['ᛗ', 510, 270],
-      ['ᚲ', 750, 310], ['ᚺ', 785, 295], ['ᛋ', 820, 310]
-    ];
-    for (const [r, rx, ry] of runes) {
-      cctx.fillText(r, rx, ry);
-    }
-    cctx.restore();
-
-    // 6. Ground Stalagmites & Jagged Rock Spires Rising Behind Platforms
-    const drawStalagmites = (pts, col) => {
-      for (const [x, w, h] of pts) {
-        cctx.fillStyle = col;
-        cctx.beginPath();
-        cctx.moveTo(x - w / 2, 480);
-        cctx.lineTo(x + w / 2, 480);
-        cctx.lineTo(x, 480 - h);
-        cctx.closePath();
-        cctx.fill();
-      }
-    };
-    drawStalagmites([
-      [90, 26, 65], [140, 20, 45], [315, 30, 80],
-      [640, 28, 75], [710, 24, 55], [875, 32, 90]
-    ], '#100d1e');
-
-    // 7. Dense Cavern Ground Mist / Abyssal Fog Hugging the Floor
-    const mistGrad = cctx.createLinearGradient(0, 390, 0, 500);
+    // 7. Dense Volumetric Abyssal Floor Fog
+    const mistGrad = cctx.createLinearGradient(0, 370, 0, 480);
     mistGrad.addColorStop(0, 'rgba(109, 40, 217, 0)');
-    mistGrad.addColorStop(0.5, 'rgba(88, 28, 135, 0.22)');
-    mistGrad.addColorStop(1, 'rgba(15, 7, 26, 0.55)');
+    mistGrad.addColorStop(0.45, 'rgba(76, 29, 149, 0.20)');
+    mistGrad.addColorStop(0.85, 'rgba(46, 16, 101, 0.45)');
+    mistGrad.addColorStop(1, 'rgba(15, 6, 28, 0.75)');
     cctx.fillStyle = mistGrad;
-    cctx.fillRect(0, 390, 960, 110);
+    cctx.fillRect(0, 370, 960, 110);
 
-    // 8. Natural Jagged Cavern Wall Framing (Left & Right)
-    const drawCavernWall = (isRight) => {
-      cctx.fillStyle = '#080610';
-      cctx.beginPath();
-      const startX = isRight ? 960 : 0;
-      const targetEdge = isRight ? 920 : 40;
-      cctx.moveTo(startX, 0);
-      cctx.lineTo(targetEdge, 0);
-      for (let y = 30; y <= 540; y += 30) {
-        const curve = targetEdge + (Math.sin(y * 0.08) * 12) + (isRight ? -4 : 4);
-        cctx.lineTo(curve, y);
-      }
-      cctx.lineTo(startX, 540);
-      cctx.closePath();
-      cctx.fill();
+    // 8. Heavy Gothic Wall Frames on Left & Right Margins
+    const drawSideButtress = (isRight) => {
+      const bx = isRight ? 918 : 0;
+      cctx.fillStyle = '#0a0714';
+      cctx.fillRect(bx, 0, 42, 480);
 
-      // Rock strata highlights
-      cctx.strokeStyle = '#1c162e';
-      cctx.lineWidth = 2;
-      cctx.beginPath();
-      for (let y = 50; y < 500; y += 60) {
-        cctx.moveTo(targetEdge - (isRight ? -10 : 10), y);
-        cctx.lineTo(targetEdge + (isRight ? 18 : -18), y + 16);
+      cctx.fillStyle = '#140e24';
+      cctx.fillRect(isRight ? bx : 28, 0, 14, 480);
+
+      cctx.strokeStyle = '#2c1e48';
+      cctx.lineWidth = 1.5;
+      for (let y = 30; y < 480; y += 45) {
+        cctx.strokeRect(bx + 4, y, 34, 40);
       }
-      cctx.stroke();
     };
-    drawCavernWall(false);
-    drawCavernWall(true);
+    drawSideButtress(false);
+    drawSideButtress(true);
 
     return { cathedralHall: ch, skySpires: ch, magmaPeaks: ch, cavernHall: ch, towerArch: null };
   }

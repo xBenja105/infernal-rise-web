@@ -1296,6 +1296,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
     if (window.progression) window.progression.updateHUD();
     if (this.passiveWeaponsManager) this.passiveWeaponsManager.updateHUD();
+    this.drawTowerFloorBadge();
     const defeatBanner = document.getElementById('boss-defeat-banner');
     if (defeatBanner) {
       defeatBanner.classList.add('hidden');
@@ -2495,7 +2496,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       ) < 75 && this.state !== 'DIALOGUE') {
       this.nearSlotMachine = true;
       this.ui.interactionBadge.style.display = 'block';
-      this.ui.interactionBadge.textContent = `🎰 ${btnKey} Ruleta de Armas (80 🔮)`;
+      this.ui.interactionBadge.textContent = `⚔️ ${btnKey} Sagrario de Armas (80 🔮)`;
       const screenX = ((this.level.slotMachine.x + this.level.slotMachine.w / 2 - this.camX) / this.vWidth) * 100;
       const screenY = ((this.level.slotMachine.y - 18 - this.camY) / this.vHeight) * 100;
       this.ui.interactionBadge.style.left = `${screenX}%`;
@@ -2837,38 +2838,16 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
   }
 
   drawTowerFloorBadge() {
-    this.ctx.save();
-    const text = this.level.towerFloor || this.level.danteCircle;
-    if (!text) {
-      this.ctx.restore();
-      return;
+    const text = (this.level && (this.level.towerFloor || this.level.danteCircle)) || '';
+    const floorBadgeEl = document.getElementById('hud-floor-badge');
+    if (floorBadgeEl) {
+      if (text && this.state === 'PLAYING') {
+        if (floorBadgeEl.textContent !== text) floorBadgeEl.textContent = text;
+        floorBadgeEl.classList.remove('hidden');
+      } else {
+        floorBadgeEl.classList.add('hidden');
+      }
     }
-    this.ctx.font = 'bold 11px "Cinzel", "Crimson Text", serif, sans-serif';
-    const textMetrics = this.ctx.measureText(text);
-    const boxW = textMetrics.width + 28;
-    const boxH = 24;
-    const boxX = (this.vWidth - boxW) / 2;
-    const boxY = 12;
-
-    // Dark gothic translucent pill
-    this.ctx.fillStyle = 'rgba(10, 4, 12, 0.78)';
-    this.ctx.strokeStyle = 'rgba(218, 165, 32, 0.6)';
-    this.ctx.lineWidth = 1;
-    this.ctx.beginPath();
-    if (this.ctx.roundRect) {
-      this.ctx.roundRect(boxX, boxY, boxW, boxH, 6);
-    } else {
-      this.ctx.rect(boxX, boxY, boxW, boxH);
-    }
-    this.ctx.fill();
-    this.ctx.stroke();
-
-    // Runic golden label
-    this.ctx.fillStyle = '#f8df8c';
-    this.ctx.textAlign = 'center';
-    this.ctx.textBaseline = 'middle';
-    this.ctx.fillText(text, this.vWidth / 2, boxY + boxH / 2);
-    this.ctx.restore();
   }
 
   drawDanteCircleBadge() {
@@ -4334,16 +4313,17 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     this.ctx.shadowColor = '#c77dff';
     this.ctx.shadowBlur = 10 * runeGlow;
     this.ctx.fillStyle = `rgba(199, 125, 255, ${0.4 + runeGlow * 0.5})`;
-    this.ctx.font = 'bold 9px sans-serif';
-    this.ctx.fillText('ᚱ', rx + 7, ry + 36);
-    this.ctx.fillText('ᛟ', rx + 7, ry + 52);
-    this.ctx.fillText('ᛏ', rx + w - 13, ry + 36);
-    this.ctx.fillText('ᛉ', rx + w - 13, ry + 52);
+    this.ctx.font = 'bold 9px Cinzel, serif';
+    this.ctx.textAlign = 'center';
+    this.ctx.fillText('I', rx + 10, ry + 36);
+    this.ctx.fillText('V', rx + 10, ry + 52);
+    this.ctx.fillText('X', rx + w - 10, ry + 36);
+    this.ctx.fillText('IX', rx + w - 10, ry + 52);
 
-    // Rune inscription along central plinth
+    // Inscription along central plinth
     this.ctx.fillStyle = `rgba(255, 215, 0, ${0.4 + runeGlow * 0.4})`;
     this.ctx.shadowColor = '#ffd700';
-    this.ctx.fillText('✧ ᚱ ᛖ ᛞ ᛖ ᛗ ᛈ ᛏ ᛁ ᛟ ✧', rx + w / 2 - 42, ry + h - 26);
+    this.ctx.fillText('✧ REDEMPTIO ✧', rx + w / 2, ry + h - 26);
     this.ctx.restore();
 
     // 3. Floating Soul Nexus / Core Orb levitating above the altar slab
@@ -4379,18 +4359,18 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       window.particleSystem.spawnTeleportSparks(sanctuary.x + w / 2 + (Math.random() - 0.5) * 20, sanctuary.y + 26);
     }
 
-    // 4. Overhead Golden Arch / Torii Crest with Torches
+    // 4. Overhead Carved Arch
     this.ctx.fillStyle = '#ffb703';
     this.ctx.fillRect(rx + 2, ry + 8, w - 4, 6);
 
     // Label Plate
     this.ctx.save();
-    this.ctx.font = 'bold 11px MedievalSharp, Cinzel, serif';
+    this.ctx.font = 'bold 11px Cinzel, serif';
     this.ctx.textAlign = 'center';
     this.ctx.fillStyle = '#ffd166';
     this.ctx.shadowColor = '#000000';
     this.ctx.shadowBlur = 4;
-    this.ctx.fillText('⛩️ SANTUARIO DE ALMAS', rx + w / 2, ry - 6);
+    this.ctx.fillText('SANTUARIO DE ALMAS', rx + w / 2, ry - 6);
     this.ctx.restore();
 
     this.ctx.restore();
@@ -4399,113 +4379,140 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
   drawSlotMachine(sm, camX, camY) {
     const rx = Math.round(sm.x - camX);
     const ry = Math.round(sm.y - camY);
-    const w = sm.w || 60;
-    const h = sm.h || 70;
-    const time = Date.now() / 250;
+    const w = sm.w || 64;
+    const h = sm.h || 80;
+    const time = Date.now() / 300;
 
     this.ctx.save();
 
-    // 1. Shadow beneath cabinet
-    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    this.ctx.fillRect(rx - 4, ry + h - 6, w + 8, 8);
-
-    // 2. Main Outer Cabinet (Iron chassis with gothic red/gold borders)
-    const cabGrad = this.ctx.createLinearGradient(rx, ry, rx + w, ry + h);
-    cabGrad.addColorStop(0, '#2b1224');
-    cabGrad.addColorStop(0.5, '#170814');
-    cabGrad.addColorStop(1, '#0c040a');
-    this.ctx.fillStyle = cabGrad;
-    this.ctx.fillRect(rx, ry, w, h);
-
-    this.ctx.strokeStyle = '#ffd166';
-    this.ctx.lineWidth = 1.8;
-    this.ctx.strokeRect(rx, ry, w, h);
-
-    // Demon horn crests on top left & right
-    this.ctx.fillStyle = '#ff4d6d';
+    // 1. Ambient Dark Forge Ember Halo
+    const halo = this.ctx.createRadialGradient(
+      rx + w / 2, ry + h / 2, 6,
+      rx + w / 2, ry + h / 2, 55 + Math.sin(time) * 4
+    );
+    halo.addColorStop(0, 'rgba(255, 69, 0, 0.35)');
+    halo.addColorStop(0.5, 'rgba(138, 43, 226, 0.18)');
+    halo.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    this.ctx.fillStyle = halo;
     this.ctx.beginPath();
-    this.ctx.moveTo(rx, ry);
-    this.ctx.lineTo(rx - 6, ry - 10);
-    this.ctx.lineTo(rx + 8, ry);
+    this.ctx.arc(rx + w / 2, ry + h / 2, 60, 0, Math.PI * 2);
     this.ctx.fill();
 
-    this.ctx.beginPath();
-    this.ctx.moveTo(rx + w, ry);
-    this.ctx.lineTo(rx + w + 6, ry - 10);
-    this.ctx.lineTo(rx + w - 8, ry);
-    this.ctx.fill();
+    // 2. Stepped Obsidian Base Plinth
+    this.ctx.fillStyle = '#110b18';
+    this.ctx.strokeStyle = '#3d254c';
+    this.ctx.lineWidth = 1.5;
+    this.ctx.fillRect(rx - 6, ry + h - 14, w + 12, 14);
+    this.ctx.strokeRect(rx - 6, ry + h - 14, w + 12, 14);
 
-    // 3. Glowing Marquee Sign on Top
-    const pulse = 0.65 + Math.sin(time * 2.0) * 0.35;
-    this.ctx.fillStyle = `rgba(255, 183, 3, ${pulse})`;
-    this.ctx.fillRect(rx + 4, ry + 4, w - 8, 12);
-    this.ctx.fillStyle = '#100508';
-    this.ctx.font = 'bold 8px Cinzel, MedievalSharp, sans-serif';
-    this.ctx.textAlign = 'center';
-    this.ctx.fillText('🎰 RULETA', rx + w / 2, ry + 13);
+    this.ctx.fillStyle = '#1c1326';
+    this.ctx.fillRect(rx - 2, ry + h - 24, w + 4, 10);
+    this.ctx.strokeRect(rx - 2, ry + h - 24, w + 4, 10);
 
-    // 4. Three Reel Windows
-    const reelW = 12;
-    const reelH = 22;
-    const reelY = ry + 22;
-    const spacing = (w - 8 - (reelW * 3)) / 4;
+    // 3. Forged Iron Reliquary Chassis
+    const chassisGrad = this.ctx.createLinearGradient(rx, ry, rx + w, ry + h);
+    chassisGrad.addColorStop(0, '#1c1220');
+    chassisGrad.addColorStop(0.5, '#281a30');
+    chassisGrad.addColorStop(1, '#0e0814');
+    this.ctx.fillStyle = chassisGrad;
+    this.ctx.fillRect(rx, ry + 12, w, h - 36);
 
-    const icons = ['✝️', '☄️', '⚡'];
-    for (let i = 0; i < 3; i++) {
-      const reelX = rx + 4 + spacing + i * (reelW + spacing);
-      this.ctx.fillStyle = '#060208';
-      this.ctx.fillRect(reelX, reelY, reelW, reelH);
-      this.ctx.strokeStyle = 'rgba(255, 209, 102, 0.6)';
-      this.ctx.lineWidth = 1;
-      this.ctx.strokeRect(reelX, reelY, reelW, reelH);
-
-      // Icon preview
-      this.ctx.font = '9px sans-serif';
-      this.ctx.textAlign = 'center';
-      this.ctx.fillText(icons[i], reelX + reelW / 2, reelY + 15);
-    }
-
-    // 5. Coin insert & Paytable Tray
-    this.ctx.fillStyle = '#1a0d16';
-    this.ctx.fillRect(rx + 8, ry + 48, w - 16, 10);
-    this.ctx.strokeStyle = '#ffb703';
-    this.ctx.lineWidth = 1;
-    this.ctx.strokeRect(rx + 8, ry + 48, w - 16, 10);
-
-    // Coin slot
-    this.ctx.fillStyle = '#ffd166';
-    this.ctx.fillRect(rx + w / 2 - 6, ry + 51, 12, 3);
-
-    // 6. Mechanical Lever on the Right
     this.ctx.strokeStyle = '#d4af37';
+    this.ctx.lineWidth = 1.5;
+    this.ctx.strokeRect(rx, ry + 12, w, h - 36);
+
+    // 4. Twin Flanking Wrought-Iron Pillars
+    this.ctx.fillStyle = '#140c1a';
+    this.ctx.fillRect(rx - 2, ry + 8, 8, h - 32);
+    this.ctx.strokeRect(rx - 2, ry + 8, 8, h - 32);
+    this.ctx.fillRect(rx + w - 6, ry + 8, 8, h - 32);
+    this.ctx.strokeRect(rx + w - 6, ry + 8, 8, h - 32);
+
+    // Twin Miniature Braziers on pillar heads
+    const emberColor = Math.sin(time * 3) > 0 ? '#ff5722' : '#ff9100';
+    this.ctx.fillStyle = emberColor;
+    this.ctx.beginPath();
+    this.ctx.arc(rx + 2, ry + 5, 3.5, 0, Math.PI * 2);
+    this.ctx.fill();
+    this.ctx.beginPath();
+    this.ctx.arc(rx + w - 2, ry + 5, 3.5, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    // 5. Central Reliquary Alcove (Containing levitating spectral weapon sigil)
+    const alcoveW = w - 20;
+    const alcoveH = h - 48;
+    const alcoveX = rx + 10;
+    const alcoveY = ry + 18;
+
+    this.ctx.fillStyle = '#06020a';
+    this.ctx.fillRect(alcoveX, alcoveY, alcoveW, alcoveH);
+    this.ctx.strokeStyle = 'rgba(212, 175, 55, 0.4)';
+    this.ctx.lineWidth = 1;
+    this.ctx.strokeRect(alcoveX, alcoveY, alcoveW, alcoveH);
+
+    // Levitating Spectral Blade in Alcove
+    const weaponBob = Math.sin(time * 2.5) * 3;
+    const swordX = alcoveX + alcoveW / 2;
+    const swordY = alcoveY + alcoveH / 2 + weaponBob;
+
+    this.ctx.save();
+    // Glowing weapon aura
+    const swordAura = this.ctx.createRadialGradient(swordX, swordY, 2, swordX, swordY, 14);
+    swordAura.addColorStop(0, 'rgba(255, 215, 0, 0.7)');
+    swordAura.addColorStop(0.6, 'rgba(157, 78, 221, 0.4)');
+    swordAura.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    this.ctx.fillStyle = swordAura;
+    this.ctx.beginPath();
+    this.ctx.arc(swordX, swordY, 14, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    // Drawn Blade
+    this.ctx.strokeStyle = '#ffffff';
     this.ctx.lineWidth = 2.5;
     this.ctx.beginPath();
-    this.ctx.moveTo(rx + w, ry + 36);
-    this.ctx.lineTo(rx + w + 8, ry + 22);
+    this.ctx.moveTo(swordX, swordY - 11);
+    this.ctx.lineTo(swordX, swordY + 6);
     this.ctx.stroke();
 
-    // Lever red knob
-    this.ctx.fillStyle = '#ff0054';
+    // Crossguard & pommel
+    this.ctx.strokeStyle = '#ffd700';
+    this.ctx.lineWidth = 2;
     this.ctx.beginPath();
-    this.ctx.arc(rx + w + 8, ry + 20, 4.5, 0, Math.PI * 2);
-    this.ctx.fill();
-    this.ctx.strokeStyle = '#ffd166';
-    this.ctx.lineWidth = 1;
+    this.ctx.moveTo(swordX - 5, swordY + 2);
+    this.ctx.lineTo(swordX + 5, swordY + 2);
     this.ctx.stroke();
 
-    // 7. Base Plinth
-    this.ctx.fillStyle = '#220b18';
-    this.ctx.fillRect(rx - 2, ry + h - 8, w + 4, 8);
-    this.ctx.strokeStyle = '#4a1520';
-    this.ctx.strokeRect(rx - 2, ry + h - 8, w + 4, 8);
+    this.ctx.fillStyle = '#ffd700';
+    this.ctx.beginPath();
+    this.ctx.arc(swordX, swordY + 8, 1.8, 0, Math.PI * 2);
+    this.ctx.fill();
+    this.ctx.restore();
 
-    // 8. Overhead label plate
+    // 6. Inscribed Gothic Offering Plaque at Bottom
+    this.ctx.fillStyle = '#120a1a';
+    this.ctx.fillRect(rx + 6, ry + h - 22, w - 12, 9);
+    this.ctx.strokeStyle = '#d4af37';
+    this.ctx.lineWidth = 0.8;
+    this.ctx.strokeRect(rx + 6, ry + h - 22, w - 12, 9);
+
+    this.ctx.fillStyle = '#ffd700';
+    this.ctx.font = 'bold 7px Cinzel, serif';
+    this.ctx.textAlign = 'center';
+    this.ctx.fillText('80 🔮 OFRENDA', rx + w / 2, ry + h - 15);
+
+    // 7. Overhead Gothic Crest & Label
+    this.ctx.fillStyle = '#2b1b38';
+    this.ctx.strokeStyle = '#d4af37';
+    this.ctx.lineWidth = 1;
+    this.ctx.fillRect(rx + 4, ry - 1, w - 8, 12);
+    this.ctx.strokeRect(rx + 4, ry - 1, w - 8, 12);
+
     this.ctx.font = 'bold 9px Cinzel, serif';
     this.ctx.textAlign = 'center';
     this.ctx.fillStyle = '#ffd166';
-    this.ctx.shadowColor = '#000';
+    this.ctx.shadowColor = '#000000';
     this.ctx.shadowBlur = 4;
-    this.ctx.fillText('Ruleta de Armas', rx + w / 2, ry - 14);
+    this.ctx.fillText('SAGRARIO DE ARMAS', rx + w / 2, ry - 8);
 
     this.ctx.restore();
   }
@@ -4518,30 +4525,82 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     const pulse = Math.sin(time) * 4;
 
     this.ctx.save();
-    // Swirling portal aura
-    const grad = this.ctx.createRadialGradient(
-      rx + portal.w / 2, ry + portal.h / 2, 5,
-      rx + portal.w / 2, ry + portal.h / 2, portal.w + pulse
+    // Portal background ethereal aura
+    const auraGrad = this.ctx.createRadialGradient(
+      rx + portal.w / 2, ry + portal.h / 2, 8,
+      rx + portal.w / 2, ry + portal.h / 2, portal.w * 0.85 + pulse
     );
-    grad.addColorStop(0, '#ff1a35');
-    grad.addColorStop(0.5, '#6a0dad');
-    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-
-    this.ctx.fillStyle = grad;
+    auraGrad.addColorStop(0, 'rgba(255, 45, 0, 0.45)');
+    auraGrad.addColorStop(0.45, 'rgba(123, 44, 191, 0.35)');
+    auraGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    this.ctx.fillStyle = auraGrad;
     this.ctx.beginPath();
-    this.ctx.arc(rx + portal.w / 2, ry + portal.h / 2, portal.w + pulse, 0, Math.PI * 2);
+    this.ctx.arc(rx + portal.w / 2, ry + portal.h / 2, portal.w * 0.85 + pulse, 0, Math.PI * 2);
     this.ctx.fill();
 
-    // Portal arch stones
+    // Portal inner arch void & vortex
+    this.ctx.save();
+    this.ctx.beginPath();
+    // Pointed gothic arch aperture
+    const archRadius = portal.w / 2 - 8;
+    this.ctx.moveTo(rx + 8, ry + portal.h);
+    this.ctx.lineTo(rx + 8, ry + archRadius + 14);
+    this.ctx.arc(rx + portal.w / 2, ry + archRadius + 14, archRadius, Math.PI, 0);
+    this.ctx.lineTo(rx + portal.w - 8, ry + portal.h);
+    this.ctx.closePath();
+    this.ctx.clip();
+
+    const vortexGrad = this.ctx.createRadialGradient(
+      rx + portal.w / 2, ry + portal.h / 2, 4,
+      rx + portal.w / 2, ry + portal.h / 2, portal.w * 0.7
+    );
+    vortexGrad.addColorStop(0, '#ff3b00');
+    vortexGrad.addColorStop(0.35, '#7b2cbf');
+    vortexGrad.addColorStop(0.75, '#190a2a');
+    vortexGrad.addColorStop(1, '#050208');
+    this.ctx.fillStyle = vortexGrad;
+    this.ctx.fillRect(rx, ry, portal.w, portal.h);
+
+    // Swirling concentric vortex rings
+    for (let r = 0; r < 3; r++) {
+      const ringRot = time * (r % 2 === 0 ? 1.2 : -1.2) + r * 1.5;
+      this.ctx.strokeStyle = r === 0 ? 'rgba(255, 140, 0, 0.65)' : (r === 1 ? 'rgba(192, 132, 252, 0.55)' : 'rgba(255, 215, 0, 0.45)');
+      this.ctx.lineWidth = 1.8;
+      this.ctx.beginPath();
+      this.ctx.ellipse(rx + portal.w / 2, ry + portal.h / 2 + 5, (portal.w / 2 - 14) * (0.35 + r * 0.3), (portal.h / 2 - 18) * (0.35 + r * 0.3), ringRot, 0, Math.PI * 2);
+      this.ctx.stroke();
+    }
+    this.ctx.restore();
+
+    // Carved Gothic Stone Arch Jambs and Keystone
+    this.ctx.fillStyle = '#1c1426';
     this.ctx.strokeStyle = '#d4af37';
-    this.ctx.lineWidth = 3;
-    this.ctx.strokeRect(rx, ry, portal.w, portal.h);
+    this.ctx.lineWidth = 2;
+
+    // Left stone jamb
+    this.ctx.fillRect(rx, ry + archRadius + 6, 8, portal.h - (archRadius + 6));
+    this.ctx.strokeRect(rx, ry + archRadius + 6, 8, portal.h - (archRadius + 6));
+    // Right stone jamb
+    this.ctx.fillRect(rx + portal.w - 8, ry + archRadius + 6, 8, portal.h - (archRadius + 6));
+    this.ctx.strokeRect(rx + portal.w - 8, ry + archRadius + 6, 8, portal.h - (archRadius + 6));
+
+    // Arch header moulding
+    this.ctx.beginPath();
+    this.ctx.arc(rx + portal.w / 2, ry + archRadius + 14, archRadius + 4, Math.PI, 0);
+    this.ctx.stroke();
+
+    // Keystone at apex
+    this.ctx.fillStyle = '#2d1e3d';
+    this.ctx.fillRect(rx + portal.w / 2 - 8, ry + 2, 16, 14);
+    this.ctx.strokeRect(rx + portal.w / 2 - 8, ry + 2, 16, 14);
 
     // Label
-    this.ctx.font = '14px MedievalSharp';
-    this.ctx.fillStyle = '#f4d06f';
+    this.ctx.font = 'bold 12px Cinzel, serif';
+    this.ctx.fillStyle = '#f8df8c';
+    this.ctx.shadowColor = '#000000';
+    this.ctx.shadowBlur = 4;
     this.ctx.textAlign = 'center';
-    this.ctx.fillText(portal.label, rx + portal.w / 2, ry - 10);
+    this.ctx.fillText(portal.label, rx + portal.w / 2, ry - 14);
     this.ctx.restore();
   }
 

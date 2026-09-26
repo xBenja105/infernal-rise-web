@@ -44,12 +44,12 @@ class LevelManager {
   createPrologueLevel() {
     return {
       id: 'prologue',
-      name: 'Refugio del Inframundo — Cavernas Tenebrosas',
-      danteCircle: 'Cavernas Profundas — Base de la Gran Torre',
+      name: 'Santuario del Despertar — Umbral del Inframundo',
+      danteCircle: 'Santuario del Despertar — Umbral del Averno',
       biome: 'prologue',
       width: 960,
       height: 540,
-      spawn: { x: 75, y: 442 },
+      spawn: { x: 85, y: 442 },
       isCombatScene: false,
       musicTrack: 'lobby',
       ambientRain: false,
@@ -60,19 +60,19 @@ class LevelManager {
         // Cavern Natural Stone Boundary Walls
         { x: 0, y: 0, w: 24, h: 480, type: 'cavern_stone' },
         { x: 936, y: 0, w: 24, h: 480, type: 'cavern_stone' },
-        // Ceiling Hanging Rock Beam
+        // Ceiling Hanging Vault Trim
         { x: 0, y: 0, w: 960, h: 22, type: 'cavern_stone' },
 
-        // 1. Ruleta de las Armas — Left Rock Dais
-        { x: 160, y: 460, w: 140, h: 20, type: 'cavern_stone' },
+        // 1. Sagrario de las Armas — Left Stone Dais
+        { x: 145, y: 460, w: 165, h: 20, type: 'cavern_stone' },
 
-        // 2. Santuario de Almas — Grand Center 3-Tier Cavern Dais
+        // 2. Santuario de Almas — Grand Center 3-Tier Gothic Dais
         { x: 330, y: 460, w: 300, h: 20, type: 'cavern_stone' },
         { x: 370, y: 440, w: 220, h: 20, type: 'cavern_stone' },
         { x: 410, y: 420, w: 140, h: 20, type: 'cavern_stone' },
 
-        // 3. Portal a la Torre — Right Rock Dais
-        { x: 730, y: 460, w: 150, h: 20, type: 'cavern_stone' }
+        // 3. Pórtico de la Gran Torre — Right Stone Dais
+        { x: 715, y: 460, w: 185, h: 20, type: 'cavern_stone' }
       ],
       // In-World Sanctuary Altar (Upgrade Shop) — Center Stage
       sanctuary: {
@@ -80,46 +80,46 @@ class LevelManager {
         y: 330,
         w: 90,
         h: 90,
-        label: 'Santuario de Mejoras'
+        label: 'Santuario de Almas'
       },
-      // In-World Slot Machine / Ruleta de Armas (80 Almas) — Left Wing
+      // In-World Weapon Reliquary / Sagrario de Armas (80 Almas) — Left Wing
       slotMachine: {
-        x: 200,
-        y: 390,
-        w: 60,
-        h: 70,
+        x: 195,
+        y: 380,
+        w: 64,
+        h: 80,
         cost: 80,
-        label: 'Ruleta de las Armas'
+        label: 'Sagrario de Armas'
       },
       ladders: [],
       movingPlatforms: [],
       crumblingPlatforms: [],
       spikes: [],
       torches: [
-        // Cavern Eerie Violet Wall Sconces
+        // Gothic Violet Wall Sconces
         { x: 45, y: 420, color: 'purple' },
-        { x: 150, y: 425, color: 'purple' },
+        { x: 135, y: 425, color: 'purple' },
         { x: 310, y: 425, color: 'purple' },
         { x: 355, y: 405, color: 'purple' },
         { x: 590, y: 405, color: 'purple' },
-        { x: 720, y: 425, color: 'purple' },
-        { x: 890, y: 425, color: 'purple' }
+        { x: 700, y: 425, color: 'purple' },
+        { x: 915, y: 425, color: 'purple' }
       ],
       enemies: [],
       urns: [
         { x: 95, y: 448, value: 25 },
-        { x: 230, y: 448, value: 20 },
+        { x: 235, y: 448, value: 20 },
         { x: 655, y: 428, value: 20 },
-        { x: 820, y: 448, value: 25 }
+        { x: 885, y: 434, value: 30 }
       ],
       chests: [],
       portal: {
-        x: 770,
-        y: 365,
-        w: 70,
-        h: 95,
+        x: 755,
+        y: 355,
+        w: 80,
+        h: 105,
         targetLevel: 'tower1',
-        label: 'Entrar a la Gran Torre (Piso 1)'
+        label: 'Pórtico a la Gran Torre (Piso 1)'
       }
     };
   }

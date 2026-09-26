@@ -276,6 +276,45 @@ body.cursor-hidden *,
   flex-wrap: wrap;
 }
 
+.hud-top-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  pointer-events: none;
+  z-index: 12;
+}
+
+.hud-floor-pill {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #f8df8c;
+  background: rgba(14, 8, 20, 0.88);
+  border: 1.5px solid rgba(218, 165, 32, 0.55);
+  border-radius: 6px;
+  padding: 4px 16px;
+  text-transform: uppercase;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.8), 0 0 10px rgba(218, 165, 32, 0.25);
+  text-shadow: 0 0 8px rgba(248, 223, 140, 0.5);
+  user-select: none;
+  white-space: nowrap;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.hud-floor-pill.hidden {
+  display: none !important;
+}
+
+.hud-combo-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+}
+
 .hud-top-right {
   display: flex;
   align-items: center;
@@ -2172,13 +2211,14 @@ body.in-menu #virtual-controls {
   pointer-events: none;
 }
 
+.hud-bonk-pill,
 .hud-bonk-badge {
   background: linear-gradient(135deg, #ff0054, #ff5400);
   color: #fff;
   font-family: 'Cinzel', serif;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 900;
-  padding: 4px 12px;
+  padding: 3px 12px;
   border-radius: 4px;
   border: 1.5px solid #ffd166;
   text-shadow: 1px 1px 0 #000;
@@ -2424,11 +2464,11 @@ body.in-menu #virtual-controls {
 }
 
 .slot-cabinet {
-  background: linear-gradient(180deg, #2b1122 0%, #170814 100%);
-  border: 2px solid #6b1d28;
+  background: linear-gradient(180deg, #180c1d 0%, #0d0610 100%);
+  border: 2px solid #5a2838;
   border-radius: 10px;
   padding: 14px;
-  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.85), 0 4px 15px rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.92), 0 4px 18px rgba(0, 0, 0, 0.7);
   position: relative;
 }
 
@@ -2442,26 +2482,27 @@ body.in-menu #virtual-controls {
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: #ffb703;
-  box-shadow: 0 0 8px #ffb703;
-  animation: bulbBlink 1.2s infinite alternate;
+  background: #f4d06f;
+  box-shadow: 0 0 8px #f4d06f;
+  animation: emberFlicker 1.8s infinite alternate ease-in-out;
 }
 
 .slot-bulb:nth-child(2n) {
-  background: #ff0054;
-  box-shadow: 0 0 8px #ff0054;
-  animation-delay: 0.3s;
+  background: #b5179e;
+  box-shadow: 0 0 8px #b5179e;
+  animation-delay: 0.4s;
 }
 
 .slot-bulb:nth-child(3n) {
-  background: #00f5d4;
-  box-shadow: 0 0 8px #00f5d4;
-  animation-delay: 0.6s;
+  background: #00b4d8;
+  box-shadow: 0 0 8px #00b4d8;
+  animation-delay: 0.8s;
 }
 
-@keyframes bulbBlink {
-  0% { opacity: 0.35; transform: scale(0.9); }
-  100% { opacity: 1; transform: scale(1.18); }
+@keyframes emberFlicker {
+  0% { opacity: 0.45; transform: scale(0.92); }
+  50% { opacity: 0.85; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1.15); }
 }
 
 .slot-display-stage {
@@ -2474,11 +2515,11 @@ body.in-menu #virtual-controls {
 .slot-reels-housing {
   display: flex;
   gap: 8px;
-  background: #080309;
-  border: 2.5px solid #ffb703;
+  background: #060208;
+  border: 2px solid #c9933b;
   border-radius: 8px;
   padding: 8px;
-  box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.95);
+  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.98);
 }
 
 .slot-reel-window {
@@ -2575,18 +2616,18 @@ body.in-menu #virtual-controls {
 .slot-lever-base {
   width: 28px;
   height: 20px;
-  background: #3a1622;
-  border: 2px solid #ffb703;
+  background: #25101a;
+  border: 2px solid #c9933b;
   border-radius: 4px;
   position: absolute;
   bottom: 4px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.75);
 }
 
 .slot-lever-shaft {
   width: 8px;
   height: 64px;
-  background: linear-gradient(90deg, #d4af37, #ffffff, #996515);
+  background: linear-gradient(90deg, #4a3e35, #8a7356, #2d2420);
   border-radius: 4px;
   position: absolute;
   bottom: 16px;
@@ -2597,13 +2638,13 @@ body.in-menu #virtual-controls {
 .slot-lever-knob {
   width: 22px;
   height: 22px;
-  background: radial-gradient(circle at 35% 35%, #ff4d6d, #800f2f);
-  border: 2px solid #ffd166;
+  background: radial-gradient(circle at 35% 35%, #e63946, #480c14);
+  border: 2px solid #f4d06f;
   border-radius: 50%;
   position: absolute;
   top: -12px;
   left: -7px;
-  box-shadow: 0 0 10px rgba(255, 77, 109, 0.85);
+  box-shadow: 0 0 10px rgba(230, 57, 70, 0.85);
 }
 
 .slot-lever-shaft.pulling {
