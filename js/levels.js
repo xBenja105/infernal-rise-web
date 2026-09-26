@@ -26,6 +26,12 @@ class LevelManager {
       this.currentLevel = this.createTower3Level();
     } else if (levelId === 'boss3' || levelId === 'boss_minotaur' || levelId === 'boss_minos') {
       this.currentLevel = this.createBossMinotaurLevel();
+    } else if (levelId === 'tower4') {
+      this.currentLevel = this.createTower4Level();
+    } else if (levelId === 'tower5') {
+      this.currentLevel = this.createTower5Level();
+    } else if (levelId === 'tower6') {
+      this.currentLevel = this.createTower6Level();
     } else if (levelId === 'infernal') {
       this.currentLevel = this.createInfernalModeLevel();
     } else {
@@ -176,8 +182,9 @@ class LevelManager {
     };
 
     while (currY > 640) {
-      // Step delta strictly between 90 and 112px (player jump reach with soft gravity is ~151px)
-      const stepY = 90 + Math.floor(Math.random() * 23);
+      // Step delta strictly calibrated between 122 and 138px (player jump reach with soft gravity is ~151px)
+      // Demands committed, deliberate single jumps and prevents skipping entire tiers
+      const stepY = 122 + Math.floor(Math.random() * 17);
       currY -= stepY;
 
       const tier = getTier(currY);
@@ -186,7 +193,7 @@ class LevelManager {
 
       // Safe Checkpoint Haven Plateau every ~700-800px
       if (currY <= nextCkptY && currY > 650) {
-        const ckptW = 460 + Math.floor(Math.random() * 80);
+        const ckptW = 420 + Math.floor(Math.random() * 60);
         const ckptX = Math.floor((width - ckptW) / 2) + Math.floor((Math.random() - 0.5) * 60);
         const havenPlat = {
           x: ckptX,
@@ -242,11 +249,11 @@ class LevelManager {
       const layerPlatforms = [];
 
       if (pattern === 0) {
-        // Dual flanking platforms
-        const lw = 220 + Math.floor(Math.random() * 50);
-        const lx = 80 + Math.floor(Math.random() * 40);
-        const rw = 220 + Math.floor(Math.random() * 50);
-        const rx = width - rw - 80 - Math.floor(Math.random() * 40);
+        // Dual flanking platforms — separated by a central abyss of ~500px
+        const lw = 150 + Math.floor(Math.random() * 30);
+        const lx = 60 + Math.floor(Math.random() * 30);
+        const rw = 150 + Math.floor(Math.random() * 30);
+        const rx = width - rw - 60 - Math.floor(Math.random() * 30);
 
         const platL = { x: lx, y: currY, w: lw, h: 22, type: pType };
         const platR = { x: rx, y: currY, w: rw, h: 22, type: pType };
@@ -265,43 +272,43 @@ class LevelManager {
           });
         }
       } else if (pattern === 1) {
-        // Wide Center platform with adjacent stepping ledge
-        const cw = 260 + Math.floor(Math.random() * 70);
-        const cx = Math.floor((width - cw) / 2) + Math.floor((Math.random() - 0.5) * 80);
+        // Center island with focused width
+        const cw = 180 + Math.floor(Math.random() * 30);
+        const cx = Math.floor((width - cw) / 2) + Math.floor((Math.random() - 0.5) * 60);
         const platC = { x: cx, y: currY, w: cw, h: 22, type: pType };
         platforms.push(platC);
         layerPlatforms.push(platC);
 
-        // Adjacent stepping stone on the wider gap side
+        // Tactical side wall perch on the wider gap side
         const stepOnLeft = cx > (width / 2);
-        const stepW = 100 + Math.floor(Math.random() * 30);
-        const stepX = stepOnLeft ? (80 + Math.floor(Math.random() * 30)) : (width - stepW - 80 - Math.floor(Math.random() * 30));
-        const platStep = { x: stepX, y: currY - 24, w: stepW, h: 20, type: pType, isRuined: true };
+        const stepW = 80 + Math.floor(Math.random() * 20);
+        const stepX = stepOnLeft ? (60 + Math.floor(Math.random() * 20)) : (width - stepW - 60 - Math.floor(Math.random() * 20));
+        const platStep = { x: stepX, y: currY + 45, w: stepW, h: 20, type: pType, isRuined: true };
         platforms.push(platStep);
         layerPlatforms.push(platStep);
 
-        // Occasional small spike hazard on outer edge
+        // Occasional small spike hazard on outer edge of center island
         if (Math.random() < 0.25) {
           spikes.push({
-            x: Math.random() < 0.5 ? cx + 10 : cx + cw - 70,
+            x: Math.random() < 0.5 ? cx + 10 : cx + cw - 60,
             y: currY - 20,
-            w: 60,
+            w: 50,
             h: 20
           });
         }
       } else if (pattern === 2) {
         // Solid platform on one side + moving platform across the gap
         const onLeft = Math.random() < 0.5;
-        const sw = 220 + Math.floor(Math.random() * 40);
-        const sx = onLeft ? (80 + Math.floor(Math.random() * 30)) : (width - sw - 80 - Math.floor(Math.random() * 30));
+        const sw = 160 + Math.floor(Math.random() * 30);
+        const sx = onLeft ? (70 + Math.floor(Math.random() * 30)) : (width - sw - 70 - Math.floor(Math.random() * 30));
         const platSolid = { x: sx, y: currY, w: sw, h: 22, type: pType };
         platforms.push(platSolid);
         layerPlatforms.push(platSolid);
 
-        const mw = 95 + Math.floor(Math.random() * 20);
-        const minX = onLeft ? (sx + sw + 20) : Math.max(80, sx - 260);
-        const maxX = onLeft ? Math.min(width - mw - 80, minX + 220) : (sx - 20 - mw);
-        if (maxX > minX + 40) {
+        const mw = 90 + Math.floor(Math.random() * 15);
+        const minX = onLeft ? (sx + sw + 70) : Math.max(70, sx - 220);
+        const maxX = onLeft ? Math.min(width - mw - 70, minX + 180) : (sx - 60 - mw);
+        if (maxX > minX + 30) {
           movingPlatforms.push({
             x: minX,
             y: currY,
@@ -314,18 +321,19 @@ class LevelManager {
           });
         }
       } else if (pattern === 3) {
-        // Solid platform + crumbling stepping stone
-        const sw = 220 + Math.floor(Math.random() * 40);
-        const sx = Math.random() < 0.5 ? 90 : 650;
+        // Solid platform + crumbling stone with distinct gap
+        const sw = 160 + Math.floor(Math.random() * 30);
+        const sx = Math.random() < 0.5 ? 90 : 670;
         const platSolid = { x: sx, y: currY, w: sw, h: 22, type: pType };
         platforms.push(platSolid);
         layerPlatforms.push(platSolid);
 
-        const crX = sx < 300 ? (sx + sw + 50) : (sx - 160);
+        const crW = 75 + Math.floor(Math.random() * 15);
+        const crX = sx < 300 ? (sx + sw + 90) : (sx - crW - 90);
         crumblingPlatforms.push({
-          x: Math.max(100, Math.min(width - 200, crX)),
+          x: Math.max(80, Math.min(width - crW - 80, crX)),
           y: currY,
-          w: 100,
+          w: crW,
           h: 20
         });
       } else if (pattern === 4) {
@@ -343,17 +351,17 @@ class LevelManager {
         };
 
         const sideL = {
-          x: Math.max(80, buttressX - 170 - Math.floor(Math.random() * 30)),
+          x: Math.max(70, buttressX - 140 - Math.floor(Math.random() * 30)),
           y: currY + 28,
-          w: 160,
+          w: 120,
           h: 22,
           type: pType,
           isRuined: true
         };
         const sideR = {
-          x: Math.min(width - 240, buttressX + 48 + 20 + Math.floor(Math.random() * 30)),
+          x: Math.min(width - 190, buttressX + 48 + 30 + Math.floor(Math.random() * 30)),
           y: currY - 26,
-          w: 160,
+          w: 120,
           h: 22,
           type: pType,
           isRuined: true
@@ -372,40 +380,44 @@ class LevelManager {
             type: pType === 'gold' ? 'gold' : 'iron'
           });
         }
+        currY = sideR.y;
       } else if (pattern === 5) {
         // ── PATRÓN 5: ARCO GÓTICO COLAPSADO / DINTEL QUEBRADO ──
-        // Losas de piedra fracturada a 3 niveles escalonados que forman los restos de un gran arco
-        const archBaseX = Math.floor((width - 480) / 2) + Math.floor((Math.random() - 0.5) * 60);
-        const slab1 = { x: archBaseX, y: currY + 24, w: 140, h: 22, type: pType, isRuined: true };
-        const slab2 = { x: archBaseX + 160, y: currY - 20, w: 160, h: 24, type: pType, isArch: true };
-        const slab3 = { x: archBaseX + 340, y: currY + 18, w: 140, h: 22, type: pType, isRuined: true };
+        // Losas de piedra fracturada con brechas reales de 90-110px entre fragmentos
+        const archBaseX = Math.floor((width - 530) / 2) + Math.floor((Math.random() - 0.5) * 40);
+        const slab1 = { x: archBaseX, y: currY + 28, w: 105, h: 22, type: pType, isRuined: true };
+        const slab2 = { x: archBaseX + 195, y: currY - 20, w: 125, h: 24, type: pType, isArch: true };
+        const slab3 = { x: archBaseX + 415, y: currY + 24, w: 105, h: 22, type: pType, isRuined: true };
 
         platforms.push(slab1, slab2, slab3);
         layerPlatforms.push(slab1, slab2, slab3);
+        currY = slab2.y;
       } else if (pattern === 6) {
         // ── PATRÓN 6: PILARES TRUNCADOS Y CAPITELES DE SALTO ──
         // Columnas quebradas rematadas por capiteles de piedra que sirven de peldaño sobre el vacío
-        const col1X = 140 + Math.floor(Math.random() * 80);
-        const col2X = width - 280 - Math.floor(Math.random() * 80);
-        const col1 = { x: col1X, y: currY, w: 120, h: 26, type: pType, isPillarRemnant: true };
-        const col2 = { x: col2X, y: currY - 26, w: 120, h: 26, type: pType, isPillarRemnant: true };
-        const midX = Math.floor((col1X + col2X) / 2) - 45;
-        const midStep = { x: midX, y: currY - 52, w: 90, h: 20, type: pType, isRuined: true };
+        const col1X = 140 + Math.floor(Math.random() * 60);
+        const col2X = width - 230 - Math.floor(Math.random() * 60);
+        const col1 = { x: col1X, y: currY, w: 90, h: 26, type: pType, isPillarRemnant: true };
+        const col2 = { x: col2X, y: currY - 26, w: 90, h: 26, type: pType, isPillarRemnant: true };
+        const midX = Math.floor((col1X + col2X) / 2) - 35;
+        const midStep = { x: midX, y: currY - 56, w: 70, h: 20, type: pType, isRuined: true };
 
         platforms.push(col1, col2, midStep);
         layerPlatforms.push(col1, col2, midStep);
+        currY = midStep.y;
       } else if (pattern === 7) {
         // ── PATRÓN 7: BALUARTE ALMENADO Y REPISA VOLADIZA ──
-        // Plataforma defensiva ancha con almenas y losa voladiza
-        const parapetW = 320 + Math.floor(Math.random() * 50);
+        // Plataforma defensiva con almenas y losa voladiza separada por brecha de 120px
+        const parapetW = 210 + Math.floor(Math.random() * 30);
         const parapetX = Math.floor((width - parapetW) / 2) + Math.floor((Math.random() - 0.5) * 60);
         const platParapet = { x: parapetX, y: currY, w: parapetW, h: 26, type: pType, isParapet: true };
 
-        const sideX = parapetX > (width / 2) ? (parapetX - 160) : (parapetX + parapetW + 30);
-        const platSide = { x: Math.max(80, Math.min(width - 200, sideX)), y: currY - 36, w: 120, h: 22, type: pType, isRuined: true };
+        const sideX = parapetX > (width / 2) ? (parapetX - 190) : (parapetX + parapetW + 80);
+        const platSide = { x: Math.max(70, Math.min(width - 160, sideX)), y: currY - 42, w: 85, h: 22, type: pType, isRuined: true };
 
         platforms.push(platParapet, platSide);
         layerPlatforms.push(platParapet, platSide);
+        currY = platSide.y;
 
         torches.push({ x: parapetX + 24, y: currY - 30, blue: isBlueTorch });
         torches.push({ x: parapetX + parapetW - 24, y: currY - 30, blue: isBlueTorch });
@@ -416,12 +428,12 @@ class LevelManager {
         const shaftX = Math.floor(width / 2) - 13 + Math.floor((Math.random() - 0.5) * 80);
 
         // Plataforma inferior de despegue (base de salto)
-        const baseW = 160 + Math.floor(Math.random() * 40);
+        const baseW = 140 + Math.floor(Math.random() * 30);
         const baseX = Math.max(90, Math.min(width - baseW - 90, shaftX - Math.floor(baseW / 2) + 13));
         const platBase = { x: baseX, y: currY, w: baseW, h: 24, type: pType };
 
         // Plataforma superior de recepción (desembarco del ascenso)
-        const topW = 180 + Math.floor(Math.random() * 40);
+        const topW = 140 + Math.floor(Math.random() * 30);
         const topY = currY - ladderH;
         const topSideLeft = Math.random() < 0.5;
         const topX = topSideLeft
@@ -487,17 +499,17 @@ class LevelManager {
 
         platforms.push(platAnchor, platDest);
         layerPlatforms.push(platAnchor, platDest);
-        currY -= 55;
+        currY = platDest.y;
       } else if (pattern === 10) {
         // ── PATRÓN 10: PUENTE BÁSCULA / BALANCÍN DINÁMICO (SEESAW) ──
         // Viga basculante que se inclina con el peso del jugador sobre un foso
-        const ledgeW = 160;
-        const platL = { x: 80, y: currY, w: ledgeW, h: 24, type: pType };
-        const platR = { x: width - ledgeW - 80, y: currY - 16, w: ledgeW, h: 24, type: pType };
+        const ledgeW = 120;
+        const platL = { x: 70, y: currY, w: ledgeW, h: 24, type: pType };
+        const platR = { x: width - ledgeW - 70, y: currY - 20, w: ledgeW, h: 24, type: pType };
 
-        const seesawW = 220;
+        const seesawW = 180;
         const pivotX = Math.floor(width / 2);
-        const pivotY = currY - 6;
+        const pivotY = currY - 8;
 
         seesawPlatforms.push({
           x: pivotX,
@@ -507,28 +519,29 @@ class LevelManager {
 
         // Foso de pinchos bajo la báscula
         spikes.push({
-          x: pivotX - 75,
+          x: pivotX - 85,
           y: currY + 45,
-          w: 150,
+          w: 170,
           h: 20
         });
 
         platforms.push(platL, platR);
         layerPlatforms.push(platL, platR);
+        currY = platR.y;
       } else if (pattern === 11) {
         // ── PATRÓN 11: VÓRTICE / BURBUJA DE ASCENSIÓN EN CHIMENEA VERTICAL ──
         // Esfera arcana flotante que anula la gravedad e impulsa a Kael
-        const launchW = 180;
-        const launchX = 90 + Math.floor(Math.random() * 50);
+        const launchW = 140;
+        const launchX = 80 + Math.floor(Math.random() * 40);
         const platLaunch = { x: launchX, y: currY, w: launchW, h: 24, type: pType };
 
-        const targetY = currY - 210;
-        const landW = 200;
-        const landX = width - landW - 90 - Math.floor(Math.random() * 50);
+        const targetY = currY - 220;
+        const landW = 150;
+        const landX = width - landW - 80 - Math.floor(Math.random() * 40);
         const platLand = { x: landX, y: targetY, w: landW, h: 24, type: pType };
 
         const vortexX = Math.floor((launchX + launchW + landX) / 2);
-        const vortexY = currY - 60;
+        const vortexY = currY - 70;
         ascensionVortices.push({
           x: vortexX,
           y: vortexY,
@@ -537,8 +550,8 @@ class LevelManager {
         });
 
         // Repisa en ruina intermedia
-        const midX = Math.floor(width / 2) - 40;
-        const platMid = { x: midX, y: currY - 120, w: 80, h: 18, type: pType, isRuined: true };
+        const midX = Math.floor(width / 2) - 35;
+        const platMid = { x: midX, y: currY - 125, w: 70, h: 18, type: pType, isRuined: true };
 
         torches.push({ x: launchX + 24, y: currY - 30, blue: isBlueTorch });
         torches.push({ x: landX + landW - 24, y: targetY - 30, blue: isBlueTorch });
@@ -547,106 +560,108 @@ class LevelManager {
         layerPlatforms.push(platLaunch, platLand, platMid);
         currY = targetY;
       } else if (pattern === 12) {
-        // ── PATRÓN 12: ANDAMIOS MINEROS Y PUENTES DE VIGAS SUSPENDIDAS ──
-        // Maderas estructurales con postes verticales y puentes de listones
-        const scaff1W = 190;
-        const scaff1X = 80 + Math.floor(Math.random() * 40);
+        // ── PATRÓN 12: ANDAMIOS MINEROS Y VIGAS SUSPENDIDAS ──
+        // Maderas estructurales con postes verticales y vigas de listones separadas por vacío
+        const scaff1W = 130;
+        const scaff1X = 70 + Math.floor(Math.random() * 30);
         const platScaff1 = { x: scaff1X, y: currY, w: scaff1W, h: 20, type: pType, isWoodScaffold: true };
 
-        const scaff2W = 190;
-        const scaff2X = width - scaff2W - 80 - Math.floor(Math.random() * 40);
-        const platScaff2 = { x: scaff2X, y: currY - 36, w: scaff2W, h: 20, type: pType, isWoodScaffold: true };
+        const scaff2W = 130;
+        const scaff2X = width - scaff2W - 70 - Math.floor(Math.random() * 30);
+        const platScaff2 = { x: scaff2X, y: currY - 42, w: scaff2W, h: 20, type: pType, isWoodScaffold: true };
 
-        // Puente colgante suspendido
-        const bridgeX = scaff1X + scaff1W + 10;
-        const bridgeW = Math.max(120, scaff2X - bridgeX - 10);
-        const platBridge = { x: bridgeX, y: currY - 18, w: bridgeW, h: 16, type: pType, isRopeBridge: true };
+        // Viga suspendida central con fosos de vacío a ambos lados (brecha ~110px)
+        const midBeamW = 100;
+        const midBeamX = Math.floor((scaff1X + scaff1W + scaff2X - midBeamW) / 2);
+        const platBridge = { x: midBeamX, y: currY - 20, w: midBeamW, h: 16, type: pType, isThinBeam: true };
 
         platforms.push(platScaff1, platScaff2, platBridge);
         layerPlatforms.push(platScaff1, platScaff2, platBridge);
+        currY = platScaff2.y;
       } else if (pattern === 13) {
         // ── PATRÓN 13: CORNISAS ESCALONADAS Y ARCOS DE SARCÓFAGO GÓTICOS ──
         // Ménsulas voladizas embutidas en muros laterales y dintel central
-        const corbelLW = 170;
-        const corbelL = { x: 0, y: currY + 12, w: corbelLW, h: 24, type: pType, isCorbelLedge: true };
+        const corbelLW = 120;
+        const corbelL = { x: 0, y: currY + 14, w: corbelLW, h: 24, type: pType, isCorbelLedge: true };
 
-        const archW = 280;
+        const archW = 190;
         const archX = Math.floor((width - archW) / 2);
-        const platArch = { x: archX, y: currY - 30, w: archW, h: 26, type: pType, isArch: true, isSarcophagus: true };
+        const platArch = { x: archX, y: currY - 34, w: archW, h: 26, type: pType, isArch: true, isSarcophagus: true };
 
-        const corbelRW = 170;
-        const corbelR = { x: width - corbelRW, y: currY - 72, w: corbelRW, h: 24, type: pType, isCorbelLedge: true };
+        const corbelRW = 120;
+        const corbelR = { x: width - corbelRW, y: currY - 80, w: corbelRW, h: 24, type: pType, isCorbelLedge: true };
 
         platforms.push(corbelL, platArch, corbelR);
         layerPlatforms.push(corbelL, platArch, corbelR);
 
         torches.push({ x: 24, y: currY - 12, blue: isBlueTorch });
-        torches.push({ x: width - 24, y: currY - 96, blue: isBlueTorch });
-        currY -= 50;
+        torches.push({ x: width - 24, y: currY - 104, blue: isBlueTorch });
+        currY = corbelR.y;
       } else if (pattern === 14) {
         // ── PATRÓN 14: TRÍADA / TETRADA DE CUBOS CUADRADOS DE SALTO ──
-        // 4 cubos cuadrados de sillería labrada (48x48px) escalonados a alturas dinámicas
-        const q1 = { x: 120 + Math.floor(Math.random() * 30), y: currY, w: 48, h: 48, type: pType, isSquareBlock: true };
-        const q2 = { x: 330 + Math.floor(Math.random() * 40), y: currY - 26, w: 48, h: 48, type: pType, isSquareBlock: true };
-        const q3 = { x: 550 + Math.floor(Math.random() * 40), y: currY - 52, w: 48, h: 48, type: pType, isSquareBlock: true };
-        const q4 = { x: width - 170 - Math.floor(Math.random() * 30), y: currY - 78, w: 48, h: 48, type: pType, isSquareBlock: true };
+        // 4 cubos cuadrados de sillería labrada (48x48px) escalonados con desnivel real entre ellos
+        const q1 = { x: 110 + Math.floor(Math.random() * 30), y: currY, w: 48, h: 48, type: pType, isSquareBlock: true };
+        const q2 = { x: 310 + Math.floor(Math.random() * 30), y: currY - 42, w: 48, h: 48, type: pType, isSquareBlock: true };
+        const q3 = { x: 530 + Math.floor(Math.random() * 30), y: currY - 84, w: 48, h: 48, type: pType, isSquareBlock: true };
+        const q4 = { x: width - 160 - Math.floor(Math.random() * 30), y: currY - 126, w: 48, h: 48, type: pType, isSquareBlock: true };
 
         platforms.push(q1, q2, q3, q4);
         layerPlatforms.push(q1, q2, q3, q4);
 
         torches.push({ x: q1.x + 24, y: q1.y - 24, blue: isBlueTorch });
         torches.push({ x: q4.x + 24, y: q4.y - 24, blue: isBlueTorch });
-        currY -= 65;
+        currY = q4.y;
       } else if (pattern === 15) {
         // ── PATRÓN 15: VIGAS Y BARRAS DELGADAS DE HIERRO/MADERA CON TENSORES ──
-        // Pasarelas delgadas de alta tensión estructural (h: 12px)
-        const bw1 = 180 + Math.floor(Math.random() * 30);
-        const bx1 = 80 + Math.floor(Math.random() * 30);
+        // 2 pasarelas esbeltas escalonadas con gran brecha central de vacío (140-160px)
+        const bw1 = 140 + Math.floor(Math.random() * 20);
+        const bx1 = 70 + Math.floor(Math.random() * 20);
         const bar1 = { x: bx1, y: currY, w: bw1, h: 12, type: pType, isThinBeam: true };
 
-        const bw2 = 180 + Math.floor(Math.random() * 30);
-        const bx2 = width - bw2 - 80 - Math.floor(Math.random() * 30);
-        const bar2 = { x: bx2, y: currY - 50, w: bw2, h: 12, type: pType, isThinBeam: true };
+        const bw2 = 140 + Math.floor(Math.random() * 20);
+        const bx2 = width - bw2 - 70 - Math.floor(Math.random() * 20);
+        const bar2 = { x: bx2, y: currY - 60, w: bw2, h: 12, type: pType, isThinBeam: true };
 
-        const bwMid = 190 + Math.floor(Math.random() * 30);
+        // Peldaño central mínimo
+        const bwMid = 80;
         const bxMid = Math.floor((width - bwMid) / 2);
-        const barMid = { x: bxMid, y: currY - 25, w: bwMid, h: 12, type: pType, isThinBeam: true };
+        const barMid = { x: bxMid, y: currY - 30, w: bwMid, h: 12, type: pType, isThinBeam: true };
 
         platforms.push(bar1, barMid, bar2);
         layerPlatforms.push(bar1, barMid, bar2);
 
         torches.push({ x: bx1 + 24, y: currY - 24, blue: isBlueTorch });
-        torches.push({ x: bx2 + bw2 - 24, y: currY - 74, blue: isBlueTorch });
-        currY -= 45;
+        torches.push({ x: bx2 + bw2 - 24, y: currY - 84, blue: isBlueTorch });
+        currY = bar2.y;
       } else if (pattern === 16) {
         // ── PATRÓN 16: MONOLITO CICLÓPEO GRUESO Y LOSAS ESCALONADAS ──
-        // Gran bloque de cimientos masivo (h: 52px) en el centro flanqueado por repisas
-        const mw = 260 + Math.floor(Math.random() * 40);
+        // Bloque central grueso (h: 52px) flanqueado por repisas separadas
+        const mw = 190 + Math.floor(Math.random() * 30);
         const mx = Math.floor((width - mw) / 2);
         const monolith = { x: mx, y: currY - 20, w: mw, h: 52, type: pType, isThickSlab: true };
 
-        const sideLW = 130 + Math.floor(Math.random() * 30);
-        const sideL = { x: 80, y: currY + 14, w: sideLW, h: 22, type: pType, isRuined: true };
+        const sideLW = 95 + Math.floor(Math.random() * 20);
+        const sideL = { x: 70, y: currY + 16, w: sideLW, h: 22, type: pType, isRuined: true };
 
-        const sideRW = 130 + Math.floor(Math.random() * 30);
-        const sideR = { x: width - sideRW - 80, y: currY - 56, w: sideRW, h: 22, type: pType, isRuined: true };
+        const sideRW = 95 + Math.floor(Math.random() * 20);
+        const sideR = { x: width - sideRW - 70, y: currY - 64, w: sideRW, h: 22, type: pType, isRuined: true };
 
         platforms.push(monolith, sideL, sideR);
         layerPlatforms.push(monolith, sideL, sideR);
 
         torches.push({ x: mx + 30, y: currY - 44, blue: isBlueTorch });
         torches.push({ x: mx + mw - 30, y: currY - 44, blue: isBlueTorch });
-        currY -= 50;
+        currY = sideR.y;
       } else if (pattern === 17) {
         // ── PATRÓN 17: EJE Y BARRA VERTICAL CON PELDAÑOS VOLADIZOS ──
         // Pilar/barra vertical central (w: 22, h: 130) con ménsulas voladizas a ambos lados
         const shaftX = Math.floor(width / 2) - 11;
         const vertBar = { x: shaftX, y: currY - 70, w: 22, h: 130, type: pType, isVerticalBarShaft: true, isVerticalStructure: true };
 
-        const stepLW = 140;
+        const stepLW = 100;
         const stepL = { x: shaftX - stepLW, y: currY + 18, w: stepLW, h: 20, type: pType, isCorbelLedge: true };
 
-        const stepRW = 140;
+        const stepRW = 100;
         const stepR = { x: shaftX + 22, y: currY - 32, w: stepRW, h: 20, type: pType, isCorbelLedge: true };
 
         const topCrest = { x: shaftX - 35, y: currY - 74, w: 92, h: 22, type: pType, isPillarRemnant: true };
@@ -665,26 +680,26 @@ class LevelManager {
 
         torches.push({ x: stepL.x + 20, y: currY - 6, blue: isBlueTorch });
         torches.push({ x: stepR.x + stepRW - 20, y: currY - 56, blue: isBlueTorch });
-        currY -= 65;
+        currY = topCrest.y;
       } else {
         // ── PATRÓN 18: BALUARTE MIXTO ASIMÉTRICO (BLOQUE GRUESO + BARRA + CUBO) ──
-        // Máxima variedad visual: bloque grueso a la izquierda, barra delgada al medio y cubo de salto
-        const thickBlock = { x: 80, y: currY, w: 180, h: 48, type: pType, isThickSlab: true };
-        const thinBar = { x: 330, y: currY - 26, w: 170, h: 12, type: pType, isThinBeam: true };
-        const cubeStep = { x: 570, y: currY - 54, w: 50, h: 50, type: pType, isSquareBlock: true };
-        const landingTerrace = { x: width - 210, y: currY - 78, w: 130, h: 22, type: pType };
+        // Máxima variedad visual y exigencia: bloque grueso a la izquierda, barra al medio, cubo y terraza
+        const thickBlock = { x: 70, y: currY, w: 130, h: 48, type: pType, isThickSlab: true };
+        const thinBar = { x: 300, y: currY - 45, w: 110, h: 12, type: pType, isThinBeam: true };
+        const cubeStep = { x: 520, y: currY - 90, w: 48, h: 48, type: pType, isSquareBlock: true };
+        const landingTerrace = { x: width - 180, y: currY - 130, w: 110, h: 22, type: pType };
 
         platforms.push(thickBlock, thinBar, cubeStep, landingTerrace);
         layerPlatforms.push(thickBlock, thinBar, cubeStep, landingTerrace);
 
         torches.push({ x: thickBlock.x + 30, y: currY - 24, blue: isBlueTorch });
-        torches.push({ x: landingTerrace.x + landingTerrace.w - 30, y: currY - 102, blue: isBlueTorch });
-        currY -= 70;
+        torches.push({ x: landingTerrace.x + landingTerrace.w - 30, y: currY - 154, blue: isBlueTorch });
+        currY = landingTerrace.y;
       }
 
       // Spawn patrolling enemies and urns
       for (const p of layerPlatforms) {
-        if (p.w >= 200) {
+        if (p.w >= 130) {
           const spawnRoll = Math.random();
           if (spawnRoll < 0.45) {
             const isMage = Math.random() < (tier.mageChance || 0.2);
@@ -694,7 +709,7 @@ class LevelManager {
             const hp = isElite ? Math.round(baseHp * 2.4) : baseHp;
             const variant = Math.floor(Math.random() * 4);
             enemies.push({
-              x: p.x + 30 + Math.floor(Math.random() * (p.w - 80)),
+              x: p.x + 20 + Math.floor(Math.random() * (p.w - 50)),
               y: p.y - Math.round(34 * scaleMultiplier),
               type: isMage ? 'skeleton_mage' : 'skeleton',
               isMage,
@@ -708,10 +723,10 @@ class LevelManager {
             });
           } else if (spawnRoll < 0.75) {
             // Urn placement: Ensure urn is never directly on top of or within 45px of any torch
-            let urnX = p.x + 24 + Math.floor(Math.random() * (p.w - 48));
+            let urnX = p.x + 20 + Math.floor(Math.random() * (p.w - 40));
             const nearTorch = torches.find(t => Math.abs(t.x - urnX) < 48 && Math.abs(t.y - (p.y - 26)) < 40);
             if (nearTorch) {
-              urnX = nearTorch.x > p.x + p.w / 2 ? p.x + 20 : p.x + p.w - 32;
+              urnX = nearTorch.x > p.x + p.w / 2 ? p.x + 16 : p.x + p.w - 28;
             }
             urns.push({
               x: urnX,
@@ -738,9 +753,10 @@ class LevelManager {
 
     // ─── SUMMIT PLATEAU & ASCENSION PORTAL ───
     const summitType = config.basePlatformType || 'runic';
-    const summitAltar = { x: 200, y: 460, w: 560, h: 32, type: summitType, isCheckpoint: true, isHaven: true, isSummit: true, checkpointId: ckptId++ };
+    const approachLedge = { x: 360, y: 540, w: 240, h: 24, type: summitType, isSummit: true };
+    const summitAltar = { x: 200, y: 450, w: 560, h: 32, type: summitType, isCheckpoint: true, isHaven: true, isSummit: true, checkpointId: ckptId++ };
     const summitStep = { x: 360, y: 360, w: 240, h: 24, type: summitType, isSummit: true };
-    platforms.push(summitAltar, summitStep);
+    platforms.push(approachLedge, summitAltar, summitStep);
 
     const isSummitBlue = (config.basePlatformType === 'glacial_ice' || config.biome === 'frozen_peaks');
     torches.push({ x: 240, y: 430, blue: isSummitBlue });
@@ -782,8 +798,8 @@ class LevelManager {
     // ─── SALAS SECRETAS Y PAREDES QUEBRADIZAS (SECRET ROOMS) ───
     const secretRoomY1 = Math.floor(height * 0.62);
     const pLeft = { x: 20, y: secretRoomY1, w: 180, h: 26, type: config.basePlatformType || 'stone', isSecretFloor: true };
-    const pLeftCeil = { x: 20, y: secretRoomY1 - 100, w: 180, h: 22, type: config.basePlatformType || 'stone' };
-    const pLeftWall = { x: 0, y: secretRoomY1 - 100, w: 22, h: 126, type: config.basePlatformType || 'stone' };
+    const pLeftCeil = { x: 20, y: secretRoomY1 - 100, w: 180, h: 22, type: config.basePlatformType || 'stone', isSecretFloor: true };
+    const pLeftWall = { x: 0, y: secretRoomY1 - 100, w: 22, h: 126, type: config.basePlatformType || 'stone', isSecretFloor: true };
     platforms.push(pLeft, pLeftCeil, pLeftWall);
     
     crackedWalls.push({
@@ -809,8 +825,8 @@ class LevelManager {
     // Segunda Sala Secreta en el flanco derecho
     const secretRoomY2 = Math.floor(height * 0.32);
     const pRight = { x: width - 200, y: secretRoomY2, w: 180, h: 26, type: config.basePlatformType || 'stone', isSecretFloor: true };
-    const pRightCeil = { x: width - 200, y: secretRoomY2 - 100, w: 180, h: 22, type: config.basePlatformType || 'stone' };
-    const pRightWall = { x: width - 22, y: secretRoomY2 - 100, w: 22, h: 126, type: config.basePlatformType || 'stone' };
+    const pRightCeil = { x: width - 200, y: secretRoomY2 - 100, w: 180, h: 22, type: config.basePlatformType || 'stone', isSecretFloor: true };
+    const pRightWall = { x: width - 22, y: secretRoomY2 - 100, w: 22, h: 126, type: config.basePlatformType || 'stone', isSecretFloor: true };
     platforms.push(pRight, pRightCeil, pRightWall);
 
     crackedWalls.push({
@@ -1378,10 +1394,10 @@ class LevelManager {
       const isThick = (!isSquare && i % 6 === 0);
       const isThin = (!isSquare && !isThick && i % 5 === 0);
 
-      const w = isSquare ? 48 : (isThin ? (140 + Math.floor(Math.random() * 40)) : (140 + Math.floor(Math.random() * 100)));
+      const w = isSquare ? 48 : (isThin ? (100 + Math.floor(Math.random() * 30)) : (115 + Math.floor(Math.random() * 45)));
       const h = isSquare ? 48 : (isThick ? 46 : (isThin ? 12 : (20 + Math.floor(Math.random() * 6))));
-      let x = lastX + (Math.random() - 0.5) * 230;
-      x = Math.max(80, Math.min(880 - w, x));
+      let x = lastX + (Math.random() < 0.5 ? -1 : 1) * (110 + Math.random() * 110);
+      x = Math.max(70, Math.min(890 - w, x));
       lastX = x;
 
       const roll = Math.random();
@@ -1391,8 +1407,8 @@ class LevelManager {
           y: currY,
           w: w,
           h: h,
-          minX: Math.max(60, x - 100),
-          maxX: Math.min(900 - w, x + 100),
+          minX: Math.max(60, x - 90),
+          maxX: Math.min(900 - w, x + 90),
           speedX: 60 + Math.random() * 40,
           type: pType
         });
@@ -1400,7 +1416,7 @@ class LevelManager {
         crumblingPlatforms.push({
           x: x,
           y: currY,
-          w: Math.min(110, w),
+          w: Math.min(90, w),
           h: h
         });
       } else {
@@ -1421,7 +1437,7 @@ class LevelManager {
           x: Math.min(860, Math.max(100, x + w / 2 - 12)),
           y: currY,
           w: 24,
-          h: 110,
+          h: 135,
           type: pType === 'gold' ? 'gold' : 'iron'
         });
       }
@@ -1430,15 +1446,15 @@ class LevelManager {
         spikes.push({
           x: x + 12,
           y: currY - 20,
-          w: Math.min(60, w - 24),
+          w: Math.min(50, w - 24),
           h: 20
         });
       }
       if (i > 8 && Math.random() > 0.85) {
         spikes.push({
-          x: x + 20,
+          x: x + 16,
           y: currY - 130,
-          w: Math.min(70, w - 40),
+          w: Math.min(55, w - 30),
           h: 18
         });
       }
@@ -1451,10 +1467,10 @@ class LevelManager {
         });
       }
 
-      if (i > 3 && w >= 130 && roll >= 0.22 && Math.random() < 0.65) {
+      if (i > 3 && w >= 105 && roll >= 0.22 && Math.random() < 0.65) {
         const isMage = Math.random() < 0.35;
         enemies.push({
-          x: x + 30,
+          x: x + 20,
           y: currY - 34,
           type: isMage ? 'skeleton_mage' : 'skeleton',
           isMage: isMage,
@@ -1474,7 +1490,7 @@ class LevelManager {
       }
 
       if (i > 1 && i % 4 === 0) {
-        const urnX = (i % 3 === 0) ? (x + w - 32) : (x + 25 + Math.random() * (w - 50));
+        const urnX = (i % 3 === 0) ? (x + w - 32) : (x + 20 + Math.random() * (w - 40));
         urns.push({
           x: urnX,
           y: currY - 26,
@@ -1482,7 +1498,8 @@ class LevelManager {
         });
       }
 
-      currY -= (86 + Math.random() * 16);
+      currY -= (122 + Math.random() * 18);
+      if (currY < 380) break;
     }
 
     return {
