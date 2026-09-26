@@ -111,6 +111,7 @@ class Player {
     this.jumpForce = stats ? (this.baseJumpForce * stats.jumpForceMult) : this.baseJumpForce;
     this.daggerDamage = stats ? (stats.daggerDamage || 16) : 16;
     this.hasDoubleJumpUsed = false;
+    this.hasSecondChanceUsed = false;
   }
 
   reset(x, y) {
@@ -538,6 +539,19 @@ class Player {
           this.y -= 8;
           if (this.hp <= 0) return 'DEAD';
         }
+      } else if (stats && stats.hasSecondChance && !this.hasSecondChanceUsed) {
+        this.hasSecondChanceUsed = true;
+        this.hp = Math.max(1, Math.round(this.maxHp * 0.25));
+        this.invulnerableTimer = 2.5;
+        this.vy = -8.5;
+        this.y -= 14;
+        if (soundEng && soundEng.playLevelUp) soundEng.playLevelUp();
+        if (particleSys) {
+          if (particleSys.spawnTeleportSparks) particleSys.spawnTeleportSparks(this.x + this.w / 2, this.y + this.h / 2);
+          if (particleSys.spawnFloatingText) {
+            particleSys.spawnFloatingText('👑 ¡RESURRECCIÓN DIVINA!', this.x + this.w / 2, this.y - 20, { isMegabonk: true });
+          }
+        }
       } else {
         return 'DEAD';
       }
@@ -639,6 +653,28 @@ class Player {
       amount = Math.round(amount * 1.15);
     }
     this.hp -= amount;
+
+    // Check Second Chance revival from Eternal Ascension (Skill Tree crown)
+    const stats = window.progression ? window.progression.getPlayerStats() : null;
+    if (this.hp <= 0 && stats && stats.hasSecondChance && !this.hasSecondChanceUsed) {
+      this.hasSecondChanceUsed = true;
+      this.hp = Math.max(1, Math.round(this.maxHp * 0.25));
+      this.invulnerableTimer = 2.5;
+      this.vy = -6.5;
+      this.vx = -this.facing * 2.5;
+      if (soundEng && soundEng.playLevelUp) soundEng.playLevelUp();
+      if (particleSys) {
+        if (particleSys.spawnTeleportSparks) particleSys.spawnTeleportSparks(this.x + this.w / 2, this.y + this.h / 2);
+        if (particleSys.spawnFloatingText) {
+          particleSys.spawnFloatingText('👑 ¡RESURRECCIÓN DIVINA!', this.x + this.w / 2, this.y - 20, { isMegabonk: true });
+        }
+      }
+      if (window.game && window.game.triggerScreenShake) {
+        window.game.triggerScreenShake(12, 0.4);
+      }
+      return;
+    }
+
     this.invulnerableTimer = 1.1; // 1.1s of i-frame grace period to prevent unfair consecutive stuns
     this.vy = -5.0;
     this.vx = -this.facing * 3.4;

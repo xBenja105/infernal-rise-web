@@ -612,12 +612,13 @@
     </div>
 
     <!-- Sanctuary Modal (Permanent Upgrades & Prestige) -->
-    <div id="sanctuary-modal" class="screen-overlay hidden">
-      <div class="sanctuary-container">
+    <!-- Skill Tree Modal (Árbol Marchito de las Almas) -->
+    <div id="sanctuary-modal" class="screen-overlay hidden" style="z-index: 9500;">
+      <div class="sanctuary-container tree-modal-container">
         <div class="sanctuary-header">
           <div class="sanctuary-title-wrap">
-            <h2 class="game-title" style="font-size: 30px; margin: 0;">Santuario de las Almas</h2>
-            <div class="sanctuary-subtitle">Altar ancestral donde Kael forja su redención eterna</div>
+            <h2 class="game-title" style="font-size: 26px; margin: 0; color: #ffd166; text-shadow: 0 0 20px rgba(255, 209, 102, 0.7);">🌳 Árbol Marchito de las Almas</h2>
+            <div class="sanctuary-subtitle">Despierta el poder latente alimentando las raíces y ramas marchitas con tus almas recolectadas</div>
           </div>
           <button id="btn-close-sanctuary" class="btn-modal-close" title="Cerrar">✕</button>
         </div>
@@ -630,23 +631,96 @@
         </div>
 
         <div class="sanctuary-tabs">
-          <button id="tab-btn-upgrades" class="sanctuary-tab-btn active">Mejoras del Alma</button>
-          <button id="tab-btn-prestige" class="sanctuary-tab-btn">Penitencia y Prestigio</button>
+          <button id="tab-btn-upgrades" class="sanctuary-tab-btn active">🌳 Árbol de Habilidades</button>
+          <button id="tab-btn-prestige" class="sanctuary-tab-btn">🔥 Penitencia y Cenizas</button>
         </div>
 
-        <!-- Upgrades Tab -->
-        <div id="sanctuary-tab-upgrades" class="sanctuary-tab-panel">
-          <div id="upgrades-grid" class="upgrades-grid"></div>
+        <!-- Skill Tree Tab Panel -->
+        <div id="sanctuary-tab-upgrades" class="sanctuary-tab-panel tree-tab-panel">
+          <div class="skill-tree-layout">
+            <!-- Left Side: Interactive Tree Canvas Stage -->
+            <div class="tree-stage-wrapper">
+              <svg id="tree-branches-svg" class="tree-branches-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="branch-grad-active" x1="0%" y1="100%" x2="0%" y2="0%">
+                    <stop offset="0%" stop-color="#ffd166" />
+                    <stop offset="50%" stop-color="#ff0054" />
+                    <stop offset="100%" stop-color="#9d4edd" />
+                  </linearGradient>
+                  <linearGradient id="branch-grad-dormant" x1="0%" y1="100%" x2="0%" y2="0%">
+                    <stop offset="0%" stop-color="#2a1625" />
+                    <stop offset="100%" stop-color="#140a18" />
+                  </linearGradient>
+                </defs>
+                <g id="tree-branches-group"></g>
+              </svg>
+              <!-- Interactive Node Orbs -->
+              <div id="tree-nodes-container" class="tree-nodes-container"></div>
+              <!-- Zone Labels -->
+              <div class="tree-zone-label zone-crown">COPA CELESTIAL</div>
+              <div class="tree-zone-label zone-branches">RAMAS ARCANAS</div>
+              <div class="tree-zone-label zone-trunk">TRONCO DEL COMBATE</div>
+              <div class="tree-zone-label zone-roots">RAÍCES DEL AVERNO</div>
+            </div>
+
+            <!-- Right Side: Node Inspector Card -->
+            <div id="tree-node-inspector" class="tree-node-inspector">
+              <div id="inspector-empty-state" class="inspector-empty-state">
+                <div class="inspector-empty-icon">🌳</div>
+                <div class="inspector-empty-title">Elige una Rama del Árbol</div>
+                <p>Haz clic en cualquier nodo o raíz para examinar sus dones, prerrequisitos y despertar su poder con tus almas.</p>
+              </div>
+              <div id="inspector-card-content" class="inspector-card-content hidden">
+                <div class="inspector-header">
+                  <div id="inspector-node-icon" class="inspector-node-icon">❤️</div>
+                  <div class="inspector-title-meta">
+                    <h3 id="inspector-node-name" class="inspector-node-name">Raíz de Vitalidad</h3>
+                    <div id="inspector-node-category" class="inspector-node-category">Raíces del Averno • Tier 1</div>
+                  </div>
+                  <div id="inspector-node-level" class="inspector-node-level">Nv. 0/5</div>
+                </div>
+
+                <div class="inspector-body">
+                  <p id="inspector-node-desc" class="inspector-node-desc">Nutre la fuerza vital de Kael.</p>
+                  <div class="inspector-stat-comparison">
+                    <div class="stat-compare-box">
+                      <span class="compare-label">Efecto Actual</span>
+                      <b id="inspector-current-stat">+0 HP</b>
+                    </div>
+                    <div class="stat-compare-arrow">➔</div>
+                    <div class="stat-compare-box next">
+                      <span class="compare-label">Siguiente Nivel</span>
+                      <b id="inspector-next-stat">+15 HP</b>
+                    </div>
+                  </div>
+
+                  <div id="inspector-prereq-box" class="inspector-prereq-box hidden">
+                    <span class="prereq-icon">🔒</span>
+                    <span id="inspector-prereq-text">Requiere: Despertar nodo anterior</span>
+                  </div>
+                </div>
+
+                <div class="inspector-footer">
+                  <button id="btn-buy-tree-node" class="btn-infernal btn-tree-upgrade">
+                    <span id="btn-buy-node-label">Despertar Poder</span>
+                    <b id="btn-buy-node-cost">50 🔮</b>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Hidden fallback for any legacy code referencing upgrades-grid -->
+          <div id="upgrades-grid" style="display:none;"></div>
         </div>
 
         <!-- Prestige Tab -->
         <div id="sanctuary-tab-prestige" class="sanctuary-tab-panel hidden">
           <div class="prestige-card">
             <h3 style="font-family:'Cinzel',serif; color:var(--flame); font-size:22px; margin-bottom:8px;">El Fuego Purificador</h3>
-            <p style="font-size:15px; line-height:1.5; color:var(--text); margin-bottom:14px;">Al realizar la <b>Penitencia</b>, consumes tus almas y restableces tus mejoras básicas a cambio de <b>Cenizas de Penitencia</b> permanentes.</p>
+            <p style="font-size:15px; line-height:1.5; color:var(--text); margin-bottom:14px;">Al realizar la <b>Penitencia</b>, consumes las ramas del árbol y restableces tus mejoras básicas a cambio de <b>Cenizas de Penitencia</b> permanentes.</p>
             <div class="prestige-perks-box">
               <div class="perk-line">🔥 Cada Ceniza otorga un <b>+15% permanente</b> a todas las estadísticas y almas ganadas.</div>
-              <div class="perk-line">💠 Los <b>Fragmentos de Humanidad</b> y el Doble Salto se conservan siempre.</div>
+              <div class="perk-line">💠 Los <b>Fragmentos de Humanidad</b>, el Doble Salto y la Ascensión Eterna se conservan siempre.</div>
             </div>
             <div class="prestige-calc-box">
               <div>Cenizas actuales: <span id="prestige-current-ashes" style="color:var(--flame);font-weight:bold;">0</span></div>

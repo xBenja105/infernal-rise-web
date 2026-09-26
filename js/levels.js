@@ -74,13 +74,13 @@ class LevelManager {
         // 3. Pórtico de la Gran Torre — Right Stone Dais
         { x: 715, y: 460, w: 185, h: 20, type: 'cavern_stone' }
       ],
-      // In-World Sanctuary Altar (Upgrade Shop) — Center Stage
+      // In-World Withered Soul Tree (Skill Tree) — Center Stage
       sanctuary: {
-        x: 435,
-        y: 330,
-        w: 90,
-        h: 90,
-        label: 'Santuario de Almas'
+        x: 420,
+        y: 290,
+        w: 120,
+        h: 130,
+        label: 'Árbol Marchito de las Almas'
       },
       // In-World Weapon Reliquary / Sagrario de Armas (80 Almas) — Left Wing
       slotMachine: {

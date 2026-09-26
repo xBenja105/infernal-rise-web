@@ -1642,6 +1642,351 @@ body.in-menu #virtual-controls {
   border-radius: 3px;
 }
 
+/* ─── WITHERED SOUL TREE (ÁRBOL MARCHITO DE HABILIDADES) ─── */
+.tree-modal-container {
+  max-width: 920px;
+  width: 95%;
+  max-height: 94dvh;
+}
+
+.tree-tab-panel {
+  overflow: visible;
+  padding: 0;
+}
+
+.skill-tree-layout {
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+  min-height: 480px;
+}
+
+@media (max-width: 768px) {
+  .skill-tree-layout {
+    flex-direction: column;
+  }
+}
+
+.tree-stage-wrapper {
+  flex: 1.4;
+  position: relative;
+  min-height: 480px;
+  background: radial-gradient(ellipse at 50% 85%, rgba(114, 9, 183, 0.22) 0%, rgba(16, 7, 22, 0.98) 75%);
+  border: 1.5px solid rgba(218, 165, 32, 0.35);
+  border-radius: 8px;
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.9);
+  overflow: hidden;
+  user-select: none;
+}
+
+.tree-branches-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.tree-branches-svg path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke 0.4s ease, stroke-width 0.3s ease, filter 0.4s ease;
+}
+
+.tree-branches-svg path.branch-dormant {
+  stroke: #2e172a;
+  stroke-width: 3.5px;
+  opacity: 0.55;
+}
+
+.tree-branches-svg path.branch-active {
+  stroke: url(#branch-grad-active);
+  stroke-width: 4.5px;
+  filter: drop-shadow(0 0 6px rgba(255, 0, 84, 0.75));
+}
+
+.tree-nodes-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 3;
+}
+
+.tree-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  font-size: 22px;
+  transition: transform 0.2s cubic-bezier(0.1, 0.9, 0.2, 1), box-shadow 0.25s, border-color 0.25s;
+  z-index: 5;
+}
+
+.tree-node:hover {
+  transform: translate(-50%, -50%) scale(1.18);
+  z-index: 10;
+}
+
+.tree-node.locked {
+  background: rgba(16, 8, 20, 0.9);
+  border: 2px solid #3d1b28;
+  opacity: 0.45;
+  filter: grayscale(0.85);
+  cursor: not-allowed;
+}
+
+.tree-node.available {
+  background: radial-gradient(circle at 35% 35%, #4a1930, #18081c);
+  border: 2px solid #ffd166;
+  box-shadow: 0 0 14px rgba(255, 209, 102, 0.55);
+  animation: pulseNodeAvailable 1.6s infinite alternate ease-in-out;
+}
+
+@keyframes pulseNodeAvailable {
+  0% { box-shadow: 0 0 8px rgba(255, 209, 102, 0.4); transform: translate(-50%, -50%) scale(1.0); }
+  100% { box-shadow: 0 0 18px rgba(255, 209, 102, 0.85); transform: translate(-50%, -50%) scale(1.08); }
+}
+
+.tree-node.unlocked {
+  background: radial-gradient(circle at 35% 35%, #7209b7, #1f0828);
+  border: 2px solid #b5179e;
+  box-shadow: 0 0 14px rgba(181, 23, 158, 0.65);
+}
+
+.tree-node.maxed {
+  background: radial-gradient(circle at 35% 35%, #ffd166, #ff0054);
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 0 20px rgba(255, 209, 102, 0.9);
+}
+
+.tree-node.selected {
+  outline: 2.5px dashed #00f5d4;
+  outline-offset: 4px;
+}
+
+.tree-node-badge {
+  position: absolute;
+  bottom: -7px;
+  background: rgba(8, 3, 12, 0.95);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  font-weight: 800;
+  color: #ffd166;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.tree-zone-label {
+  position: absolute;
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: rgba(244, 208, 111, 0.22);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.tree-zone-label.zone-crown { top: 12px; left: 14px; }
+.tree-zone-label.zone-branches { top: 28%; left: 14px; }
+.tree-zone-label.zone-trunk { top: 56%; left: 14px; }
+.tree-zone-label.zone-roots { bottom: 12px; left: 14px; }
+
+/* ─── NODE INSPECTOR (DETALLE DEL NODO) ─── */
+.tree-node-inspector {
+  flex: 1;
+  min-width: 280px;
+  background: rgba(18, 9, 24, 0.95);
+  border: 1.5px solid rgba(218, 165, 32, 0.3);
+  border-radius: 8px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.7);
+}
+
+.inspector-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  height: 100%;
+  color: #a095a8;
+  gap: 12px;
+  padding: 20px;
+}
+
+.inspector-empty-icon {
+  font-size: 48px;
+  filter: drop-shadow(0 0 12px rgba(114, 9, 183, 0.6));
+}
+
+.inspector-empty-title {
+  font-family: 'Cinzel', serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: #f4d06f;
+}
+
+.inspector-card-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.inspector-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid rgba(244, 208, 111, 0.2);
+  padding-bottom: 12px;
+}
+
+.inspector-node-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1.5px solid rgba(255, 215, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+  flex-shrink: 0;
+}
+
+.inspector-title-meta {
+  flex: 1;
+}
+
+.inspector-node-name {
+  font-family: 'Cinzel', serif;
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+}
+
+.inspector-node-category {
+  font-size: 11.5px;
+  color: #b5adc0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.inspector-node-level {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 800;
+  color: #ffd166;
+  background: rgba(255, 209, 102, 0.12);
+  border: 1px solid rgba(255, 209, 102, 0.35);
+  border-radius: 4px;
+  padding: 3px 8px;
+}
+
+.inspector-node-desc {
+  font-size: 13px;
+  color: #e0d6c8;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.inspector-stat-comparison {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.stat-compare-box {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 8px 10px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stat-compare-box.next {
+  border-color: rgba(255, 209, 102, 0.35);
+  background: rgba(255, 209, 102, 0.05);
+}
+
+.compare-label {
+  font-size: 10.5px;
+  color: #a095a8;
+  text-transform: uppercase;
+}
+
+.stat-compare-box b {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  color: #e0d6c8;
+}
+
+.stat-compare-box.next b {
+  color: #ffd166;
+  font-weight: 800;
+}
+
+.stat-compare-arrow {
+  color: #a095a8;
+  font-size: 14px;
+}
+
+.inspector-prereq-box {
+  background: rgba(100, 20, 30, 0.35);
+  border: 1px solid rgba(255, 84, 84, 0.4);
+  border-radius: 6px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #ff99a8;
+}
+
+.btn-tree-upgrade {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 18px;
+  font-size: 14px;
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+}
+
+.btn-tree-upgrade:disabled {
+  opacity: 0.5;
+  filter: grayscale(0.8);
+  cursor: not-allowed;
+}
+
 .upgrades-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));

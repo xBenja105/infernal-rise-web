@@ -16,17 +16,19 @@ class ProgressionManager {
     this.totalSoulsEver = 0;
     this.maxHeightClimbed = 0;
 
-    // Upgrades: level of each upgrade
+    // Upgrades: level of each upgrade in the Withered Soul Tree
     this.upgrades = {
-      vitality: 0,        // +10 Max HP per level (up to 200 HP)
-      healthRegen: 0,     // Health regen per second (+0.5 HP/s per level)
-      spikeResist: 0,     // Level 1 allows surviving spikes! Reduces spike damage further each lvl
-      agility: 0,         // Movement & air control speed (+3.5% per lvl)
-      jumpPower: 0,       // Jump force (+2% per lvl)
-      bladeMastery: 0,    // Sword damage (+2.5 dmg per lvl)
-      soulGreed: 0,       // +10% souls gained from height & kills per lvl
-      altarOfTorment: 0,  // Passive souls per second (+0.08/s per lvl base)
-      doubleJump: 0       // Unlocks mid-air double jump (costs 2 Humanity Shards)
+      vitality: 0,          // Raíces: +15 Max HP per level (up to 175 HP)
+      spikeResist: 0,       // Raíces: Spike immunity lvl 1, reduces trap/spike damage
+      healthRegen: 0,       // Raíces: Continuous HP regen (+0.6 HP/s per level)
+      agility: 0,           // Tronco: Movement speed & air control (+4% per level)
+      bladeMastery: 0,      // Tronco: Melee dagger damage (+3.5 dmg per level)
+      megabonkPower: 0,     // Tronco: Knockback & kinetic wall-slam damage (+20% per level)
+      doubleJump: 0,        // Tronco: Mid-air double jump (costs 2 Humanity Shards)
+      soulHarvest: 0,       // Rama Izq: +15% souls & +70px magnet aura per level
+      altarOfTorment: 0,    // Rama Izq: Passive soul generation (+0.15/s per level)
+      wrathFervor: 0,       // Rama Der: +1 starting Balatro fervor & +5% crit chance per level
+      eternalAscension: 0   // Copa: +25% boss damage & fatal death prevention shield (costs 3 Shards)
     };
 
     // ─── VAMPIRE SURVIVORS XP & LEVELING ───
@@ -373,86 +375,203 @@ class ProgressionManager {
     ];
 
     this.upgradeDefinitions = {
+      // ── RAÍCES DEL AVERNO (SUPERVIVENCIA & FORTALEZA) ──
       vitality: {
-        name: 'Vitalidad de Kael',
-        desc: 'Incrementa la vida máxima en +10 HP por nivel (hasta 200 HP totales).',
+        id: 'vitality',
+        category: 'roots',
+        tier: 1,
+        gridX: 20,
+        gridY: 82,
+        name: 'Raíz de Vitalidad',
+        desc: 'Nutre la fuerza vital de Kael (+15 HP máximo por nivel).',
         currency: 'souls',
-        baseCost: 50,
+        baseCost: 45,
         costMult: 1.45,
-        maxLvl: 10,
-        icon: '❤️'
+        maxLvl: 5,
+        icon: '❤️',
+        statUnit: 'HP',
+        statPerLvl: 15,
+        prerequisites: []
       },
-      healthRegen: {
-        name: 'Regeneración Carmesí',
-        desc: 'Regenera la salud de Kael continuamente en el tiempo (+0.5 HP/segundo por nivel).',
+      spikeResist: {
+        id: 'spikeResist',
+        category: 'roots',
+        tier: 1,
+        gridX: 50,
+        gridY: 88,
+        name: 'Corteza de Obsidiana',
+        desc: 'Inmunidad a muerte súbita por pinchos y -12% daño recibido de trampas.',
         currency: 'souls',
         baseCost: 65,
         costMult: 1.5,
-        maxLvl: 8,
-        icon: '🩸'
-      },
-      spikeResist: {
-        name: 'Piel de Obsidiana',
-        desc: 'Nivel 1: ¡Los pinchos ya no te matan al instante! Reduce el daño recibido por trampas y pinchos.',
-        currency: 'souls',
-        baseCost: 90,
-        costMult: 1.6,
         maxLvl: 5,
-        icon: '🛡️'
+        icon: '🛡️',
+        statUnit: '% Def',
+        statPerLvl: 12,
+        prerequisites: []
       },
+      healthRegen: {
+        id: 'healthRegen',
+        category: 'roots',
+        tier: 2,
+        gridX: 80,
+        gridY: 82,
+        name: 'Savia Carmesí',
+        desc: 'Regenera la salud continuamente en el averno (+0.6 HP/s por nivel).',
+        currency: 'souls',
+        baseCost: 75,
+        costMult: 1.55,
+        maxLvl: 4,
+        icon: '🩸',
+        statUnit: 'HP/s',
+        statPerLvl: 0.6,
+        prerequisites: ['vitality']
+      },
+
+      // ── TRONCO DEL SUPLICIO (COMBATE & DESTREZA CENTRAL) ──
       agility: {
-        name: 'Agilidad Abisal',
-        desc: 'Aumenta la velocidad de movimiento horizontal y maniobrabilidad aérea en un +3.5% por nivel.',
+        id: 'agility',
+        category: 'trunk',
+        tier: 2,
+        gridX: 50,
+        gridY: 68,
+        name: 'Impulso de las Sombras',
+        desc: '+4% velocidad de movimiento horizontal y maniobrabilidad aérea.',
         currency: 'souls',
         baseCost: 60,
         costMult: 1.45,
-        maxLvl: 8,
-        icon: '👟'
-      },
-      jumpPower: {
-        name: 'Impulso Titánico',
-        desc: 'Aumenta la fuerza base y máxima de salto en un +2% por nivel.',
-        currency: 'souls',
-        baseCost: 65,
-        costMult: 1.5,
-        maxLvl: 8,
-        icon: '🚀'
+        maxLvl: 5,
+        icon: '👟',
+        statUnit: '% Vel',
+        statPerLvl: 4,
+        prerequisites: ['vitality', 'spikeResist']
       },
       bladeMastery: {
-        name: 'Filo del Purgatorio',
-        desc: 'Aumenta el filo de tu daga y daño de estocadas en +2.5 por nivel.',
-        currency: 'souls',
-        baseCost: 70,
-        costMult: 1.5,
-        maxLvl: 10,
-        icon: '⚔️'
-      },
-      soulGreed: {
-        name: 'Codicia del Condenado',
-        desc: '+10% de almas obtenidas por altura y por cada enemigo derrotado.',
+        id: 'bladeMastery',
+        category: 'trunk',
+        tier: 3,
+        gridX: 50,
+        gridY: 52,
+        name: 'Filo del Averno',
+        desc: 'Temple ígneo en la daga (+3.5 de daño base por nivel a cada estocada).',
         currency: 'souls',
         baseCost: 75,
         costMult: 1.5,
-        maxLvl: 8,
-        icon: '💰'
+        maxLvl: 5,
+        icon: '⚔️',
+        statUnit: 'Dmg',
+        statPerLvl: 3.5,
+        prerequisites: ['agility']
       },
-      altarOfTorment: {
-        name: 'Altar del Tormento',
-        desc: 'Genera almas pasivas continuamente (+0.08 almas/segundo por nivel base).',
+      megabonkPower: {
+        id: 'megabonkPower',
+        category: 'trunk',
+        tier: 4,
+        gridX: 50,
+        gridY: 38,
+        name: 'Impacto Devastador',
+        desc: '+20% fuerza de empuje cinético y daño al estrellar enemigos contra muros.',
         currency: 'souls',
         baseCost: 90,
         costMult: 1.55,
-        maxLvl: 10,
-        icon: '🕯️'
+        maxLvl: 3,
+        icon: '💥',
+        statUnit: '% Empuje',
+        statPerLvl: 20,
+        prerequisites: ['bladeMastery']
       },
       doubleJump: {
-        name: 'Doble Salto (Gracia Perdida)',
-        desc: 'Permite a Kael realizar un segundo salto libre en el aire.',
+        id: 'doubleJump',
+        category: 'trunk',
+        tier: 5,
+        gridX: 50,
+        gridY: 24,
+        name: 'Gracia de Ceniza (Doble Salto)',
+        desc: 'Permite a Kael ejecutar un segundo salto libre y acrobático en el aire.',
         currency: 'humanityShards',
         baseCost: 2,
         costMult: 1.0,
         maxLvl: 1,
-        icon: '🪽'
+        icon: '🪽',
+        statUnit: 'Salto',
+        statPerLvl: 1,
+        prerequisites: ['megabonkPower']
+      },
+
+      // ── RAMAS ARCANAS (ALMAS & SINERGIAS) ──
+      soulHarvest: {
+        id: 'soulHarvest',
+        category: 'branches',
+        branch: 'left',
+        tier: 5,
+        gridX: 22,
+        gridY: 34,
+        name: 'Cosecha de Almas',
+        desc: '+15% de almas obtenidas y +70px de radio magnético de absorción.',
+        currency: 'souls',
+        baseCost: 90,
+        costMult: 1.55,
+        maxLvl: 4,
+        icon: '🔮',
+        statUnit: '% Almas',
+        statPerLvl: 15,
+        prerequisites: ['doubleJump']
+      },
+      altarOfTorment: {
+        id: 'altarOfTorment',
+        category: 'branches',
+        branch: 'left',
+        tier: 6,
+        gridX: 16,
+        gridY: 18,
+        name: 'Tributo del Inframundo',
+        desc: 'Genera almas pasivas continuamente (+0.15 almas/segundo por nivel).',
+        currency: 'souls',
+        baseCost: 110,
+        costMult: 1.55,
+        maxLvl: 5,
+        icon: '🕯️',
+        statUnit: 'APS',
+        statPerLvl: 0.15,
+        prerequisites: ['soulHarvest']
+      },
+      wrathFervor: {
+        id: 'wrathFervor',
+        category: 'branches',
+        branch: 'right',
+        tier: 5,
+        gridX: 78,
+        gridY: 34,
+        name: 'Cólera y Fervor',
+        desc: '+1 Fervor inicial en combate Balatro y +5% de probabilidad de golpe crítico.',
+        currency: 'souls',
+        baseCost: 90,
+        costMult: 1.55,
+        maxLvl: 4,
+        icon: '🔥',
+        statUnit: '% Crítico',
+        statPerLvl: 5,
+        prerequisites: ['doubleJump']
+      },
+
+      // ── COPA MARCHITA (MAESTRÍA SUPREMA) ──
+      eternalAscension: {
+        id: 'eternalAscension',
+        category: 'crown',
+        tier: 7,
+        gridX: 50,
+        gridY: 8,
+        name: 'Ascensión Eterna',
+        desc: '+25% daño a Jefes y 1 protección contra muerte letal por partida.',
+        currency: 'humanityShards',
+        baseCost: 3,
+        costMult: 1.0,
+        maxLvl: 1,
+        icon: '👑',
+        statUnit: 'Poder',
+        statPerLvl: 1,
+        requiresAll: true,
+        prerequisites: ['soulHarvest', 'wrathFervor']
       }
     };
 
@@ -501,6 +620,9 @@ class ProgressionManager {
         if (data.upgrades) {
           if (data.upgrades.chargeSpeed !== undefined && data.upgrades.agility === undefined) {
             data.upgrades.agility = data.upgrades.chargeSpeed;
+          }
+          if (data.upgrades.soulGreed !== undefined && data.upgrades.soulHarvest === undefined) {
+            data.upgrades.soulHarvest = Math.min(4, data.upgrades.soulGreed);
           }
           for (const k in this.upgrades) {
             if (data.upgrades[k] !== undefined) {
@@ -960,20 +1082,20 @@ class ProgressionManager {
   }
 
   getPassiveAPS() {
-    const lvl = this.upgrades.altarOfTorment;
+    const lvl = this.upgrades.altarOfTorment || 0;
     if (lvl <= 0) return 0;
-    const baseAPS = lvl * 0.08;
-    const greedMult = 1.0 + (this.upgrades.soulGreed * 0.10);
+    const baseAPS = lvl * 0.15;
+    const harvestMult = 1.0 + ((this.upgrades.soulHarvest || 0) * 0.15);
     const prestigeMult = this.getPrestigeMultiplier();
-    return baseAPS * greedMult * prestigeMult;
+    return baseAPS * harvestMult * prestigeMult;
   }
 
   addSouls(amount) {
-    const greedMult = 1.0 + (this.upgrades.soulGreed * 0.10);
+    const harvestMult = 1.0 + ((this.upgrades.soulHarvest || 0) * 0.15);
     const boonMult = this.hasBoon('goldenTouch') ? 1.5 : 1.0;
     const curseMult = this.hasBoon('curse_greed') ? 3.0 : 1.0;
     const prestigeMult = this.getPrestigeMultiplier();
-    const finalAmount = Math.max(1, Math.round(amount * greedMult * boonMult * prestigeMult * curseMult));
+    const finalAmount = Math.max(1, Math.round(amount * harvestMult * boonMult * prestigeMult * curseMult));
 
     this.souls += finalAmount;
     this.totalSoulsEver += finalAmount;
@@ -997,10 +1119,11 @@ class ProgressionManager {
     }
   }
 
-  // ─── UPGRADES LOGIC ───
+  // ─── UPGRADES LOGIC (WITHERED SOUL TREE) ───
   getUpgradeCost(key) {
     const def = this.upgradeDefinitions[key];
-    const lvl = this.upgrades[key];
+    if (!def) return Infinity;
+    const lvl = this.upgrades[key] || 0;
     if (lvl >= def.maxLvl) return Infinity;
     if (def.currency === 'humanityShards') {
       return def.baseCost;
@@ -1008,10 +1131,25 @@ class ProgressionManager {
     return Math.floor(def.baseCost * Math.pow(def.costMult, lvl));
   }
 
+  isNodeUnlocked(key) {
+    return (this.upgrades[key] || 0) > 0;
+  }
+
+  arePrerequisitesMet(key) {
+    const def = this.upgradeDefinitions[key];
+    if (!def || !def.prerequisites || def.prerequisites.length === 0) return true;
+    if (def.requiresAll) {
+      return def.prerequisites.every(p => this.isNodeUnlocked(p));
+    }
+    return def.prerequisites.some(p => this.isNodeUnlocked(p));
+  }
+
   canBuyUpgrade(key) {
     const def = this.upgradeDefinitions[key];
-    const lvl = this.upgrades[key];
+    if (!def) return false;
+    const lvl = this.upgrades[key] || 0;
     if (lvl >= def.maxLvl) return false;
+    if (!this.arePrerequisitesMet(key)) return false;
     const cost = this.getUpgradeCost(key);
     if (def.currency === 'humanityShards') {
       return this.humanityShards >= cost;
@@ -1030,7 +1168,7 @@ class ProgressionManager {
       this.souls -= cost;
     }
 
-    this.upgrades[key]++;
+    this.upgrades[key] = (this.upgrades[key] || 0) + 1;
     this.save();
     this.updateHUD();
     if (window.soundEngine) window.soundEngine.playUpgradePurchase();
@@ -1039,37 +1177,43 @@ class ProgressionManager {
 
   // ─── CALCULATE COMBAT & MOVEMENT STATS ───
   getPlayerStats() {
-    const doubleJumpActive = this.upgrades.doubleJump > 0 || this.hasRelic('relic_double_jump');
-    const magnetRange = this.hasRelic('relic_soul_magnet_aura') ? 400 : (this.hasBoon('soulMagnet') ? 260 : 70);
+    const doubleJumpActive = (this.upgrades.doubleJump || 0) > 0 || this.hasRelic('relic_double_jump');
+    const baseMagnet = 70 + ((this.upgrades.soulHarvest || 0) * 70);
+    const magnetRange = this.hasRelic('relic_soul_magnet_aura') ? (baseMagnet + 300) : (this.hasBoon('soulMagnet') ? (baseMagnet + 180) : baseMagnet);
     const bonusDmg = this.runBonusDaggerDmg || 0;
     const bonusRegen = this.runBonusRegen || 0;
 
-    let baseDmg = 16 + (this.upgrades.bladeMastery * 2.5) + bonusDmg;
+    let baseDmg = 16 + ((this.upgrades.bladeMastery || 0) * 3.5) + bonusDmg;
     if (this.hasBoon('curse_damage')) {
       baseDmg *= 1.40; // +40% sword damage
     }
 
-    let speedMult = 1.0 + (this.upgrades.agility * 0.035);
+    let speedMult = 1.0 + ((this.upgrades.agility || 0) * 0.04);
     if (this.hasBoon('curse_greed')) {
       speedMult *= 0.90; // -10% speed
     }
 
     const maxHpPenalty = this.bloodAltarMaxHpPenalty || 0;
-    const computedMaxHp = Math.max(25, 100 + (this.upgrades.vitality * 10) - maxHpPenalty);
+    const computedMaxHp = Math.max(25, 100 + ((this.upgrades.vitality || 0) * 15) - maxHpPenalty);
 
     return {
       maxHp: computedMaxHp,
-      hpRegen: (this.upgrades.healthRegen || 0) * 0.5 + bonusRegen,
-      hasSpikeResist: this.upgrades.spikeResist > 0,
-      spikeDamageRatio: Math.max(0.35, 0.70 - (this.upgrades.spikeResist * 0.07)),
+      hpRegen: ((this.upgrades.healthRegen || 0) * 0.6) + bonusRegen,
+      hasSpikeResist: (this.upgrades.spikeResist || 0) > 0,
+      spikeDamageRatio: Math.max(0.28, 0.68 - ((this.upgrades.spikeResist || 0) * 0.08)),
       moveSpeedMult: speedMult,
-      jumpForceMult: 1.0 + (this.upgrades.jumpPower * 0.02),
+      jumpForceMult: 1.0,
       weaponName: 'Daga Básica',
       weaponType: 'dagger',
       daggerDamage: Math.round(baseDmg),
       swordDamage: Math.round(baseDmg),
       hasDoubleJump: doubleJumpActive,
-      magnetRadius: magnetRange
+      magnetRadius: magnetRange,
+      megabonkMult: 1.0 + ((this.upgrades.megabonkPower || 0) * 0.20),
+      critChance: (this.upgrades.wrathFervor || 0) * 0.05,
+      extraStartingFervor: (this.upgrades.wrathFervor || 0) * 1,
+      hasSecondChance: (this.upgrades.eternalAscension || 0) > 0,
+      bossDamageMult: (this.upgrades.eternalAscension || 0) > 0 ? 1.25 : 1.0
     };
   }
 
@@ -1331,16 +1475,17 @@ class ProgressionManager {
 
     this.penitenceAshes += pending;
 
-    // Reset base upgrades and current souls (keep humanity shards & prestige ashes)
+    // Reset base tree upgrades and current souls (keep humanity shards, doubleJump & eternalAscension)
     this.souls = 0;
     this.upgrades.vitality = 0;
     this.upgrades.healthRegen = 0;
     this.upgrades.spikeResist = 0;
     this.upgrades.agility = 0;
-    this.upgrades.jumpPower = 0;
     this.upgrades.bladeMastery = 0;
-    this.upgrades.soulGreed = 0;
+    this.upgrades.megabonkPower = 0;
+    this.upgrades.soulHarvest = 0;
     this.upgrades.altarOfTorment = 0;
+    this.upgrades.wrathFervor = 0;
 
     this.resetRunBoons();
     this.save();

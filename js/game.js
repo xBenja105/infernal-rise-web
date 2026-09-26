@@ -685,6 +685,7 @@ class Game {
         this.ui.tabBtnPrestige.classList.remove('active');
         this.ui.tabPanelUpgrades.classList.remove('hidden');
         this.ui.tabPanelPrestige.classList.add('hidden');
+        this.renderSanctuaryUpgrades();
       });
     }
     if (this.ui.tabBtnPrestige) {
@@ -2504,12 +2505,12 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     } else if (this.level && this.level.sanctuary && Math.hypot(
         (this.player.x + this.player.w / 2) - (this.level.sanctuary.x + this.level.sanctuary.w / 2),
         (this.player.y + this.player.h / 2) - (this.level.sanctuary.y + this.level.sanctuary.h / 2)
-      ) < 95 && this.state !== 'DIALOGUE') {
+      ) < 115 && this.state !== 'DIALOGUE') {
       this.nearSanctuary = true;
       this.ui.interactionBadge.style.display = 'block';
-      this.ui.interactionBadge.textContent = `${btnKey} Santuario de Mejoras`;
+      this.ui.interactionBadge.textContent = `🌳 ${btnKey} Árbol de las Almas`;
       const screenX = ((this.level.sanctuary.x + this.level.sanctuary.w / 2 - this.camX) / this.vWidth) * 100;
-      const screenY = ((this.level.sanctuary.y - 18 - this.camY) / this.vHeight) * 100;
+      const screenY = ((this.level.sanctuary.y - 14 - this.camY) / this.vHeight) * 100;
       this.ui.interactionBadge.style.left = `${screenX}%`;
       this.ui.interactionBadge.style.top = `${screenY}%`;
     } else if (this.level && this.level.npc) {
@@ -4254,123 +4255,201 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
   drawSanctuaryAltar(sanctuary, camX, camY) {
     const rx = Math.round(sanctuary.x - camX);
     const ry = Math.round(sanctuary.y - camY);
-    const w = sanctuary.w || 90;
-    const h = sanctuary.h || 90;
+    const w = sanctuary.w || 120;
+    const h = sanctuary.h || 130;
     const time = Date.now() / 350;
 
     this.ctx.save();
 
-    // 1. Ethereal ambient light halo
+    // 1. Ambient Ethereal Aura Gradient
     const auraGrad = this.ctx.createRadialGradient(
-      rx + w / 2, ry + h / 2 - 10, 8,
-      rx + w / 2, ry + h / 2 - 10, 65 + Math.sin(time) * 6
+      rx + w / 2, ry + h / 2, 10,
+      rx + w / 2, ry + h / 2, 90 + Math.sin(time) * 8
     );
-    auraGrad.addColorStop(0, 'rgba(157, 78, 221, 0.45)');
-    auraGrad.addColorStop(0.5, 'rgba(255, 215, 0, 0.18)');
+    auraGrad.addColorStop(0, 'rgba(157, 78, 221, 0.35)');
+    auraGrad.addColorStop(0.4, 'rgba(255, 0, 84, 0.15)');
+    auraGrad.addColorStop(0.7, 'rgba(255, 215, 0, 0.08)');
     auraGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
     this.ctx.fillStyle = auraGrad;
     this.ctx.beginPath();
-    this.ctx.arc(rx + w / 2, ry + h / 2 - 10, 75, 0, Math.PI * 2);
+    this.ctx.arc(rx + w / 2, ry + h / 2, 95, 0, Math.PI * 2);
     this.ctx.fill();
 
-    // 2. Heavy Stone Base Altar (stepped pediment)
-    // Bottom plinth step
-    this.ctx.fillStyle = '#1c1b22';
-    this.ctx.strokeStyle = '#4a3b5c';
+    // 2. Gnarled Ground Roots clawing into stone
+    const rootPulse = 0.5 + Math.sin(time * 2.0) * 0.4;
+    this.ctx.lineCap = 'round';
+    this.ctx.lineJoin = 'round';
+
+    // Base root mounds
+    this.ctx.fillStyle = '#140c1a';
+    this.ctx.beginPath();
+    this.ctx.ellipse(rx + w / 2, ry + h - 6, w * 0.45, 12, 0, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    // Deep twisted root tendrils
+    const roots = [
+      { startX: rx + w / 2 - 10, startY: ry + h - 14, cpX: rx + 10, cpY: ry + h - 2, endX: rx - 12, endY: ry + h - 1, w: 7, glow: true },
+      { startX: rx + w / 2 + 10, startY: ry + h - 14, cpX: rx + w - 10, cpY: ry + h - 2, endX: rx + w + 14, endY: ry + h - 1, w: 7, glow: true },
+      { startX: rx + w / 2 - 20, startY: ry + h - 20, cpX: rx + w / 2 - 38, cpY: ry + h - 8, endX: rx + 8, endY: ry + h + 2, w: 5, glow: false },
+      { startX: rx + w / 2 + 20, startY: ry + h - 20, cpX: rx + w / 2 + 38, cpY: ry + h - 8, endX: rx + w - 8, endY: ry + h + 2, w: 5, glow: false }
+    ];
+
+    for (const r of roots) {
+      // Bark root
+      this.ctx.strokeStyle = '#1e1126';
+      this.ctx.lineWidth = r.w;
+      this.ctx.beginPath();
+      this.ctx.moveTo(r.startX, r.startY);
+      this.ctx.quadraticCurveTo(r.cpX, r.cpY, r.endX, r.endY);
+      this.ctx.stroke();
+
+      // Vein of glowing purple soul sap
+      if (r.glow) {
+        this.ctx.strokeStyle = `rgba(199, 125, 255, ${0.4 + rootPulse * 0.4})`;
+        this.ctx.lineWidth = Math.max(1.5, r.w * 0.35);
+        this.ctx.beginPath();
+        this.ctx.moveTo(r.startX, r.startY);
+        this.ctx.quadraticCurveTo(r.cpX, r.cpY, r.endX, r.endY);
+        this.ctx.stroke();
+      }
+    }
+
+    // 3. Main Twisted Withered Trunk
+    const centerX = rx + w / 2;
+    const baseY = ry + h - 14;
+    const trunkTopY = ry + 42;
+
+    this.ctx.fillStyle = '#1c1024';
+    this.ctx.strokeStyle = '#38204b';
     this.ctx.lineWidth = 2;
-    this.ctx.fillRect(rx - 8, ry + h - 18, w + 16, 18);
-    this.ctx.strokeRect(rx - 8, ry + h - 18, w + 16, 18);
 
-    // Middle pediment
-    this.ctx.fillStyle = '#262330';
-    this.ctx.fillRect(rx + 4, ry + h - 42, w - 8, 24);
-    this.ctx.strokeRect(rx + 4, ry + h - 42, w - 8, 24);
-
-    // Altar top slab
-    this.ctx.fillStyle = '#342e42';
-    this.ctx.fillRect(rx, ry + h - 50, w, 10);
-    this.ctx.strokeRect(rx, ry + h - 50, w, 10);
-
-    // Flanking runic stone pillars
-    this.ctx.fillStyle = '#221e2a';
-    this.ctx.fillRect(rx + 4, ry + 16, 12, h - 66);
-    this.ctx.strokeRect(rx + 4, ry + 16, 12, h - 66);
-    this.ctx.fillRect(rx + w - 16, ry + 16, 12, h - 66);
-    this.ctx.strokeRect(rx + w - 16, ry + 16, 12, h - 66);
-
-    // Twin Celestial Brazier Flames atop pillars
-    const fireFrames = (window.spriteManager && window.spriteManager.sprites?.fx?.fire?.purple) ||
-                       (window.spriteManager && window.spriteManager.sprites?.fx?.fire?.white);
-    if (fireFrames && fireFrames.length > 0) {
-      const fIdx = Math.floor(Date.now() / 110) % fireFrames.length;
-      this.ctx.drawImage(fireFrames[fIdx], rx + 4 - 5, ry + 16 - 20, 22, 22);
-      this.ctx.drawImage(fireFrames[fIdx], rx + w - 16 - 5, ry + 16 - 20, 22, 22);
-    }
-
-    // Glowing Engraved Runes on pillars and plinth
-    const runeGlow = 0.5 + Math.sin(time * 1.5) * 0.4;
-    this.ctx.save();
-    this.ctx.shadowColor = '#c77dff';
-    this.ctx.shadowBlur = 10 * runeGlow;
-    this.ctx.fillStyle = `rgba(199, 125, 255, ${0.4 + runeGlow * 0.5})`;
-    this.ctx.font = 'bold 9px Cinzel, serif';
-    this.ctx.textAlign = 'center';
-    this.ctx.fillText('I', rx + 10, ry + 36);
-    this.ctx.fillText('V', rx + 10, ry + 52);
-    this.ctx.fillText('X', rx + w - 10, ry + 36);
-    this.ctx.fillText('IX', rx + w - 10, ry + 52);
-
-    // Inscription along central plinth
-    this.ctx.fillStyle = `rgba(255, 215, 0, ${0.4 + runeGlow * 0.4})`;
-    this.ctx.shadowColor = '#ffd700';
-    this.ctx.fillText('✧ REDEMPTIO ✧', rx + w / 2, ry + h - 26);
-    this.ctx.restore();
-
-    // 3. Floating Soul Nexus / Core Orb levitating above the altar slab
-    const floatY = Math.sin(time * 2.0) * 5;
-    const orbX = rx + w / 2;
-    const orbY = ry + 26 + floatY;
-
-    // Outer spinning soul halo rings
-    this.ctx.strokeStyle = 'rgba(255, 215, 0, 0.7)';
-    this.ctx.lineWidth = 1.5;
     this.ctx.beginPath();
-    this.ctx.ellipse(orbX, orbY, 16, 8, time * 0.8, 0, Math.PI * 2);
+    this.ctx.moveTo(centerX - 24, baseY);
+    this.ctx.bezierCurveTo(centerX - 28, baseY - 30, centerX - 18, baseY - 50, centerX - 14, trunkTopY);
+    this.ctx.lineTo(centerX + 14, trunkTopY);
+    this.ctx.bezierCurveTo(centerX + 18, baseY - 50, centerX + 28, baseY - 30, centerX + 24, baseY);
+    this.ctx.closePath();
+    this.ctx.fill();
     this.ctx.stroke();
 
-    this.ctx.strokeStyle = 'rgba(199, 125, 255, 0.7)';
+    // Twisted bark wood grain ridges
+    this.ctx.strokeStyle = '#2b163a';
+    this.ctx.lineWidth = 2;
     this.ctx.beginPath();
-    this.ctx.ellipse(orbX, orbY, 16, 8, -time * 0.8, 0, Math.PI * 2);
+    this.ctx.moveTo(centerX - 10, baseY - 4);
+    this.ctx.bezierCurveTo(centerX - 14, baseY - 28, centerX - 4, baseY - 45, centerX - 6, trunkTopY + 4);
     this.ctx.stroke();
 
-    // Soul Core
-    const coreGrad = this.ctx.createRadialGradient(orbX, orbY, 1, orbX, orbY, 10);
-    coreGrad.addColorStop(0, '#ffffff');
-    coreGrad.addColorStop(0.4, '#c77dff');
-    coreGrad.addColorStop(0.8, '#7b2cbf');
-    coreGrad.addColorStop(1, 'rgba(60, 9, 108, 0.8)');
-    this.ctx.fillStyle = coreGrad;
     this.ctx.beginPath();
-    this.ctx.arc(orbX, orbY, 9, 0, Math.PI * 2);
+    this.ctx.moveTo(centerX + 8, baseY - 4);
+    this.ctx.bezierCurveTo(centerX + 12, baseY - 28, centerX + 4, baseY - 45, centerX + 6, trunkTopY + 4);
+    this.ctx.stroke();
+
+    // 4. Central Soul Nexus / Eye of the Hollow Trunk
+    const heartX = centerX;
+    const heartY = ry + 72 + Math.sin(time * 1.5) * 2;
+    const heartGlow = 0.6 + Math.sin(time * 2.2) * 0.35;
+
+    // Outer dark cavity
+    this.ctx.fillStyle = '#0c0610';
+    this.ctx.beginPath();
+    this.ctx.ellipse(heartX, heartY, 9, 13, 0, 0, Math.PI * 2);
     this.ctx.fill();
 
-    // Occasional soul particle spark
-    if (window.particleSystem && Math.random() < 0.08) {
-      window.particleSystem.spawnTeleportSparks(sanctuary.x + w / 2 + (Math.random() - 0.5) * 20, sanctuary.y + 26);
+    // Radiant Soul Core
+    const heartGrad = this.ctx.createRadialGradient(heartX, heartY, 1, heartX, heartY, 11);
+    heartGrad.addColorStop(0, '#ffffff');
+    heartGrad.addColorStop(0.3, '#ff0054');
+    heartGrad.addColorStop(0.7, '#9d4edd');
+    heartGrad.addColorStop(1, 'rgba(123, 44, 191, 0)');
+    this.ctx.fillStyle = heartGrad;
+    this.ctx.beginPath();
+    this.ctx.arc(heartX, heartY, 10, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    // Pulsing soul sap fissure down the trunk
+    this.ctx.strokeStyle = `rgba(255, 0, 84, ${0.45 + heartGlow * 0.4})`;
+    this.ctx.lineWidth = 2;
+    this.ctx.beginPath();
+    this.ctx.moveTo(heartX, heartY + 12);
+    this.ctx.quadraticCurveTo(heartX + 3, heartY + 22, heartX - 2, baseY - 4);
+    this.ctx.stroke();
+
+    // 5. Spreading Gnarled Branches reaching outward and up
+    const branches = [
+      // Left major limb
+      { startX: centerX - 12, startY: trunkTopY + 6, cp1X: centerX - 26, cp1Y: trunkTopY - 10, cp2X: centerX - 42, cp2Y: trunkTopY - 14, endX: rx + 6, endY: ry + 24, w: 5 },
+      // Left minor sub-branch
+      { startX: centerX - 32, startY: trunkTopY - 10, cp1X: centerX - 40, cp1Y: trunkTopY - 26, cp2X: centerX - 46, cp2Y: trunkTopY - 32, endX: rx + 14, endY: ry + 6, w: 3 },
+      // Right major limb
+      { startX: centerX + 12, startY: trunkTopY + 6, cp1X: centerX + 26, cp1Y: trunkTopY - 10, cp2X: centerX + 42, cp2Y: trunkTopY - 14, endX: rx + w - 6, endY: ry + 24, w: 5 },
+      // Right minor sub-branch
+      { startX: centerX + 32, startY: trunkTopY - 10, cp1X: centerX + 40, cp1Y: trunkTopY - 26, cp2X: centerX + 46, cp2Y: trunkTopY - 32, endX: rx + w - 14, endY: ry + 6, w: 3 },
+      // Crown central spire
+      { startX: centerX, startY: trunkTopY, cp1X: centerX - 4, cp1Y: trunkTopY - 18, cp2X: centerX + 4, cp2Y: trunkTopY - 28, endX: centerX, endY: ry + 4, w: 4.5 }
+    ];
+
+    for (const b of branches) {
+      this.ctx.strokeStyle = '#22132e';
+      this.ctx.lineWidth = b.w;
+      this.ctx.beginPath();
+      this.ctx.moveTo(b.startX, b.startY);
+      this.ctx.bezierCurveTo(b.cp1X, b.cp1Y, b.cp2X, b.cp2Y, b.endX, b.endY);
+      this.ctx.stroke();
+
+      // Barren thorn shoots
+      this.ctx.strokeStyle = '#38204b';
+      this.ctx.lineWidth = 1.5;
+      this.ctx.beginPath();
+      this.ctx.moveTo(b.endX, b.endY);
+      this.ctx.lineTo(b.endX + (b.endX < centerX ? -5 : 5), b.endY - 6);
+      this.ctx.stroke();
     }
 
-    // 4. Overhead Carved Arch
-    this.ctx.fillStyle = '#ffb703';
-    this.ctx.fillRect(rx + 2, ry + 8, w - 4, 6);
+    // 6. Suspended Glowing Soul Embers (Spectral Fruits)
+    const embers = [
+      { x: rx + 8, y: ry + 22, color: '#c77dff', offset: 0 },
+      { x: rx + 18, y: ry + 8, color: '#ffd166', offset: 1.2 },
+      { x: centerX, y: ry + 4, color: '#ff0054', offset: 2.1 },
+      { x: rx + w - 18, y: ry + 8, color: '#ffd166', offset: 3.4 },
+      { x: rx + w - 8, y: ry + 22, color: '#c77dff', offset: 4.6 }
+    ];
 
-    // Label Plate
+    for (const em of embers) {
+      const bobY = Math.sin(time * 2.2 + em.offset) * 3.5;
+      const ex = em.x;
+      const ey = em.y + bobY;
+
+      // Outer aura
+      this.ctx.fillStyle = em.color === '#ffd166' ? 'rgba(255, 209, 102, 0.3)' :
+                           em.color === '#ff0054' ? 'rgba(255, 0, 84, 0.35)' : 'rgba(199, 125, 255, 0.35)';
+      this.ctx.beginPath();
+      this.ctx.arc(ex, ey, 7, 0, Math.PI * 2);
+      this.ctx.fill();
+
+      // Glowing ember point
+      this.ctx.fillStyle = '#ffffff';
+      this.ctx.beginPath();
+      this.ctx.arc(ex, ey, 2.5, 0, Math.PI * 2);
+      this.ctx.fill();
+    }
+
+    // 7. Ambient soul flame spark
+    if (window.particleSystem && Math.random() < 0.09) {
+      window.particleSystem.spawnTeleportSparks(
+        rx + 16 + Math.random() * (w - 32),
+        ry + 20 + Math.random() * 50
+      );
+    }
+
+    // 8. Overhead Glowing Tree Title
     this.ctx.save();
-    this.ctx.font = 'bold 11px Cinzel, serif';
+    this.ctx.font = 'bold 10px Cinzel, serif';
     this.ctx.textAlign = 'center';
     this.ctx.fillStyle = '#ffd166';
-    this.ctx.shadowColor = '#000000';
-    this.ctx.shadowBlur = 4;
-    this.ctx.fillText('SANTUARIO DE ALMAS', rx + w / 2, ry - 6);
+    this.ctx.shadowColor = '#9d4edd';
+    this.ctx.shadowBlur = 8;
+    this.ctx.fillText('✦ ÁRBOL DE LAS ALMAS ✦', centerX, ry - 10);
     this.ctx.restore();
 
     this.ctx.restore();
@@ -5640,58 +5719,299 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
   }
 
   renderSanctuaryUpgrades() {
-    if (!window.progression || !this.ui.upgradesGrid) return;
-    this.ui.upgradesGrid.innerHTML = '';
+    if (!window.progression) return;
 
     const defs = window.progression.upgradeDefinitions;
-    for (const key in defs) {
-      const def = defs[key];
-      const currentLvl = window.progression.upgrades[key];
-      const isMax = currentLvl >= def.maxLvl;
-      const cost = window.progression.getUpgradeCost(key);
-      const canBuy = window.progression.canBuyUpgrade(key);
-      const currencyIcon = def.currency === 'humanityShards' ? '💠' : '🔮';
+    if (!defs) return;
 
-      const card = document.createElement('div');
-      card.className = `upgrade-card ${isMax ? 'is-maxed' : ''}`;
-      card.innerHTML = `
-        <div class="upgrade-icon-box">${def.icon}</div>
-        <div class="upgrade-center">
-          <div class="upgrade-header">
-            <span class="upgrade-name">${def.name}</span>
-            <span class="upgrade-level-tag">${isMax ? 'MÁXIMO' : `Nv. ${currentLvl}/${def.maxLvl}`}</span>
-          </div>
-          <div class="upgrade-bar-wrap">
-            <div class="upgrade-bar-fill" style="width: ${Math.round((currentLvl / def.maxLvl) * 100)}%;"></div>
-          </div>
-          <div class="upgrade-desc">${def.desc}</div>
-        </div>
-        <div class="upgrade-right">
-          <button class="btn-upgrade-action ${isMax ? 'maxed' : (canBuy ? 'affordable' : 'unaffordable')}" ${isMax || !canBuy ? 'disabled' : ''}>
-            ${isMax ? '<span class="btn-cost">✔ MÁX</span>' : `
-              <span class="btn-cost">${currencyIcon} ${cost}</span>
-              <span class="btn-action-text">${canBuy ? 'Mejorar' : 'Faltan'}</span>
-            `}
-          </button>
-        </div>
-      `;
+    const branchesGroup = document.getElementById('tree-branches-group');
+    const nodesContainer = document.getElementById('tree-nodes-container');
 
-      const buyBtn = card.querySelector('.btn-upgrade-action');
-      if (buyBtn && !isMax) {
-        buyBtn.addEventListener('mouseenter', () => {
-          if (window.soundEngine && window.soundEngine.playUiHover) window.soundEngine.playUiHover();
-        });
-        buyBtn.addEventListener('click', () => {
-          if (window.progression.buyUpgrade(key)) {
-            this.renderSanctuaryWallet();
-            this.renderSanctuaryUpgrades();
-            this.renderSanctuaryPrestige();
-            if (this.player) this.player.applyProgressionStats();
+    // Default selection
+    if (!this.selectedTreeNode || !defs[this.selectedTreeNode]) {
+      this.selectedTreeNode = 'vitality';
+    }
+
+    // 1. Render Dynamic SVG Connector Branches
+    if (branchesGroup) {
+      branchesGroup.innerHTML = '';
+      for (const key in defs) {
+        const def = defs[key];
+        if (!def.prereqs || def.prereqs.length === 0) continue;
+
+        for (const pKey of def.prereqs) {
+          const pDef = defs[pKey];
+          if (!pDef) continue;
+
+          const x1 = pDef.gridX;
+          const y1 = pDef.gridY;
+          const x2 = def.gridX;
+          const y2 = def.gridY;
+          const isParentUnlocked = window.progression.isNodeUnlocked(pKey);
+          const isChildUnlocked = window.progression.isNodeUnlocked(key);
+
+          // Smooth cubic Bézier curve connecting parent to child
+          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          const midY = (y1 + y2) / 2;
+          const d = `M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`;
+          path.setAttribute('d', d);
+          path.setAttribute('class', `branch-path ${isParentUnlocked ? 'branch-active' : 'branch-dormant'}`);
+          if (isChildUnlocked) {
+            path.classList.add('branch-pulsing');
+          }
+          branchesGroup.appendChild(path);
+        }
+      }
+    }
+
+    // 2. Render Interactive Tree Nodes
+    if (nodesContainer) {
+      nodesContainer.innerHTML = '';
+      for (const key in defs) {
+        const def = defs[key];
+        const currentLvl = window.progression.upgrades[key] || 0;
+        const isMax = currentLvl >= def.maxLvl;
+        const isUnlocked = window.progression.isNodeUnlocked(key);
+        const prereqsMet = window.progression.arePrerequisitesMet(key);
+
+        const nodeEl = document.createElement('div');
+        let statusClass = 'locked';
+        if (isMax) {
+          statusClass = 'maxed';
+        } else if (isUnlocked) {
+          statusClass = 'unlocked';
+        } else if (prereqsMet) {
+          statusClass = 'available';
+        }
+
+        const isSelected = this.selectedTreeNode === key;
+        nodeEl.className = `tree-node ${statusClass} ${isSelected ? 'selected' : ''}`;
+        nodeEl.style.left = `${def.gridX}%`;
+        nodeEl.style.top = `${def.gridY}%`;
+        nodeEl.dataset.key = key;
+
+        let badgeContent = '';
+        if (isMax) {
+          badgeContent = 'MAX';
+        } else if (isUnlocked || prereqsMet) {
+          badgeContent = `${currentLvl}/${def.maxLvl}`;
+        } else {
+          badgeContent = '🔒';
+        }
+
+        nodeEl.innerHTML = `
+          <div class="node-glow"></div>
+          <div class="node-core">${def.icon}</div>
+          <div class="tree-node-badge">${badgeContent}</div>
+        `;
+
+        nodeEl.addEventListener('mouseenter', () => {
+          if (window.soundEngine && window.soundEngine.playUiHover) {
+            window.soundEngine.playUiHover();
           }
         });
+
+        nodeEl.addEventListener('click', () => {
+          this.selectedTreeNode = key;
+          nodesContainer.querySelectorAll('.tree-node').forEach(n => {
+            n.classList.toggle('selected', n.dataset.key === key);
+          });
+          if (window.soundEngine && window.soundEngine.playUiSelect) {
+            window.soundEngine.playUiSelect();
+          }
+          this.renderTreeNodeInspector();
+        });
+
+        nodesContainer.appendChild(nodeEl);
+      }
+    }
+
+    // 3. Render Inspector Card
+    this.renderTreeNodeInspector();
+  }
+
+  renderTreeNodeInspector() {
+    if (!window.progression) return;
+    const defs = window.progression.upgradeDefinitions;
+    const key = this.selectedTreeNode;
+    const emptyState = document.getElementById('inspector-empty-state');
+    const cardContent = document.getElementById('inspector-card-content');
+
+    if (!defs || !key || !defs[key]) {
+      if (emptyState) emptyState.classList.remove('hidden');
+      if (cardContent) cardContent.classList.add('hidden');
+      return;
+    }
+
+    if (emptyState) emptyState.classList.add('hidden');
+    if (cardContent) cardContent.classList.remove('hidden');
+
+    const def = defs[key];
+    const currentLvl = window.progression.upgrades[key] || 0;
+    const isMax = currentLvl >= def.maxLvl;
+    const prereqsMet = window.progression.arePrerequisitesMet(key);
+    const canAfford = window.progression.canBuyUpgrade(key);
+    const cost = window.progression.getUpgradeCost(key);
+    const currencyIcon = def.currency === 'humanityShards' ? '💠' : '🔮';
+    const currencyName = def.currency === 'humanityShards' ? 'Fragmentos' : 'Almas';
+
+    // Header info
+    const iconEl = document.getElementById('inspector-node-icon');
+    const nameEl = document.getElementById('inspector-node-name');
+    const catEl = document.getElementById('inspector-node-category');
+    const lvlEl = document.getElementById('inspector-node-level');
+    const descEl = document.getElementById('inspector-node-desc');
+
+    if (iconEl) iconEl.textContent = def.icon;
+    if (nameEl) nameEl.textContent = def.name;
+    if (catEl) {
+      const catNames = {
+        roots: 'Raíces del Averno',
+        trunk: 'Tronco del Combate',
+        branches: 'Ramas Arcanas',
+        crown: 'Copa Celestial'
+      };
+      catEl.textContent = `${catNames[def.category] || 'Árbol Marchito'} • Tier ${def.tier}`;
+    }
+    if (lvlEl) {
+      lvlEl.textContent = isMax ? '✦ MÁXIMO ✦' : `Nv. ${currentLvl} / ${def.maxLvl}`;
+      lvlEl.className = `inspector-node-level ${isMax ? 'level-maxed' : ''}`;
+    }
+    if (descEl) descEl.textContent = def.desc;
+
+    // Stat comparisons
+    const currentStatEl = document.getElementById('inspector-current-stat');
+    const nextStatEl = document.getElementById('inspector-next-stat');
+    if (currentStatEl && nextStatEl) {
+      const stats = this.getTreeNodeStatValues(key, currentLvl, def);
+      currentStatEl.textContent = stats.current;
+      nextStatEl.textContent = stats.next;
+    }
+
+    // Prerequisites alert
+    const prereqBox = document.getElementById('inspector-prereq-box');
+    const prereqText = document.getElementById('inspector-prereq-text');
+    if (prereqBox && prereqText) {
+      if (!prereqsMet && def.prereqs && def.prereqs.length > 0) {
+        const missing = def.prereqs
+          .filter(p => !window.progression.isNodeUnlocked(p))
+          .map(p => defs[p] ? defs[p].name : p);
+        prereqText.textContent = `Requiere despertar: ${missing.join(', ')}`;
+        prereqBox.classList.remove('hidden');
+      } else {
+        prereqBox.classList.add('hidden');
+      }
+    }
+
+    // Upgrade Action Button
+    const buyBtn = document.getElementById('btn-buy-tree-node');
+    const buyLabel = document.getElementById('btn-buy-node-label');
+    const buyCost = document.getElementById('btn-buy-node-cost');
+
+    if (buyBtn && buyLabel && buyCost) {
+      buyBtn.classList.remove('btn-tree-maxed', 'btn-tree-locked', 'btn-tree-canbuy', 'btn-tree-cantafford');
+
+      if (isMax) {
+        buyBtn.disabled = true;
+        buyLabel.textContent = 'Poder al Máximo';
+        buyCost.textContent = '✔ COMPLETADO';
+        buyBtn.classList.add('btn-tree-maxed');
+      } else if (!prereqsMet) {
+        buyBtn.disabled = true;
+        buyLabel.textContent = 'Rama Bloqueada';
+        buyCost.textContent = `🔒 ${currencyIcon} ${cost}`;
+        buyBtn.classList.add('btn-tree-locked');
+      } else if (!canAfford) {
+        buyBtn.disabled = true;
+        buyLabel.textContent = `${currencyName} Insuficientes`;
+        buyCost.textContent = `${currencyIcon} ${cost}`;
+        buyBtn.classList.add('btn-tree-cantafford');
+      } else {
+        buyBtn.disabled = false;
+        buyLabel.textContent = currentLvl === 0 ? 'Despertar Poder' : 'Ascender Poder';
+        buyCost.textContent = `${currencyIcon} ${cost}`;
+        buyBtn.classList.add('btn-tree-canbuy');
       }
 
-      this.ui.upgradesGrid.appendChild(card);
+      buyBtn.onclick = () => {
+        if (window.progression.buyUpgrade(key)) {
+          if (window.soundEngine && window.soundEngine.playLevelUp) {
+            window.soundEngine.playLevelUp();
+          }
+          this.renderSanctuaryWallet();
+          this.renderSanctuaryUpgrades();
+          this.renderSanctuaryPrestige();
+          if (this.player) this.player.applyProgressionStats();
+        }
+      };
+    }
+  }
+
+  getTreeNodeStatValues(key, currentLvl, def) {
+    const isMax = currentLvl >= def.maxLvl;
+    const nextLvl = currentLvl + 1;
+
+    switch (key) {
+      case 'vitality':
+        return {
+          current: `+${currentLvl * 15} Salud Máxima`,
+          next: isMax ? '—' : `+${nextLvl * 15} Salud Máxima`
+        };
+      case 'spikeResist':
+        return {
+          current: currentLvl === 0 ? 'Mortal al contacto (100%)' : `Daño de trampas: ${Math.round((0.40 - currentLvl * 0.08) * 100)}%`,
+          next: isMax ? '—' : `Daño de trampas: ${Math.round((0.40 - nextLvl * 0.08) * 100)}%`
+        };
+      case 'healthRegen':
+        return {
+          current: currentLvl === 0 ? 'Sin regeneración' : `+${(currentLvl * 1.0).toFixed(1)} HP / segundo`,
+          next: isMax ? '—' : `+${(nextLvl * 1.0).toFixed(1)} HP / segundo`
+        };
+      case 'agility':
+        return {
+          current: `+${Math.round(currentLvl * 5)}% Vel. Mov. y Salto`,
+          next: isMax ? '—' : `+${Math.round(nextLvl * 5)}% Vel. Mov. y Salto`
+        };
+      case 'bladeMastery':
+        return {
+          current: `+${currentLvl * 3} Daño Dagas (${16 + currentLvl * 3} Base)`,
+          next: isMax ? '—' : `+${nextLvl * 3} Daño Dagas (${16 + nextLvl * 3} Base)`
+        };
+      case 'megabonkPower':
+        return {
+          current: `+${Math.round(currentLvl * 15)}% Daño Megabonk`,
+          next: isMax ? '—' : `+${Math.round(nextLvl * 15)}% Daño Megabonk`
+        };
+      case 'doubleJump':
+        return {
+          current: currentLvl > 0 ? 'Salto Doble Desbloqueado' : 'Salto simple únicamente',
+          next: isMax ? '—' : 'Permite un segundo impulso aéreo'
+        };
+      case 'soulHarvest':
+        return {
+          current: `+${currentLvl * 2} Almas/s & +${currentLvl * 15}% Ganancia`,
+          next: isMax ? '—' : `+${nextLvl * 2} Almas/s & +${nextLvl * 15}% Ganancia`
+        };
+      case 'altarOfTorment':
+        return {
+          current: `+${Math.round(currentLvl * 12)}% Daño a Jefes de la Torre`,
+          next: isMax ? '—' : `+${Math.round(nextLvl * 12)}% Daño a Jefes de la Torre`
+        };
+      case 'wrathFervor':
+        return {
+          current: `+${currentLvl * 5}% Probabilidad Crítica`,
+          next: isMax ? '—' : `+${nextLvl * 5}% Probabilidad Crítica`
+        };
+      case 'eternalAscension':
+        return {
+          current: currentLvl > 0 ? 'Segunda Oportunidad Activa (25% HP)' : 'Sin salvaguarda divina',
+          next: isMax ? '—' : 'Revive al instante con 25% HP e inmunidad'
+        };
+      default:
+        return {
+          current: `Nivel ${currentLvl}`,
+          next: isMax ? '—' : `Nivel ${nextLvl}`
+        };
     }
   }
 
