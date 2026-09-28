@@ -5,7 +5,7 @@ const pkg = require('../package.json');
 
 const version = pkg.version || '2.0.0';
 const targetUser = 'benja1005';
-const targetGame = 'infernal-rise';
+const targetGame = 'infernal-rise-roguelite';
 
 // Find butler binary (PATH or local install)
 let butlerCmd = 'butler';

@@ -50,7 +50,7 @@ jobs:
           $ver = "${{ github.event.inputs.userversion }}"
           if (-not $ver) { $ver = "${{ github.ref_name }}".TrimStart('v') }
           if (-not $ver) { $ver = "2.0.0" }
-          butler push "dist/Infernal Rise Roguelite 2.0.0.exe" "benja1005/infernal-rise:windows-portable" --userversion $ver
+          butler push "dist/Infernal Rise Roguelite 2.0.0.exe" "benja1005/infernal-rise-roguelite:windows-portable" --userversion $ver
 
       - name: Publicar Instalador NSIS en itch.io
         shell: pwsh
@@ -60,4 +60,4 @@ jobs:
           $ver = "${{ github.event.inputs.userversion }}"
           if (-not $ver) { $ver = "${{ github.ref_name }}".TrimStart('v') }
           if (-not $ver) { $ver = "2.0.0" }
-          butler push "dist/Infernal Rise Roguelite Setup 2.0.0.exe" "benja1005/infernal-rise:windows-installer" --userversion $ver
+          butler push "dist/Infernal Rise Roguelite Setup 2.0.0.exe" "benja1005/infernal-rise-roguelite:windows-installer" --userversion $ver
