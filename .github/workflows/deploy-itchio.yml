@@ -1,0 +1,63 @@
+name: Desplegar en itch.io
+
+on:
+  workflow_dispatch:
+    inputs:
+      userversion:
+        description: 'Versión del release (ej: 2.0.0)'
+        required: false
+        default: '2.0.0'
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-deploy:
+    name: Compilar y Publicar en itch.io
+    runs-on: windows-latest
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Compilar Ejecutables (Portable e Instalador)
+        run: |
+          npm run dist
+          npm run dist:installer
+
+      - name: Descargar e Instalar Butler CLI
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri 'https://broth.itch.zone/butler/windows-amd64/LATEST/archive/default' -OutFile 'butler.zip' -UseBasicParsing
+          Expand-Archive -Path 'butler.zip' -DestinationPath 'C:\tools\butler' -Force
+          Remove-Item 'butler.zip' -Force
+          echo "C:\tools\butler" >> $env:GITHUB_PATH
+
+      - name: Publicar Versión Portable en itch.io
+        shell: pwsh
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        run: |
+          $ver = "${{ github.event.inputs.userversion }}"
+          if (-not $ver) { $ver = "${{ github.ref_name }}".TrimStart('v') }
+          if (-not $ver) { $ver = "2.0.0" }
+          butler push "dist/Infernal Rise Roguelite 2.0.0.exe" "benja1005/infernal-rise:windows-portable" --userversion $ver
+
+      - name: Publicar Instalador NSIS en itch.io
+        shell: pwsh
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        run: |
+          $ver = "${{ github.event.inputs.userversion }}"
+          if (-not $ver) { $ver = "${{ github.ref_name }}".TrimStart('v') }
+          if (-not $ver) { $ver = "2.0.0" }
+          butler push "dist/Infernal Rise Roguelite Setup 2.0.0.exe" "benja1005/infernal-rise:windows-installer" --userversion $ver

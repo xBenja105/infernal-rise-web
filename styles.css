@@ -643,6 +643,20 @@ body.cursor-hidden *,
   text-align: center;
 }
 
+.title-roguelite-badge {
+  display: inline-block;
+  font-size: clamp(14px, 2.2vw, 26px);
+  font-weight: 800;
+  letter-spacing: clamp(4px, 1vw, 8px);
+  color: #ffd166;
+  text-shadow: 0 0 16px rgba(255, 209, 102, 0.75), 0 0 32px rgba(255, 107, 0, 0.5);
+  background: linear-gradient(180deg, #fff3b0 0%, #ffd166 40%, #ff9f1c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  vertical-align: middle;
+  margin-left: 8px;
+}
+
 .game-subtitle {
   font-family: 'Cinzel', serif;
   font-size: clamp(14px, 2vw, 18px);

@@ -1,7 +1,8 @@
-# Infernal Rise 2.0 (Videojuego Nativo de Escritorio PC — Roguelite de Acción y Plataformas Vertical)
+# Infernal Rise Roguelite (Videojuego Nativo de Escritorio PC — Roguelite de Acción y Plataformas Vertical)
 
 [![Platform Windows](https://img.shields.io/badge/Plataforma-Windows%20PC-0078D6?style=for-the-badge&logo=windows)](https://github.com/xBenja105/infernal-rise-web)
 [![Engine Electron](https://img.shields.io/badge/Motor-Electron%20Desktop-47848F?style=for-the-badge&logo=electron)](https://github.com/xBenja105/infernal-rise-web)
+[![itch.io](https://img.shields.io/badge/itch.io-Infernal%20Rise-FA5C5C?style=for-the-badge&logo=itchdotio&logoColor=white)](https://benja1005.itch.io/infernal-rise)
 [![Release v2.0.0](https://img.shields.io/badge/Release-v2.0.0-success?style=for-the-badge&logo=github)](https://github.com/xBenja105/infernal-rise-web/releases/tag/v2.0.0)
 [![GitHub Repo](https://img.shields.io/badge/GitHub-xBenja105%2Finfernal--rise--web-181717?style=for-the-badge&logo=github)](https://github.com/xBenja105/infernal-rise-web)
 

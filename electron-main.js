@@ -22,7 +22,7 @@ function createWindow() {
     minWidth: 960,
     minHeight: 540,
     center: true,
-    title: 'Infernal Rise 2.0',
+    title: 'Infernal Rise Roguelite',
     backgroundColor: '#030105',
     icon: iconPath,
     autoHideMenuBar: true,

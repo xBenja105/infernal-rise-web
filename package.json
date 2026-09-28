@@ -1,8 +1,8 @@
 {
   "name": "infernal-rise",
-  "productName": "Infernal Rise",
+  "productName": "Infernal Rise Roguelite",
   "version": "2.0.0",
-  "description": "Infernal Rise 2.0 - Roguelike de Acción y Plataformas Vertical",
+  "description": "Infernal Rise Roguelite - Videojuego de Acción Roguelite y Plataformas Vertical",
   "main": "electron-main.js",
   "author": "Benja",
   "license": "MIT",
@@ -13,7 +13,10 @@
     "dist": "electron-builder --win portable",
     "dist:win": "electron-builder --win",
     "dist:installer": "electron-builder --win nsis",
-    "dist:portable": "electron-builder --win portable"
+    "dist:portable": "electron-builder --win portable",
+    "deploy:itch": "node scripts/deploy-itch.js",
+    "deploy:itch:portable": "node scripts/deploy-itch.js portable",
+    "deploy:itch:installer": "node scripts/deploy-itch.js installer"
   },
   "devDependencies": {
     "electron": "^34.5.8",
@@ -21,7 +24,7 @@
   },
   "build": {
     "appId": "com.infernalrise.game",
-    "productName": "Infernal Rise",
+    "productName": "Infernal Rise Roguelite",
     "directories": {
       "output": "dist",
       "buildResources": "build"
@@ -57,8 +60,8 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Infernal Rise",
-      "uninstallDisplayName": "Infernal Rise 2.0"
+      "shortcutName": "Infernal Rise Roguelite",
+      "uninstallDisplayName": "Infernal Rise Roguelite 2.0"
     }
   }
 }
