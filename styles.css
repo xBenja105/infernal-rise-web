@@ -2250,6 +2250,7 @@ body.in-menu #virtual-controls {
 }
 
 .boon-card {
+  position: relative;
   background: linear-gradient(180deg, rgba(28, 14, 34, 0.98), rgba(12, 6, 16, 0.98));
   border: 2px solid #5a3d7a;
   border-radius: 6px;
@@ -2261,6 +2262,54 @@ body.in-menu #virtual-controls {
   cursor: pointer;
   transition: all 0.25s ease;
   box-shadow: 0 8px 24px rgba(0,0,0,0.85), inset 0 0 14px rgba(90, 61, 122, 0.3);
+}
+
+.card-shortcut-tag {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+  font-size: 11px;
+  font-family: monospace;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.card-shortcut-tag .key-tag {
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(255, 215, 0, 0.6);
+  color: #ffd700;
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.card-shortcut-tag .gp-tag {
+  background: rgba(0, 180, 216, 0.25);
+  border: 1px solid rgba(0, 180, 216, 0.6);
+  color: #90e0ef;
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.levelup-quick-keys-hint {
+  text-align: center;
+  font-size: 12px;
+  color: #ffd700;
+  margin-top: -6px;
+  margin-bottom: 14px;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+}
+
+.levelup-quick-keys-hint b {
+  color: #fff;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 1px 4px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
 }
 
 .boon-card:hover {
@@ -2560,6 +2609,74 @@ body.in-menu #virtual-controls {
   background: linear-gradient(90deg, #00b4d8, #5ce1e6);
   box-shadow: 0 0 8px rgba(92, 225, 230, 0.9);
   transition: width 0.25s ease-out;
+}
+
+/* ─── BANCO DE NIVELES EN HUD (LEVEL ON DEMAND) ─── */
+.hud-levelup-prompt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(220, 38, 38, 0.45));
+  border: 1.5px solid #f59e0b;
+  border-radius: 6px;
+  padding: 4px 10px;
+  color: #fff;
+  font-family: 'Cinzel', serif;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.6);
+  animation: hudLevelPulse 1.3s infinite alternate ease-in-out;
+  transition: transform 0.15s ease, filter 0.15s ease;
+  user-select: none;
+}
+
+.hud-levelup-prompt:hover {
+  transform: scale(1.06);
+  filter: brightness(1.25);
+  border-color: #ffd700;
+  box-shadow: 0 0 22px rgba(255, 215, 0, 0.85);
+}
+
+.hud-levelup-prompt.hidden {
+  display: none !important;
+}
+
+@keyframes hudLevelPulse {
+  0% {
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+    border-color: #f59e0b;
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.9);
+    border-color: #ffd700;
+  }
+}
+
+.hud-levelup-icon {
+  font-size: 15px;
+  color: #ffd700;
+  text-shadow: 0 0 8px #ffd700;
+}
+
+.hud-levelup-text {
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 3px #000;
+}
+
+.hud-levelup-text b {
+  color: #ffe600;
+}
+
+.hud-levelup-key {
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid rgba(255, 215, 0, 0.5);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: monospace;
+  font-size: 11px;
+  color: #ffd700;
 }
 
 /* ─── FRENESÍ DE IMPACTOS & TRIBUTO DEL AVERNO HUD ─── */

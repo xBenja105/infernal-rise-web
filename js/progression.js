@@ -34,7 +34,7 @@ class ProgressionManager {
     // ─── VAMPIRE SURVIVORS XP & LEVELING ───
     this.runLevel = 1;
     this.runXp = 0;
-    this.runXpToNext = 30;
+    this.runXpToNext = 75;
 
     // ─── MEGABONK COMBO & MULTIPLIER ───
     this.bonkCombo = 0;
@@ -1250,7 +1250,7 @@ class ProgressionManager {
     this.runBonusRegen = 0;
     this.runLevel = 1;
     this.runXp = 0;
-    this.runXpToNext = 30;
+    this.runXpToNext = 75;
     this.bonkCombo = 0;
     this.bonkComboTimer = 0;
     this.lastBalatroScore = null;
@@ -1271,7 +1271,7 @@ class ProgressionManager {
     while (this.runXp >= this.runXpToNext) {
       this.runXp -= this.runXpToNext;
       this.runLevel++;
-      this.runXpToNext = Math.round(this.runXpToNext * 1.25 + 15);
+      this.runXpToNext = Math.round(this.runXpToNext * 1.30 + 25);
       levelsGained++;
       if (this.runLevel >= 5) {
         this.unlockAchievement('immortal_run');
@@ -1546,6 +1546,23 @@ class ProgressionManager {
     if (xpFill) {
       const pct = Math.min(100, Math.max(0, (this.runXp / this.runXpToNext) * 100));
       xpFill.style.width = `${pct.toFixed(1)}%`;
+    }
+
+    // Notificación de Mejora / Banco de Niveles en el HUD
+    const levelupBadge = document.getElementById('hud-levelup-badge');
+    const pendingCount = (window.game && window.game.pendingLevelUps) ? window.game.pendingLevelUps : 0;
+    if (levelupBadge) {
+      if (pendingCount > 0 && window.game && window.game.state === 'PLAYING') {
+        levelupBadge.classList.remove('hidden');
+        const countEl = document.getElementById('hud-pending-levels');
+        if (countEl) countEl.textContent = pendingCount;
+        const keyEl = levelupBadge.querySelector('.hud-levelup-key');
+        if (keyEl) {
+          keyEl.textContent = (window.game && window.game.lastInputDevice === 'gamepad') ? '[LB]' : '[TAB]';
+        }
+      } else {
+        levelupBadge.classList.add('hidden');
+      }
     }
 
     // Combo de Impactos Demoledores
