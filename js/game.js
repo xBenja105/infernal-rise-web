@@ -229,8 +229,6 @@ class Game {
       modalRunLevel: document.getElementById('modal-run-level'),
       levelupCardsContainer: document.getElementById('levelup-cards-container'),
       btnLevelupReroll: document.getElementById('btn-levelup-reroll'),
-      hudLevelupBadge: document.getElementById('hud-levelup-badge'),
-      hudPendingLevels: document.getElementById('hud-pending-levels'),
 
       // Ruleta de Armas (Slot Machine) Modal
       slotMachineModal: document.getElementById('slot-machine-modal'),
@@ -488,38 +486,6 @@ class Game {
       if (e.code === 'KeyP') {
         if (this.level && (this.level.id === 'prologue' || this.nearSanctuary)) {
           this.toggleSanctuaryModal();
-        }
-      }
-
-      // Open Level Up Modal on Demand via [TAB]
-      if (e.code === 'Tab') {
-        e.preventDefault();
-        if (this.state === 'PLAYING' && this.pendingLevelUps > 0) {
-          this.openLevelUpModal();
-          return;
-        }
-      }
-
-      // Quick-select cards (1, 2, 3) or Reroll (R) in Level-Up Modal
-      if (this.state === 'LEVEL_UP') {
-        if (Date.now() >= this.modalInputCooldownUntil) {
-          if (e.code === 'Digit1' || e.code === 'Numpad1') {
-            e.preventDefault();
-            this.chooseLevelUpCardByIndex(0);
-            return;
-          } else if (e.code === 'Digit2' || e.code === 'Numpad2') {
-            e.preventDefault();
-            this.chooseLevelUpCardByIndex(1);
-            return;
-          } else if (e.code === 'Digit3' || e.code === 'Numpad3') {
-            e.preventDefault();
-            this.chooseLevelUpCardByIndex(2);
-            return;
-          } else if (e.code === 'KeyR' && this.ui.btnLevelupReroll && !this.ui.btnLevelupReroll.disabled) {
-            e.preventDefault();
-            this.ui.btnLevelupReroll.click();
-            return;
-          }
         }
       }
 
@@ -1023,15 +989,6 @@ class Game {
           const fresh = window.progression.getRandomBoons(3, false);
           this.renderLevelUpCards(fresh);
           this.ui.btnLevelupReroll.disabled = !window.progression.canReroll();
-        }
-      });
-    }
-
-    // HUD Level-Up Available Button (Level on Demand)
-    if (this.ui.hudLevelupBadge) {
-      this.ui.hudLevelupBadge.addEventListener('click', () => {
-        if (this.state === 'PLAYING' && this.pendingLevelUps > 0) {
-          this.openLevelUpModal();
         }
       });
     }
@@ -2100,10 +2057,6 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       const p = this.level.portal;
       if (this.player.x + this.player.w > p.x && this.player.x < p.x + p.w &&
           this.player.y + this.player.h > p.y && this.player.y < p.y + p.h) {
-        if (this.pendingLevelUps > 0) {
-          this.openLevelUpModal();
-          return;
-        }
         if (p.isFinalPortal || !p.targetLevel || p.targetLevel === 'victory') {
           if (this.cutsceneManager) {
             this.cutsceneManager.startEnding(() => {
@@ -2473,21 +2426,6 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       this.camY = (this.level.height - this.vHeight) / 2;
     } else {
       this.camY = Math.max(0, Math.min(this.level.height - this.vHeight, this.camY));
-    }
-
-    // Smart Safe-Ground Level Up Trigger (if pending for > 3.5s and player is safe on ground)
-    if (this.pendingLevelUps > 0 && this.state === 'PLAYING' && this.player) {
-      this.levelUpPendingTimer = (this.levelUpPendingTimer || 0) + dt;
-      const isGrounded = this.player.isGrounded && !this.player.isClimbing;
-      const isStill = Math.abs(this.player.vx) < 15;
-      const notInCombat = !this.enemies.some(en => !en.isDead && Math.hypot((en.x - this.player.x), (en.y - this.player.y)) < 160);
-      const notInBossCombat = !(this.boss && !this.boss.isDead && this.boss.hp > 0);
-      const lavaSafe = !this.level.risingLava || ((this.level.lavaY - (this.player.y + this.player.h)) > 280);
-
-      // If player rested safely on ground for a few seconds with pending levels:
-      if (this.levelUpPendingTimer > 3.5 && isGrounded && isStill && notInCombat && notInBossCombat && lavaSafe) {
-        this.openLevelUpModal();
-      }
     }
 
     // Update UI HUD positioning
@@ -5559,39 +5497,16 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     this.state = targetState;
   }
 
-  // ─── VAMPIRE SURVIVORS LEVEL-UP MODAL & QUEUE (LEVEL ON DEMAND) ───
+  // ─── VAMPIRE SURVIVORS LEVEL-UP MODAL & QUEUE ───
   queueLevelUps(count = 1) {
     if (!this.pendingLevelUps) this.pendingLevelUps = 0;
     this.pendingLevelUps += count;
-    this.levelUpPendingTimer = 0;
-
-    // Pleasant audio chime
-    if (window.soundEngine) {
-      if (window.soundEngine.playLevelUpEarned) {
-        window.soundEngine.playLevelUpEarned();
-      } else if (window.soundEngine.playBoonSelect) {
-        window.soundEngine.playBoonSelect();
-      }
+    // Only open immediately if playing and no other modal is currently active!
+    if (this.state === 'PLAYING') {
+      this.openLevelUpModal();
     }
-
-    // Floating notification on the player
-    if (this.player && window.particleSystem && window.particleSystem.spawnFloatingText) {
-      const keyPrompt = this.lastInputDevice === 'gamepad' ? '[LB]' : '[TAB]';
-      window.particleSystem.spawnFloatingText(`⚡ ¡NIVEL OBTENIDO! ${keyPrompt}`, this.player.x + this.player.w / 2, this.player.y - 25, {
-        color: '#ffd700',
-        isCritical: true
-      });
-    }
-
-    // Spark burst around the player
-    if (this.player && window.particleSystem && window.particleSystem.spawnTeleportSparks) {
-      window.particleSystem.spawnTeleportSparks(this.player.x + this.player.w / 2, this.player.y + this.player.h / 2, 18);
-    }
-
-    // Update HUD indicator badge
-    if (window.progression && window.progression.updateHUD) {
-      window.progression.updateHUD();
-    }
+    // If state is 'BOON_SELECT', 'LEVEL_UP', 'HERMIT_SHOP', 'SANCTUARY', 'SLOT_MACHINE', 'PAUSED', 'DIALOGUE',
+    // the level up will stay safely in pendingLevelUps and open cleanly as soon as the active modal closes.
   }
 
   openLevelUpModal() {
@@ -5604,12 +5519,8 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     if (boons.length === 0) {
       this.pendingLevelUps = 0;
       this.state = 'PLAYING';
-      if (window.progression && window.progression.updateHUD) {
-        window.progression.updateHUD();
-      }
       return;
     }
-    this._currentLevelUpBoons = boons;
 
     // Only record previous state if it was a non-modal state
     const nonModalStates = ['PLAYING', 'MENU'];
@@ -5621,7 +5532,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
     this.state = 'LEVEL_UP';
     this.input.attack = false;
-    this.modalInputCooldownUntil = Date.now() + 350;
+    this.modalInputCooldownUntil = Date.now() + 450;
     if (this.ui && this.ui.interactionBadge) {
       this.ui.interactionBadge.style.display = 'none';
     }
@@ -5636,7 +5547,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
         if (this.ui && this.ui.levelupCardsContainer) {
           this.ui.levelupCardsContainer.classList.remove('modal-input-locked');
         }
-      }, 350);
+      }, 450);
     }
 
     if (window.soundEngine) {
@@ -5653,19 +5564,13 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     if (this.ui && this.ui.levelUpModal) {
       this.ui.levelUpModal.classList.remove('hidden');
     }
-
-    if (window.progression && window.progression.updateHUD) {
-      window.progression.updateHUD();
-    }
   }
 
   renderLevelUpCards(boons) {
     if (!this.ui.levelupCardsContainer) return;
     this.ui.levelupCardsContainer.innerHTML = '';
-    this._currentLevelUpBoons = boons;
 
-    for (let index = 0; index < boons.length; index++) {
-      const b = boons[index];
+    for (const b of boons) {
       const card = document.createElement('div');
       card.className = 'boon-card';
 
@@ -5699,9 +5604,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
         badgeHtml = `<span class="boon-rarity ${rarityClass}">${b.rarity}</span>`;
       }
 
-      const gpKey = index === 0 ? 'X' : (index === 1 ? 'Y' : 'B');
       card.innerHTML = `
-        <div class="card-shortcut-tag"><span class="key-tag">[ ${index + 1} ]</span> <span class="gp-tag">[${gpKey}]</span></div>
         ${badgeHtml}
         <div class="boon-icon-large">${b.icon}</div>
         <div class="boon-card-title">${titleHtml}</div>
@@ -5714,28 +5617,18 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       });
 
       card.addEventListener('click', () => {
-        this.chooseLevelUpCardByIndex(index);
+        if (Date.now() < this.modalInputCooldownUntil) return;
+        window.progression.chooseBoon(b);
+        this.closeLevelUpModal();
       });
 
       this.ui.levelupCardsContainer.appendChild(card);
     }
   }
 
-  chooseLevelUpCardByIndex(index) {
-    if (this.state !== 'LEVEL_UP') return;
-    if (Date.now() < this.modalInputCooldownUntil) return;
-    if (!this._currentLevelUpBoons || !this._currentLevelUpBoons[index]) return;
-    const chosenBoon = this._currentLevelUpBoons[index];
-    if (window.progression) {
-      window.progression.chooseBoon(chosenBoon);
-    }
-    this.closeLevelUpModal();
-  }
-
   closeLevelUpModal() {
     this.input.attack = false;
     this.modalInputCooldownUntil = 0;
-    this._currentLevelUpBoons = null;
     if (this.pendingLevelUps > 1) {
       this.pendingLevelUps--;
       this.openLevelUpModal();
@@ -5744,9 +5637,6 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     this.pendingLevelUps = 0;
     if (this.ui && this.ui.levelUpModal) {
       this.ui.levelUpModal.classList.add('hidden');
-    }
-    if (window.progression && window.progression.updateHUD) {
-      window.progression.updateHUD();
     }
     // Always return cleanly to PLAYING (or valid non-modal state), never a stuck modal state!
     const targetState = (this.prevStateBeforeModal && !['LEVEL_UP', 'BOON_SELECT', 'SANCTUARY', 'HERMIT_SHOP', 'SLOT_MACHINE'].includes(this.prevStateBeforeModal))
@@ -6613,31 +6503,6 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
       if (justPressed(0) && this.player) {
         this.player.jumpBufferTimer = this.player.jumpBufferMax;
-      }
-    }
-
-    // LB / L1 (4) or Back/Select (8) -> Open pending level ups on demand
-    if ((justPressed(4) || justPressed(8)) && this.state === 'PLAYING' && this.pendingLevelUps > 0) {
-      this.openLevelUpModal();
-      return;
-    }
-
-    // Level-Up Modal Gamepad Controls: X (2) = Carta 1, Y (3) = Carta 2, B (1) = Carta 3, RB (5) = Reroll
-    if (this.state === 'LEVEL_UP' && Date.now() >= this.modalInputCooldownUntil) {
-      if (justPressed(2)) {
-        this.chooseLevelUpCardByIndex(0);
-        return;
-      } else if (justPressed(3)) {
-        this.chooseLevelUpCardByIndex(1);
-        return;
-      } else if (justPressed(1)) {
-        this.chooseLevelUpCardByIndex(2);
-        return;
-      } else if (justPressed(5)) {
-        if (this.ui.btnLevelupReroll && !this.ui.btnLevelupReroll.disabled) {
-          this.ui.btnLevelupReroll.click();
-          return;
-        }
       }
     }
 

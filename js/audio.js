@@ -614,25 +614,6 @@ class SoundEngine {
     });
   }
 
-  playLevelUpEarned() {
-    if (!this.ctx || !this.enabled) return;
-    // Ascending arpeggio of celestial bells (C5 -> E5 -> G5 -> C6)
-    const notes = [523.25, 659.25, 783.99, 1046.5];
-    notes.forEach((f, idx) => {
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'triangle';
-      const startTime = this.ctx.currentTime + idx * 0.08;
-      osc.frequency.setValueAtTime(f, startTime);
-      gain.gain.setValueAtTime(0.14, startTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.45);
-      osc.connect(gain);
-      gain.connect(this.sfxGain);
-      osc.start(startTime);
-      osc.stop(startTime + 0.5);
-    });
-  }
-
   playPrestige() {
     if (!this.ctx || !this.enabled) return;
     // Grand cosmic gong + thunder
