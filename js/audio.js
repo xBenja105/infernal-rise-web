@@ -776,6 +776,7 @@ class SoundEngine {
   }
 
   playPadNote(freq, dur, type = 'sawtooth', vol = 0.15) {
+    if (!this.ctx || !this.enabled) return;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     const filter = this.ctx.createBiquadFilter();
@@ -799,6 +800,7 @@ class SoundEngine {
   }
 
   playBell(freq) {
+    if (!this.ctx || !this.enabled) return;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'sine';
@@ -813,6 +815,7 @@ class SoundEngine {
   }
 
   playBassHit(freq, dur) {
+    if (!this.ctx || !this.enabled) return;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'triangle';
@@ -827,6 +830,7 @@ class SoundEngine {
   }
 
   playLeadSynth(freq, dur) {
+    if (!this.ctx || !this.enabled) return;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     const filter = this.ctx.createBiquadFilter();
@@ -845,6 +849,7 @@ class SoundEngine {
   }
 
   playSnareHit() {
+    if (!this.ctx || !this.enabled) return;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'triangle';
@@ -860,6 +865,7 @@ class SoundEngine {
   }
 
   playHihatHit() {
+    if (!this.ctx || !this.enabled) return;
     const bufferSize = this.ctx.sampleRate * 0.04;
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const data = buffer.getChannelData(0);
