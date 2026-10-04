@@ -18,8 +18,20 @@ class ParticleSystem {
     this.shakeY = 0;
 
     this.floatingTexts = [];
+    this.shockwaves = [];
+    this.ambientWeather = [];
 
     this.initRain();
+  }
+
+  spawnShockwave(x, y, maxRadius = 110) {
+    this.shockwaves.push({
+      x, y,
+      radius: 12,
+      maxRadius,
+      life: 1.0,
+      decay: 0.05
+    });
   }
 
   initRain() {
@@ -373,12 +385,60 @@ class ParticleSystem {
         this.floatingTexts.splice(i, 1);
       }
     }
+
+    // 5. Update Shockwaves
+    for (let i = this.shockwaves.length - 1; i >= 0; i--) {
+      const sw = this.shockwaves[i];
+      sw.radius += (sw.maxRadius - sw.radius) * 0.22;
+      sw.life -= sw.decay;
+      if (sw.life <= 0) {
+        this.shockwaves.splice(i, 1);
+      }
+    }
+
+    // 6. Update Ambient Weather (Atmosphere by Biome)
+    const levelBiome = (window.game && window.game.level && window.game.level.biome) || 'fire';
+    if (this.ambientWeather.length < 45) {
+      this.ambientWeather.push({
+        x: Math.random() * (viewW + 120) - 60,
+        y: levelBiome === 'ice' ? -15 : (viewH + 15),
+        vx: (Math.random() - 0.5) * (levelBiome === 'ice' ? 1.6 : 0.8),
+        vy: levelBiome === 'ice' ? (1.2 + Math.random() * 2.2) : (-1.2 - Math.random() * 2.0),
+        size: 1.8 + Math.random() * 3.2,
+        opacity: 0.25 + Math.random() * 0.55,
+        biome: levelBiome
+      });
+    }
+
+    for (let i = this.ambientWeather.length - 1; i >= 0; i--) {
+      const aw = this.ambientWeather[i];
+      aw.x += aw.vx;
+      aw.y += aw.vy;
+      aw.x += Math.sin(Date.now() * 0.0025 + i) * 0.35;
+      if (aw.y < -35 || aw.y > viewH + 35 || aw.x < -70 || aw.x > viewW + 70) {
+        this.ambientWeather.splice(i, 1);
+      }
+    }
   }
 
   draw(ctx, camX, camY) {
     ctx.save();
 
-    // 1. Draw Rain (Screen space)
+    // 1. Draw Ambient Weather Particles (Screen Space Background)
+    for (const aw of this.ambientWeather) {
+      ctx.globalAlpha = aw.opacity;
+      if (aw.biome === 'ice') {
+        ctx.fillStyle = '#bae6fd';
+      } else if (aw.biome === 'abyss') {
+        ctx.fillStyle = '#c084fc';
+      } else {
+        // Fire / Crypt: burning embers and ash
+        ctx.fillStyle = Math.random() > 0.35 ? '#ffd166' : '#ff5400';
+      }
+      ctx.fillRect(aw.x, aw.y, aw.size, aw.size);
+    }
+
+    // 2. Draw Rain (Screen space)
     ctx.strokeStyle = '#6a7888';
     ctx.lineWidth = 1.2;
     for (const r of this.rainDrops) {
@@ -389,7 +449,7 @@ class ParticleSystem {
       ctx.stroke();
     }
 
-    // 2. Draw World Particles (offset by camera)
+    // 3. Draw World Particles (offset by camera)
     for (const p of this.particles) {
       const rx = p.x - camX;
       const ry = p.y - camY;
@@ -398,7 +458,27 @@ class ParticleSystem {
       ctx.fillRect(rx - p.size / 2, ry - p.size / 2, p.size, p.size);
     }
 
-    // 3. Draw Meteorites
+    // 4. Draw Shockwaves on Ground (Elliptical glowing impact blast)
+    for (const sw of this.shockwaves) {
+      const rx = sw.x - camX;
+      const ry = sw.y - camY;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, sw.life * 0.9);
+      ctx.strokeStyle = '#ffd166';
+      ctx.lineWidth = Math.max(1, 3.5 * sw.life);
+      ctx.beginPath();
+      ctx.ellipse(rx, ry, sw.radius, sw.radius * 0.42, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.strokeStyle = '#ff0054';
+      ctx.lineWidth = Math.max(1, 1.8 * sw.life);
+      ctx.beginPath();
+      ctx.ellipse(rx, ry, sw.radius * 0.75, sw.radius * 0.32, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 5. Draw Meteorites
     for (const m of this.meteorites) {
       const rx = m.x - camX;
       const ry = m.y - camY;
@@ -412,7 +492,7 @@ class ParticleSystem {
       ctx.fill();
     }
 
-    // 4. Draw Floating Combat & Balatro Texts
+    // 6. Draw Floating Combat & Balatro Texts
     for (const ft of this.floatingTexts) {
       const rx = Math.round(ft.x - camX);
       const ry = Math.round(ft.y - camY);

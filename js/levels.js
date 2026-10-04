@@ -146,6 +146,7 @@ class LevelManager {
     const urns = [];
     const chests = [];
     const crackedWalls = [];
+    const hangingTorches = [];
     const bloodAltars = [];
     const runicBells = [];
     const spectralPlatforms = [];
@@ -153,6 +154,7 @@ class LevelManager {
     const ascensionVortices = [];
     const familiarCages = [];
     let hermitOutpost = null;
+    let treasureImpSpawned = false;
 
     // Starting ground platform
     platforms.push({
@@ -633,11 +635,22 @@ class LevelManager {
         torches.push({ x: thinBar.x + 30, y: currY - 24, blue: isBlueTorch });
       }
 
-      // Spawn patrolling enemies and urns
+      // Spawn patrolling enemies, treasure imps, urns, and hanging torches
       for (const p of layerPlatforms) {
         if (p.w >= 130) {
           const spawnRoll = Math.random();
-          if (spawnRoll < 0.45) {
+          if (!treasureImpSpawned && currY < height * 0.72 && currY > height * 0.22 && p.w >= 140 && Math.random() < 0.22) {
+            // Rare Treasure Imp (Ladrón del Averno)
+            treasureImpSpawned = true;
+            enemies.push({
+              x: p.x + 30,
+              y: p.y - 28,
+              type: 'treasure_imp',
+              minX: p.x + 8,
+              maxX: p.x + p.w - 8,
+              hp: 45
+            });
+          } else if (spawnRoll < 0.45) {
             const isMage = Math.random() < (tier.mageChance || 0.2);
             const isElite = Math.random() < 0.22;
             const scaleMultiplier = isElite ? (1.4 + Math.random() * 0.18) : 1.0;
@@ -670,6 +683,14 @@ class LevelManager {
               value: 15 + Math.floor((1 - currY / height) * 35)
             });
           }
+        }
+
+        // Interactive Hanging Lantern / Torch suspended beneath platform
+        if (p.w >= 110 && currY < height - 200 && Math.random() < 0.28) {
+          hangingTorches.push({
+            x: p.x + Math.floor(p.w / 2) - 8,
+            y: p.y + p.h
+          });
         }
       }
 
@@ -865,6 +886,7 @@ class LevelManager {
       npc: config.npc || null,
       challengeShrine,
       crackedWalls,
+      hangingTorches,
       bloodAltars,
       runicBells,
       spectralPlatforms,

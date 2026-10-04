@@ -52,7 +52,7 @@ class ProgressionManager {
     this.achievements = {};
     this.achievementDefinitions = [
       { id: 'first_blood', name: 'Primer Escarmiento', icon: '💀', desc: 'Derrota a tu primer esqueleto en la Torre.', reward: 25 },
-      { id: 'megabonk', name: 'Impacto Titánico', icon: '💥', desc: 'Ejecuta un Megabonk con un golpe devastador.', reward: 35 },
+      { id: 'megabonk', name: 'Impacto Titánico', icon: '💥', desc: 'Ejecuta un Impacto Demoledor con un golpe devastador.', reward: 35 },
       { id: 'bonk_chain', name: 'Cadena Infernal', icon: '⚡', desc: 'Provoca una colisión dominó entre enemigos.', reward: 45 },
       { id: 'balatro_jackpot', name: 'Tributo Dorado', icon: '🎰', desc: 'Alcanza un multiplicador Balatro superior a 8x.', reward: 50 },
       { id: 'weapon_master', name: 'Maestro del Arsenal', icon: '🗡️', desc: 'Adquiere tu primera arma pasiva automática.', reward: 30 },
@@ -120,7 +120,7 @@ class ProgressionManager {
         id: 'relic_vampiric_eye',
         name: 'Ojo Vampírico',
         icon: '👁️',
-        desc: 'Los Megabonks y críticos de espada restauran +12 HP.',
+        desc: 'Los Impactos Demoledores y críticos de espada restauran +12 HP.',
         rarity: 'Rara'
       },
       {
@@ -971,7 +971,7 @@ class ProgressionManager {
         hp: '85 - 120 HP',
         damage: '26 Daño',
         behavior: 'Posee un aura dorada, mayor masa corporal y resistencia al empuje. Suelta cofres de reliquias.',
-        weakness: 'Megabonks cargados y ataques a distancia con Chakram o Jabalina.',
+        weakness: 'Impactos Demoledores y ataques a distancia con Chakram o Jabalina.',
         kills: this.bestiaryKills.elite || 0
       },
       {
@@ -1553,7 +1553,7 @@ class ProgressionManager {
     if (comboEl) {
       if (this.bonkCombo > 1) {
         comboEl.classList.remove('hidden');
-        comboEl.textContent = this.bonkCombo >= 5 ? `⚡ ¡FRENESÍ TITÁNICO! ×${this.bonkCombo}` : `🔥 IMPACTO ×${this.bonkCombo}!`;
+        comboEl.textContent = this.bonkCombo >= 5 ? `⚡ ¡FRENESÍ DEMOLEDOR! ×${this.bonkCombo}` : `🔥 IMPACTO ×${this.bonkCombo}!`;
         comboEl.style.transform = `scale(${Math.min(1.35, 1.0 + this.bonkCombo * 0.03)})`;
       } else {
         comboEl.classList.add('hidden');

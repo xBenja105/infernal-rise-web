@@ -91,6 +91,9 @@ class Player {
     this.dashDir = 1;
     this.dashTrail = [];
 
+    // Downslam (Pisotón en Picada)
+    this.isDownslamming = false;
+
     // Checkpoint
     this.checkpoint = { x: x, y: y };
     this.lastActivatedCheckpoint = null;
@@ -122,6 +125,7 @@ class Player {
     this.vx = 0;
     this.vy = 0;
     this.isDashing = false;
+    this.isDownslamming = false;
     this.dashTimer = 0;
     this.dashCooldown = 0;
     this.dashTrail = [];
@@ -152,6 +156,17 @@ class Player {
   }
 
   getAttackHitbox() {
+    if (this.isDownslamming) {
+      return {
+        x: this.x - 12,
+        y: this.y,
+        w: this.w + 24,
+        h: this.h + 20,
+        attackId: this.attackId || 1,
+        facing: this.facing,
+        isDownslam: true
+      };
+    }
     if (!this.isAttacking) return null;
     const reach = 64;
     const boxH = Math.max(62, this.h + 24);
@@ -270,7 +285,18 @@ class Player {
     // ─── ATTACK SYSTEM (FREEKNIGHT SWORD COMBOS) ───
     if (this.attackCooldown > 0) this.attackCooldown -= dt;
 
-    if (input.attack && !this.isAttacking && this.attackCooldown <= 0) {
+    // Downslam Activation (Down + Attack in mid-air)
+    if (input.attack && !this.isGrounded && input.down && !this.isDownslamming && !this.isClimbing) {
+      this.isDownslamming = true;
+      this.isAttacking = false;
+      this.vy = 22.0;
+      this.vx = 0;
+      this.attackId = (this.attackId || 0) + 1;
+      if (this.attackHitTargets) this.attackHitTargets.clear();
+      if (soundEng && soundEng.playDownslamLaunch) soundEng.playDownslamLaunch();
+      if (particleSys) particleSys.spawnSlashSparks(this.x + this.w / 2, this.y + this.h, 0);
+      input.attack = false;
+    } else if (input.attack && !this.isAttacking && this.attackCooldown <= 0) {
       this.isAttacking = true;
       this.attackFrame = 0;
       this.attackTimer = 0;
@@ -496,8 +522,29 @@ class Player {
       this.gravity = this.baseGravity;
     }
 
-    this.vy += this.gravity;
-    if (this.vy > 10.0) this.vy = 10.0;
+    if (this.isDownslamming) {
+      this.vy = 22.0;
+      this.vx = 0;
+      if (particleSys && Math.random() < 0.6) {
+        particleSys.spawnDust(this.x + this.w / 2 + (Math.random() * 8 - 4), this.y + this.h, 1);
+      }
+      // Check mid-air stomp directly onto enemies
+      if (window.game && window.game.enemies) {
+        for (const enemy of window.game.enemies) {
+          if (!enemy || enemy.isDead || enemy.hp <= 0) continue;
+          if (this.x + this.w > enemy.x && this.x < enemy.x + enemy.w &&
+              this.y + this.h >= enemy.y && this.y + this.h <= enemy.y + enemy.h + 16) {
+            enemy.takeDamage(55, this.x + this.w / 2, soundEng, particleSys);
+            this.executeDownslamImpact(level, soundEng, particleSys);
+            this.vy = -7.5; // Stomp bounce
+            break;
+          }
+        }
+      }
+    } else {
+      this.vy += this.gravity;
+      if (this.vy > 10.0) this.vy = 10.0;
+    }
 
     this.prevY = this.y;
     this.prevVy = this.vy;
@@ -519,11 +566,15 @@ class Player {
 
     // Landing feedback with gentle elastic impact squash (no harsh flattening)
     if (!this.wasGrounded && this.isGrounded) {
-      const impact = Math.min(0.20, Math.max(0.06, Math.abs(this.prevVy) * 0.018));
-      this.scaleY = 1.0 - impact;
-      this.scaleX = 1.0 + impact * 0.60;
-      if (soundEng) soundEng.playLand();
-      if (particleSys) particleSys.spawnDust(this.x + this.w / 2, this.y + this.h, 6);
+      if (this.isDownslamming) {
+        this.executeDownslamImpact(level, soundEng, particleSys);
+      } else {
+        const impact = Math.min(0.20, Math.max(0.06, Math.abs(this.prevVy) * 0.018));
+        this.scaleY = 1.0 - impact;
+        this.scaleX = 1.0 + impact * 0.60;
+        if (soundEng) soundEng.playLand();
+        if (particleSys) particleSys.spawnDust(this.x + this.w / 2, this.y + this.h, 6);
+      }
     }
 
     // ─── HAZARD COLLISIONS ───
@@ -644,6 +695,70 @@ class Player {
     return null;
   }
 
+  executeDownslamImpact(level, soundEng, particleSys) {
+    this.isDownslamming = false;
+    this.scaleY = 0.65;
+    this.scaleX = 1.45;
+    if (soundEng && soundEng.playDownslamImpact) soundEng.playDownslamImpact();
+    if (window.game) {
+      if (window.game.triggerScreenShake) window.game.triggerScreenShake(7, 0.24);
+      if (window.game.triggerHitStop) window.game.triggerHitStop(0.045);
+      if (window.game.triggerShockwave) window.game.triggerShockwave(this.x + this.w / 2, this.y + this.h, 120);
+    }
+    if (particleSys) {
+      if (particleSys.spawnDust) particleSys.spawnDust(this.x + this.w / 2, this.y + this.h, 18);
+      if (particleSys.spawnShockwave) particleSys.spawnShockwave(this.x + this.w / 2, this.y + this.h, 120);
+      if (particleSys.spawnFloatingText) {
+        particleSys.spawnFloatingText('💥 ¡PISOTÓN SÍSMICO!', this.x + this.w / 2, this.y - 12, { isMegabonk: true });
+      }
+    }
+    // AoE damage on ground shockwave
+    if (window.game && window.game.enemies) {
+      const radius = 120;
+      const slamDmg = 45 + (window.progression ? (window.progression.upgrades.bladeMastery || 0) * 4 : 0);
+      for (const enemy of window.game.enemies) {
+        if (!enemy || enemy.isDead || enemy.hp <= 0) continue;
+        const ex = enemy.x + enemy.w / 2;
+        const ey = enemy.y + enemy.h / 2;
+        const dist = Math.hypot(ex - (this.x + this.w / 2), ey - (this.y + this.h));
+        if (dist <= radius) {
+          enemy.takeDamage(slamDmg, this.x + this.w / 2, soundEng, particleSys);
+          enemy.vx = (Math.sign(ex - (this.x + this.w / 2)) || 1) * 7.5;
+          enemy.vy = -6.0;
+        }
+      }
+      if (window.game.boss && !window.game.boss.isDead && window.game.boss.hp > 0) {
+        const b = window.game.boss;
+        const dist = Math.hypot((b.x + b.w / 2) - (this.x + this.w / 2), (b.y + b.h / 2) - (this.y + this.h));
+        if (dist <= radius + 30) {
+          b.takeDamage(slamDmg, this.x + this.w / 2, soundEng, particleSys);
+        }
+      }
+    }
+    // Also hit cracked walls nearby
+    if (level && level.crackedWalls) {
+      for (const cw of level.crackedWalls) {
+        if (cw && !cw.isBroken && !cw.broken) {
+          const dist = Math.hypot((cw.x + cw.w / 2) - (this.x + this.w / 2), (cw.y + cw.h / 2) - (this.y + this.h));
+          if (dist <= 140) {
+            cw.damage(35, soundEng, particleSys);
+          }
+        }
+      }
+    }
+    // Downslam shockwave knocks loose hanging torches above/nearby
+    if (window.game && window.game.hangingTorches) {
+      for (const ht of window.game.hangingTorches) {
+        if (ht && !ht.isDropped) {
+          const dist = Math.hypot((ht.x + ht.w / 2) - (this.x + this.w / 2), (ht.y + ht.h / 2) - (this.y + this.h));
+          if (dist <= 150) {
+            ht.drop(soundEng, particleSys);
+          }
+        }
+      }
+    }
+  }
+
   takeDamage(amount, soundEng, particleSys) {
     if (this.invulnerableTimer > 0) return;
     if (window.progression && window.progression.hasBoon('ironWill')) {
@@ -707,6 +822,12 @@ class Player {
     if (this.isDashing) {
       this.animState = 'dash';
       this.animFrame = Math.floor((this.dashDuration - this.dashTimer) / (this.dashDuration / 2)) % 2;
+      return;
+    }
+
+    if (this.isDownslamming) {
+      this.animState = 'fall';
+      this.animFrame = 2;
       return;
     }
 
@@ -790,6 +911,28 @@ class Player {
     ctx.scale(this.facing * this.scaleX, this.scaleY);
     ctx.rotate(this.bodyTilt * Math.sign(this.facing));
     ctx.translate(-this.w / 2, -this.h);
+
+    // Blazing Downslam descending aura
+    if (this.isDownslamming) {
+      ctx.save();
+      const slamGlow = 0.55 + Math.sin(Date.now() * 0.03) * 0.25;
+      ctx.fillStyle = `rgba(255, 69, 0, ${slamGlow})`;
+      ctx.beginPath();
+      ctx.moveTo(-10, -14);
+      ctx.lineTo(this.w + 10, -14);
+      ctx.lineTo(this.w / 2, this.h + 24);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = 'rgba(255, 215, 0, 0.75)';
+      ctx.beginPath();
+      ctx.moveTo(-4, -6);
+      ctx.lineTo(this.w + 4, -6);
+      ctx.lineTo(this.w / 2, this.h + 16);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
 
     const pwm = window.game ? window.game.passiveWeaponsManager : null;
     const visuals = pwm ? pwm.getActiveVisuals() : null;
@@ -2381,7 +2524,7 @@ class SkeletonEnemy {
       // Comic-book Floating Text
       if (particleSys && particleSys.spawnFloatingText) {
         if (isMegabonk) {
-          particleSys.spawnFloatingText(`💥 ¡IMPACTO TITÁNICO! -${amount}`, this.x + this.w / 2, this.y - 12, { isMegabonk: true });
+          particleSys.spawnFloatingText(`💥 ¡IMPACTO DEMOLEDOR! -${amount}`, this.x + this.w / 2, this.y - 12, { isMegabonk: true });
           particleSys.triggerScreenShake(0.16, 5);
           if (window.game) {
             if (window.game.triggerHitStop) window.game.triggerHitStop(0.055);
@@ -3689,11 +3832,19 @@ class CrackedWall {
     this.w = data.w || 32;
     this.h = data.h || 80;
     this.maxHp = data.hp || 50;
-    this.hp = this.maxHp;
     this.isBroken = false;
+    this.broken = false;
     this.hitCooldown = 0;
     this.shakeTimer = 0;
     this.biome = data.biome || 'abyss';
+  }
+
+  get broken() {
+    return this.isBroken;
+  }
+
+  set broken(val) {
+    this.isBroken = val;
   }
 
   update(dt) {
@@ -3701,21 +3852,26 @@ class CrackedWall {
     if (this.shakeTimer > 0) this.shakeTimer -= dt;
   }
 
+  damage(amount = 25, soundEng, particleSys) {
+    if (this.isBroken) return;
+    this.hitCooldown = 0.2;
+    this.shakeTimer = 0.18;
+    this.hp -= amount;
+    if (soundEng && soundEng.playHit) soundEng.playHit();
+    if (particleSys) {
+      particleSys.spawnDust(this.x + this.w / 2, this.y + this.h / 2, 8);
+      if (particleSys.spawnSlashSparks) particleSys.spawnSlashSparks(this.x + this.w / 2, this.y + this.h / 2, 1);
+    }
+    if (this.hp <= 0) {
+      this.break(soundEng, particleSys);
+    }
+  }
+
   checkHit(attackHitbox, damage = 25, soundEng, particleSys) {
     if (this.isBroken || this.hitCooldown > 0) return false;
     if (attackHitbox.x + attackHitbox.w > this.x && attackHitbox.x < this.x + this.w &&
         attackHitbox.y + attackHitbox.h > this.y && attackHitbox.y < this.y + this.h) {
-      this.hitCooldown = 0.2;
-      this.shakeTimer = 0.18;
-      this.hp -= damage;
-      if (soundEng && soundEng.playHit) soundEng.playHit();
-      if (particleSys) {
-        particleSys.spawnDust(this.x + this.w / 2, this.y + this.h / 2, 8);
-        if (particleSys.spawnSlashSparks) particleSys.spawnSlashSparks(this.x + this.w / 2, this.y + this.h / 2, 1);
-      }
-      if (this.hp <= 0) {
-        this.break(soundEng, particleSys);
-      }
+      this.damage(damage, soundEng, particleSys);
       return true;
     }
     return false;
@@ -3724,8 +3880,10 @@ class CrackedWall {
   break(soundEng, particleSys) {
     if (this.isBroken) return;
     this.isBroken = true;
+    this.broken = true;
     this.hp = 0;
     if (soundEng) {
+      if (soundEng.playMeteorExplosion) soundEng.playMeteorExplosion();
       if (soundEng.playUrnBreak) soundEng.playUrnBreak();
       if (soundEng.playChestOpen) soundEng.playChestOpen();
     }
@@ -3734,9 +3892,12 @@ class CrackedWall {
       if (particleSys.spawnBloodExplosion) {
         particleSys.spawnBloodExplosion(this.x + this.w / 2, this.y + this.h / 2, 20);
       }
+      if (particleSys.spawnFloatingText) {
+        particleSys.spawnFloatingText('✦ ¡SECRETO DESCUBIERTO! ✦', this.x + this.w / 2, this.y - 12, { isMegabonk: true });
+      }
     }
     if (window.game && window.game.triggerScreenShake) {
-      window.game.triggerScreenShake(7, 0.25);
+      window.game.triggerScreenShake(8, 0.28);
     }
   }
 
@@ -6080,9 +6241,423 @@ class HealthOrb {
   }
 }
 
+// ─── EL LADRÓN DEL AVERNO (TREASURE IMP / DUENDE DE ALMAS) ───
+class TreasureImp {
+  constructor(data) {
+    this.x = data.x;
+    this.y = data.y;
+    this.w = 24;
+    this.h = 28;
+    this.hp = data.hp || 50;
+    this.maxHp = this.hp;
+    this.speed = 3.6;
+    this.currentVx = 0;
+    this.vy = 0;
+    this.gravity = 0.32;
+    this.isGrounded = false;
+    this.dir = 1;
+    this.renderFacing = 1;
+    this.minX = data.minX || (this.x - 120);
+    this.maxX = data.maxX || (this.x + 120);
+    this.isDead = false;
+    this.hasDropped = false;
+    this.noticeGiven = false;
+    this.type = 'treasure_imp';
+    this.hitTimer = 0;
+    this.jumpCooldown = 0;
+    this.sparkleTimer = 0;
+    this.wobbleTimer = Math.random() * 10;
+  }
+
+  update(dt, player, level, soundEng, particleSys) {
+    if (this.isDead) return;
+
+    if (this.hitTimer > 0) this.hitTimer -= dt;
+    if (this.jumpCooldown > 0) this.jumpCooldown -= dt;
+    this.sparkleTimer += dt;
+    this.wobbleTimer += dt * 6;
+
+    // Detect Kael nearby
+    if (player && !this.noticeGiven) {
+      const dist = Math.hypot((this.x + this.w / 2) - (player.x + player.w / 2), (this.y + this.h / 2) - (player.y + player.h / 2));
+      if (dist < 260) {
+        this.noticeGiven = true;
+        if (soundEng && soundEng.playTreasureImpNotice) soundEng.playTreasureImpNotice();
+        if (particleSys && particleSys.spawnFloatingText) {
+          particleSys.spawnFloatingText('💰 ¡LADRÓN DEL AVERNO!', this.x + this.w / 2, this.y - 14, { isCrit: true });
+        }
+      }
+    }
+
+    // Fleeing AI behavior
+    if (player && this.noticeGiven) {
+      this.dir = (this.x >= player.x) ? 1 : -1;
+      this.currentVx = this.dir * (this.hitTimer > 0 ? this.speed * 1.35 : this.speed);
+      this.renderFacing = this.dir;
+
+      // Jump when reaching bounds or obstacle
+      if (this.isGrounded && this.jumpCooldown <= 0) {
+        const atEdge = (this.dir > 0 && this.x >= this.maxX - 10) || (this.dir < 0 && this.x <= this.minX + 10);
+        if (atEdge || Math.random() < 0.04) {
+          this.vy = -7.4;
+          this.isGrounded = false;
+          this.jumpCooldown = 1.0;
+          if (particleSys && particleSys.spawnDust) particleSys.spawnDust(this.x + this.w / 2, this.y + this.h, 4);
+        }
+      }
+    } else {
+      this.currentVx = this.dir * 1.1;
+      this.renderFacing = this.dir;
+      if (this.x >= this.maxX) this.dir = -1;
+      if (this.x <= this.minX) this.dir = 1;
+    }
+
+    // Physics
+    this.vy += this.gravity;
+    if (this.vy > 9) this.vy = 9;
+
+    this.x += this.currentVx;
+    this.y += this.vy;
+
+    // Platform collisions
+    this.isGrounded = false;
+    if (level && level.platforms) {
+      const feet = this.y + this.h;
+      for (const p of level.platforms) {
+        if (p.isCollapsed) continue;
+        if (this.x + this.w > p.x + 2 && this.x < p.x + p.w - 2) {
+          if (this.vy >= 0 && feet >= p.y - 1 && feet <= p.y + 12) {
+            this.y = p.y - this.h;
+            this.vy = 0;
+            this.isGrounded = true;
+            break;
+          }
+        }
+      }
+    }
+
+    // Lava hazard check
+    if (level && level.hasLava && (this.y + this.h >= level.lavaY)) {
+      this.isDead = true;
+    }
+
+    // Drop sparkles while running
+    if (this.sparkleTimer > 0.22 && particleSys) {
+      this.sparkleTimer = 0;
+      particleSys.particles.push({
+        type: 'spark',
+        x: this.x + this.w / 2,
+        y: this.y + this.h / 2,
+        vx: -this.dir * (1 + Math.random() * 2),
+        vy: -Math.random() * 2,
+        gravity: 0.1,
+        size: 2.5,
+        color: '#ffd166',
+        life: 0.6,
+        decay: 0.04
+      });
+    }
+
+    // Check hit by sword or downslam
+    if (player) {
+      const swordBox = player.getAttackHitbox ? player.getAttackHitbox() : null;
+      if (swordBox && this.hitTimer <= 0) {
+        if (swordBox.x + swordBox.w > this.x && swordBox.x < this.x + this.w &&
+            swordBox.y + swordBox.h > this.y && swordBox.y < this.y + this.h) {
+          const dmg = (swordBox.isDownslam ? 55 : (player.daggerDamage || 20));
+          this.takeDamage(dmg, player.x + player.w / 2, soundEng, particleSys);
+        }
+      }
+    }
+  }
+
+  takeDamage(amount, sourceX, soundEng, particleSys) {
+    if (this.isDead) return;
+    this.hp -= amount;
+    this.hitTimer = 0.28;
+    this.vy = -4.5;
+    this.currentVx = Math.sign(this.x - sourceX || 1) * 4.8;
+
+    if (soundEng) soundEng.playHit();
+    if (particleSys) {
+      particleSys.spawnFloatingText(`💰 -${amount}`, this.x + this.w / 2, this.y - 10, { isCrit: true });
+      if (window.game && window.game.spawnHealthOrb) {
+        for (let i = 0; i < 2; i++) {
+          window.game.spawnHealthOrb(this.x + (Math.random() * 10 - 5), this.y - 4, 8);
+        }
+      }
+    }
+
+    if (this.hp <= 0) {
+      this.die(soundEng, particleSys);
+    }
+  }
+
+  die(soundEng, particleSys) {
+    this.isDead = true;
+    if (this.hasDropped) return;
+    this.hasDropped = true;
+
+    if (soundEng && soundEng.playLevelUp) soundEng.playLevelUp();
+    if (particleSys) {
+      particleSys.spawnLevelUpFireworks(this.x + this.w / 2, this.y + this.h / 2, 28);
+      particleSys.spawnFloatingText('👑 ¡BOTÍN RECLAMADO! +120 🔮 +1 💠', this.x + this.w / 2, this.y - 20, { isMegabonk: true });
+    }
+
+    // Massive loot drop
+    if (window.progression) {
+      window.progression.addSouls(120);
+      window.progression.addHumanityShards(1);
+    }
+    if (window.game) {
+      if (window.game.spawnHealthOrb) {
+        for (let i = 0; i < 5; i++) {
+          window.game.spawnHealthOrb(this.x + (Math.random() * 30 - 15), this.y - 10, 15);
+        }
+      }
+      if (window.game.triggerHitStop) window.game.triggerHitStop(0.06);
+      if (window.game.triggerScreenShake) window.game.triggerScreenShake(7, 0.25);
+    }
+  }
+
+  draw(ctx, camX, camY) {
+    if (this.isDead) return;
+    const rx = Math.round(this.x - camX);
+    const ry = Math.round(this.y - camY);
+
+    ctx.save();
+    if (this.hitTimer > 0) {
+      ctx.globalAlpha = 0.6;
+    }
+
+    ctx.translate(rx + this.w / 2, ry + this.h);
+    ctx.scale(this.renderFacing, 1.0);
+    ctx.translate(-this.w / 2, -this.h);
+
+    const bob = Math.sin(this.wobbleTimer) * 2;
+
+    // Bulging Gold Sack on Back
+    ctx.fillStyle = '#b45309';
+    ctx.beginPath();
+    ctx.ellipse(3, 14 + bob, 9, 11, 0.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#ffd166';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    // Gold coins overflowing sack
+    ctx.fillStyle = '#ffd166';
+    ctx.beginPath();
+    ctx.arc(6, 6 + bob, 4, 0, Math.PI * 2);
+    ctx.arc(0, 7 + bob, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Imp Crimson Cloak / Body
+    ctx.fillStyle = '#991b1b';
+    ctx.beginPath();
+    ctx.moveTo(8, 8 + bob);
+    ctx.lineTo(20, 10 + bob);
+    ctx.lineTo(22, 28);
+    ctx.lineTo(6, 28);
+    ctx.closePath();
+    ctx.fill();
+
+    // Hood
+    ctx.fillStyle = '#7f1d1d';
+    ctx.beginPath();
+    ctx.arc(14, 8 + bob, 7, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Pointy Hood Tip
+    ctx.beginPath();
+    ctx.moveTo(14, 1 + bob);
+    ctx.lineTo(7, 6 + bob);
+    ctx.lineTo(16, 8 + bob);
+    ctx.closePath();
+    ctx.fill();
+
+    // Glowing Golden Eyes inside hood
+    ctx.fillStyle = '#fbbf24';
+    ctx.shadowColor = '#f59e0b';
+    ctx.shadowBlur = 6;
+    ctx.beginPath();
+    ctx.arc(16, 8 + bob, 1.8, 0, Math.PI * 2);
+    ctx.arc(19, 8 + bob, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.restore();
+    ctx.save();
+    ctx.font = 'bold 8px "Pixelify Sans", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffd166';
+    ctx.shadowColor = '#000';
+    ctx.shadowBlur = 4;
+    ctx.fillText('✦ LADRÓN DE ALMAS ✦', rx + this.w / 2, ry - 6);
+    ctx.restore();
+  }
+}
+
+// ─── LÁMPARA / ANTORCHA COLGANTE (INTERACTIVE FALLING HAZARD) ───
+class HangingTorch {
+  constructor(data) {
+    this.x = data.x;
+    this.y = data.y;
+    this.w = 16;
+    this.h = 24;
+    this.isDropped = false;
+    this.isBroken = false;
+    this.vy = 0;
+    this.groundFireTimer = 0;
+    this.fireX = 0;
+    this.fireY = 0;
+    this.swing = Math.random() * 5;
+  }
+
+  update(dt, player, level, soundEng, particleSys) {
+    this.swing += dt * 3;
+
+    if (!this.isDropped) {
+      if (player) {
+        const swordBox = player.getAttackHitbox ? player.getAttackHitbox() : null;
+        if (swordBox) {
+          if (swordBox.x + swordBox.w > this.x - 6 && swordBox.x < this.x + this.w + 6 &&
+              swordBox.y + swordBox.h > this.y - 6 && swordBox.y < this.y + this.h + 6) {
+            this.drop(soundEng, particleSys);
+          }
+        }
+      }
+    } else if (!this.isBroken) {
+      this.vy += 0.38;
+      this.y += this.vy;
+
+      if (level && level.platforms) {
+        for (const p of level.platforms) {
+          if (this.x + this.w > p.x && this.x < p.x + p.w &&
+              this.y + this.h >= p.y && this.y + this.h <= p.y + 14 && this.vy > 0) {
+            this.shatter(p.y, soundEng, particleSys);
+            break;
+          }
+        }
+      }
+      if (level && level.hasLava && this.y + this.h >= level.lavaY) {
+        this.isBroken = true;
+      }
+    } else if (this.groundFireTimer > 0) {
+      this.groundFireTimer -= dt;
+      if (window.game && window.game.enemies) {
+        for (const enemy of window.game.enemies) {
+          if (!enemy || enemy.isDead || enemy.hp <= 0) continue;
+          if (Math.abs((enemy.x + enemy.w / 2) - this.fireX) < 45 &&
+              Math.abs((enemy.y + enemy.h) - this.fireY) < 16) {
+            enemy.takeDamage(12 * dt * 4, this.fireX, soundEng, particleSys);
+          }
+        }
+      }
+      if (particleSys && Math.random() < 0.3) {
+        particleSys.particles.push({
+          type: 'spark',
+          x: this.fireX + (Math.random() * 40 - 20),
+          y: this.fireY - 2,
+          vx: (Math.random() - 0.5) * 1.5,
+          vy: -1.5 - Math.random() * 2,
+          gravity: -0.05,
+          size: 2.5,
+          color: Math.random() > 0.4 ? '#ff5400' : '#ffd166',
+          life: 0.5,
+          decay: 0.04
+        });
+      }
+    }
+  }
+
+  drop(soundEng, particleSys) {
+    if (this.isDropped) return;
+    this.isDropped = true;
+    this.vy = 1.0;
+    if (soundEng) soundEng.playSwordSlash();
+    if (particleSys) particleSys.spawnSlashSparks(this.x + this.w / 2, this.y, 0);
+  }
+
+  shatter(groundY, soundEng, particleSys) {
+    this.isBroken = true;
+    this.fireX = this.x + this.w / 2;
+    this.fireY = groundY;
+    this.groundFireTimer = 5.5;
+    if (soundEng && soundEng.playMeteorExplosion) soundEng.playMeteorExplosion();
+    if (particleSys) {
+      particleSys.spawnDust(this.fireX, this.fireY, 12);
+      particleSys.triggerScreenShake(0.12, 3);
+    }
+  }
+
+  draw(ctx, camX, camY) {
+    if (this.isBroken) {
+      if (this.groundFireTimer > 0) {
+        const rx = Math.round(this.fireX - camX);
+        const ry = Math.round(this.fireY - camY);
+        ctx.save();
+        ctx.fillStyle = 'rgba(255, 69, 0, 0.4)';
+        ctx.beginPath();
+        ctx.ellipse(rx, ry, 36, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        const fireSpr = window.spriteManager && window.spriteManager.sprites?.fx?.fire?.orange;
+        if (fireSpr && fireSpr.length > 0) {
+          const sIdx = Math.floor(Date.now() / 90) % fireSpr.length;
+          ctx.drawImage(fireSpr[sIdx], rx - 18, ry - 22, 36, 26);
+        } else {
+          ctx.fillStyle = '#ff6b00';
+          ctx.beginPath();
+          ctx.arc(rx, ry - 8, 12, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+      return;
+    }
+
+    const rx = Math.round(this.x - camX);
+    const ry = Math.round(this.y - camY);
+    ctx.save();
+
+    if (!this.isDropped) {
+      ctx.strokeStyle = '#64748b';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(rx + this.w / 2, ry - 14);
+      ctx.lineTo(rx + this.w / 2, ry);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(rx + 2, ry + 4, this.w - 4, 14);
+    ctx.strokeStyle = '#d4af37';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(rx + 2, ry + 4, this.w - 4, 14);
+
+    const flameBob = Math.sin(this.swing) * 2;
+    ctx.fillStyle = '#ff7700';
+    ctx.shadowColor = '#ff3300';
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(rx + this.w / 2, ry + 2 + flameBob, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffd166';
+    ctx.beginPath();
+    ctx.arc(rx + this.w / 2, ry + 3 + flameBob, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+}
+
 if (typeof window !== 'undefined') {
   window.Player = Player;
   window.SkeletonEnemy = SkeletonEnemy;
+  window.TreasureImp = TreasureImp;
+  window.HangingTorch = HangingTorch;
+  window.CrackedWall = CrackedWall;
   window.AbyssalBat = AbyssalBat;
   window.EnemyProjectile = EnemyProjectile;
   window.Boss = Boss;

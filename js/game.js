@@ -58,6 +58,7 @@ class Game {
     this.healthOrbs = [];
     this.chests = [];
     this.urns = [];
+    this.hangingTorches = [];
     this.crackedWalls = [];
     this.bloodAltars = [];
     this.activeBloodAltar = null;
@@ -207,6 +208,7 @@ class Game {
       bossHealthFill: document.getElementById('boss-health-fill'),
       playerHealthWrap: document.getElementById('player-health-wrap'),
       playerHealthFill: document.getElementById('player-health-fill'),
+      lowHpVignette: document.getElementById('low-hp-vignette'),
       interactionBadge: document.getElementById('interaction-badge'),
       soundToggle: document.getElementById('btn-sound-toggle'),
 
@@ -1134,6 +1136,7 @@ class Game {
     this.healthOrbs = [];
     this.chests = [];
     this.urns = [];
+    this.hangingTorches = [];
     this.crackedWalls = [];
     this.bloodAltars = [];
     this.ladders = [];
@@ -1249,6 +1252,7 @@ Lucha, sobrevive y reclama tu redención con sangre.`;
 
   loadLevel(levelId) {
     if (this.ui.victoryScreen) this.ui.victoryScreen.classList.add('hidden');
+    if (this.ui.lowHpVignette) this.ui.lowHpVignette.classList.add('hidden');
     if (this.ui.hud) this.ui.hud.classList.remove('hidden');
     this.state = 'PLAYING';
     this.level = window.levelManager.loadLevel(levelId);
@@ -1358,7 +1362,9 @@ Lucha, sobrevive y reclama tu redención con sangre.`;
     this.bats = [];
     if (this.level.enemies) {
       for (const e of this.level.enemies) {
-        if (e.type === 'skeleton' || e.type === 'skeleton_mage') {
+        if (e.type === 'treasure_imp') {
+          this.enemies.push(new TreasureImp(e));
+        } else if (e.type === 'skeleton' || e.type === 'skeleton_mage') {
           this.enemies.push(new SkeletonEnemy(e));
         } else if (e.type === 'bat' || e.type === 'gargoyle') {
           this.bats.push(new AbyssalBat(e));
@@ -1370,6 +1376,11 @@ Lucha, sobrevive y reclama tu redención con sangre.`;
         this.bats.push(new AbyssalBat(b));
       }
     }
+
+    // Interactive Environment (Hanging Torches & Cracked Walls)
+    this.hangingTorches = (this.level.hangingTorches || []).map(ht => ht instanceof HangingTorch ? ht : new HangingTorch(ht));
+    this.crackedWalls = (this.level.crackedWalls || []).map(cw => cw instanceof CrackedWall ? cw : new CrackedWall(cw));
+    this.level.crackedWalls = this.crackedWalls;
 
     // Music & Rain
     if (window.soundEngine) {
@@ -2067,7 +2078,30 @@ Lucha, sobrevive y reclama tu redención con sangre.`;
       const pct = Math.max(0, (this.player.hp / this.player.maxHp) * 100);
       this.ui.playerHealthFill.style.width = `${pct}%`;
     }
+
+    // Low HP Danger Vignette (<25% HP) & Heartbeat Sound
+    const isLowHp = this.state === 'PLAYING' && this.player && this.player.hp > 0 && ((this.player.hp / this.player.maxHp) <= 0.25);
+    if (this.ui.lowHpVignette) {
+      if (isLowHp) {
+        this.ui.lowHpVignette.classList.remove('hidden');
+      } else {
+        this.ui.lowHpVignette.classList.add('hidden');
+      }
+    }
+    if (isLowHp) {
+      this.heartbeatTimer = (this.heartbeatTimer || 0) - dt;
+      if (this.heartbeatTimer <= 0) {
+        this.heartbeatTimer = 1.05;
+        if (window.soundEngine && window.soundEngine.playHeartbeat) {
+          window.soundEngine.playHeartbeat();
+        }
+      }
+    } else {
+      this.heartbeatTimer = 0;
+    }
+
     if (this.player.hp <= 0) {
+      if (this.ui.lowHpVignette) this.ui.lowHpVignette.classList.add('hidden');
       this.handlePlayerDeath();
       return;
     }
@@ -2181,6 +2215,13 @@ Lucha, sobrevive y reclama tu redención con sangre.`;
           const lvls = window.progression.addRunXp(50);
           if (lvls > 0) this.queueLevelUps(lvls);
         }
+      }
+    }
+
+    // 4d. Update Hanging Torches
+    if (this.hangingTorches) {
+      for (const ht of this.hangingTorches) {
+        ht.update(dt, this.player, this.level, window.soundEngine, window.particleSystem);
       }
     }
 
@@ -2705,7 +2746,12 @@ Lucha, sobrevive y reclama tu redención con sangre.`;
       c.draw(this.ctx, finalCamX, finalCamY);
     }
 
-    // 6b. Draw Cracked Walls & Blood Altars
+    // 6b. Draw Cracked Walls, Hanging Torches & Blood Altars
+    if (this.hangingTorches) {
+      for (const ht of this.hangingTorches) {
+        ht.draw(this.ctx, finalCamX, finalCamY);
+      }
+    }
     if (this.crackedWalls) {
       for (const cw of this.crackedWalls) {
         cw.draw(this.ctx, finalCamX, finalCamY);
@@ -6044,8 +6090,8 @@ Lucha, sobrevive y reclama tu redención con sangre.`;
         };
       case 'megabonkPower':
         return {
-          current: `+${Math.round(currentLvl * 15)}% Daño Megabonk`,
-          next: isMax ? '—' : `+${Math.round(nextLvl * 15)}% Daño Megabonk`
+          current: `+${Math.round(currentLvl * 15)}% Daño Demoledor`,
+          next: isMax ? '—' : `+${Math.round(nextLvl * 15)}% Daño Demoledor`
         };
       case 'doubleJump':
         return {
@@ -7019,7 +7065,7 @@ Lucha, sobrevive y reclama tu redención con sangre.`;
           <div class="summary-stat-val">${summary.enemiesDefeated}</div>
         </div>
         <div class="summary-stat-box">
-          <div class="summary-stat-label">💥 ${t('summary.megabonks', 'Megabonks')}</div>
+          <div class="summary-stat-label">💥 ${t('summary.megabonks', 'Impactos Demoledores')}</div>
           <div class="summary-stat-val">${summary.megabonks}</div>
         </div>
         <div class="summary-stat-box">
@@ -7050,7 +7096,7 @@ Lucha, sobrevive y reclama tu redención con sangre.`;
     const text = [
       `⚔️ INFERNAL RISE 2.0 — ${title} ⚔️`,
       `⏱️ Duración: ${summary.duration} | 🏔️ Altitud: ${summary.maxAltitude}m`,
-      `💀 Enemigos Abatidos: ${summary.enemiesDefeated} | 💥 Megabonks: ${summary.megabonks}`,
+      `💀 Enemigos Abatidos: ${summary.enemiesDefeated} | 💥 Impactos Demoledores: ${summary.megabonks}`,
       `🔱 Arma Más Letal: ${summary.mostLethal.name} (${summary.mostLethal.damage} dmg - ${summary.mostLethal.percent}%)`,
       `🔮 Almas Cosechadas: ${summary.soulsCollected} | 💠 Fragmentos: ${summary.shardsCollected}`,
       `🔥 ¡Conquista los 9 Círculos en Infernal Rise!`
