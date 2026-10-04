@@ -1,6 +1,9 @@
 @import url('assets/fonts/fonts.css');
 
 :root {
+  --font-pixel: 'Pixelify Sans', 'VT323', monospace;
+  --font-title: 'Press Start 2P', 'Pixelify Sans', monospace;
+  --font-mono: 'VT323', monospace;
   --bg: #030105;
   --panel: rgba(12, 8, 16, 0.94);
   --border: #3a1520;
@@ -25,7 +28,7 @@
 html, body {
   background-color: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-pixel); image-rendering: pixelated;
   overflow: hidden;
   width: 100vw;
   width: 100dvw;
@@ -253,7 +256,7 @@ body.cursor-hidden *,
 }
 
 .radar-altitude-text {
-  font-family: 'Cinzel', 'Segoe UI', monospace, sans-serif;
+  font-family: var(--font-pixel);
   font-size: 10px;
   font-weight: 700;
   color: #00f5d4;
@@ -286,7 +289,7 @@ body.cursor-hidden *,
 }
 
 .hud-floor-pill {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 1.5px;
@@ -336,7 +339,7 @@ body.cursor-hidden *,
   border: 1px solid rgba(212, 175, 55, 0.3);
   border-radius: 4px;
   padding: 4px 10px;
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.5px;
@@ -429,7 +432,7 @@ body.cursor-hidden *,
 }
 
 .health-label {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 2px;
@@ -473,7 +476,7 @@ body.cursor-hidden *,
 }
 
 .boss-name {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 15px;
   font-weight: 900;
   letter-spacing: 3px;
@@ -572,7 +575,7 @@ body.cursor-hidden *,
 }
 
 .dialogue-speaker {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 16px;
   font-weight: 800;
   color: var(--gold);
@@ -580,7 +583,7 @@ body.cursor-hidden *,
 }
 
 .dialogue-text {
-  font-family: 'MedievalSharp', cursive;
+  font-family: var(--font-pixel);
   font-size: 18px;
   line-height: 1.4;
   color: var(--text);
@@ -632,8 +635,8 @@ body.cursor-hidden *,
 }
 
 .game-title {
-  font-family: 'Cinzel', serif;
-  font-size: clamp(36px, 6vw, 68px);
+  font-family: var(--font-title);
+  font-size: clamp(22px, 3.8vw, 38px);
   font-weight: 900;
   color: #ff2a3b;
   letter-spacing: clamp(4px, 1vw, 8px);
@@ -658,7 +661,7 @@ body.cursor-hidden *,
 }
 
 .game-subtitle {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: clamp(14px, 2vw, 18px);
   color: var(--gold);
   letter-spacing: 2.5px;
@@ -744,7 +747,7 @@ body.cursor-hidden *,
 }
 
 .menu-subtitle-text {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: clamp(12px, 1.6vw, 15px);
   letter-spacing: 2px;
   text-transform: uppercase;
@@ -772,7 +775,7 @@ body.cursor-hidden *,
   border: 1.5px solid rgba(212, 175, 55, 0.45);
   border-radius: 4px;
   color: #f5eedc;
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 15px;
   font-weight: 700;
   padding: 11px 22px;
@@ -923,7 +926,7 @@ body.cursor-hidden *,
   align-items: center;
   gap: 6px;
   color: #e5d8cb;
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 13px;
   letter-spacing: 1px;
 }
@@ -947,7 +950,7 @@ body.cursor-hidden *,
 }
 
 .subview-title {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: clamp(22px, 3.5vw, 28px);
   color: #ffd700;
   text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
@@ -956,7 +959,7 @@ body.cursor-hidden *,
 }
 
 .subview-subtitle {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-pixel);
   font-size: 13.5px;
   line-height: 1.4;
   color: #94a3b8;
@@ -1004,7 +1007,7 @@ body.cursor-hidden *,
 }
 
 .codex-card-title {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 16px;
   font-weight: 800;
   color: #ffd700;
@@ -1078,7 +1081,7 @@ body.cursor-hidden *,
 
 .station-info b {
   display: block;
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 13.5px;
   color: #ffb703;
   margin-bottom: 2px;
@@ -1116,7 +1119,7 @@ body.cursor-hidden *,
 }
 
 .settings-group-title {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 15px;
   font-weight: 800;
   color: #ffd700;
@@ -1192,7 +1195,7 @@ body.cursor-hidden *,
 
 .intro-text-box {
   max-width: 800px;
-  font-family: 'MedievalSharp', cursive;
+  font-family: var(--font-pixel);
   font-size: clamp(16px, 2.2vw, 23px);
   line-height: 1.7;
   color: #e8ded2;
@@ -1217,7 +1220,7 @@ body.cursor-hidden *,
 
 /* Death / Game Over Screen */
 #death-screen h2 {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: clamp(36px, 6vw, 56px);
   color: #ff1e38;
   letter-spacing: 4px;
@@ -1437,7 +1440,7 @@ body.cursor-hidden *,
 }
 
 .action-interact .action-label {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 11px;
   font-weight: 900;
   color: #f4d06f;
@@ -1623,7 +1626,7 @@ body.in-menu #virtual-controls {
   border: 1.5px solid #5a1820;
   border-radius: 4px;
   color: var(--text-muted);
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 14px;
   font-weight: 800;
   padding: 6px 16px;
@@ -1796,7 +1799,7 @@ body.in-menu #virtual-controls {
   border: 1px solid rgba(255, 215, 0, 0.4);
   border-radius: 4px;
   padding: 1px 5px;
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 9px;
   font-weight: 800;
   color: #ffd166;
@@ -1806,7 +1809,7 @@ body.in-menu #virtual-controls {
 
 .tree-zone-label {
   position: absolute;
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 2px;
@@ -1852,7 +1855,7 @@ body.in-menu #virtual-controls {
 }
 
 .inspector-empty-title {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 17px;
   font-weight: 700;
   color: #f4d06f;
@@ -1893,7 +1896,7 @@ body.in-menu #virtual-controls {
 }
 
 .inspector-node-name {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 16px;
   font-weight: 800;
   color: #fff;
@@ -1908,7 +1911,7 @@ body.in-menu #virtual-controls {
 }
 
 .inspector-node-level {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 13px;
   font-weight: 800;
   color: #ffd166;
@@ -1957,7 +1960,7 @@ body.in-menu #virtual-controls {
 }
 
 .stat-compare-box b {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 13px;
   color: #e0d6c8;
 }
@@ -1991,7 +1994,7 @@ body.in-menu #virtual-controls {
   align-items: center;
   padding: 12px 18px;
   font-size: 14px;
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-weight: 700;
 }
 
@@ -2058,7 +2061,7 @@ body.in-menu #virtual-controls {
 }
 
 .upgrade-name {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 13.5px;
   font-weight: 700;
   color: #fff;
@@ -2068,7 +2071,7 @@ body.in-menu #virtual-controls {
 }
 
 .upgrade-level-tag {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 11px;
   font-weight: 700;
   color: var(--gold);
@@ -2118,7 +2121,7 @@ body.in-menu #virtual-controls {
   min-width: 86px;
   padding: 6px 10px;
   border-radius: 5px;
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   cursor: pointer;
   transition: all 0.2s;
   text-align: center;
@@ -2277,7 +2280,7 @@ body.in-menu #virtual-controls {
   padding: 3px 8px;
   border-radius: 3px;
   margin-bottom: 10px;
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
 }
 
 .rarity-comun {
@@ -2307,7 +2310,7 @@ body.in-menu #virtual-controls {
 }
 
 .boon-card-title {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 17px;
   font-weight: 800;
   color: #fff;
@@ -2329,7 +2332,7 @@ body.in-menu #virtual-controls {
   border: 1.5px solid var(--gold);
   border-radius: 4px;
   color: var(--gold);
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 13px;
   font-weight: 800;
   padding: 8px 18px;
@@ -2426,7 +2429,7 @@ body.in-menu #virtual-controls {
 }
 
 .weapon-hud-name {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 10px;
   font-weight: 700;
   color: #f1f5f9;
@@ -2435,7 +2438,7 @@ body.in-menu #virtual-controls {
 }
 
 .weapon-hud-lvl {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 10px;
   font-weight: 800;
   color: #ffe600;
@@ -2495,7 +2498,7 @@ body.in-menu #virtual-controls {
 }
 
 .defeat-title {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-title);
   font-size: 20px;
   font-weight: 900;
   letter-spacing: 3px;
@@ -2505,7 +2508,7 @@ body.in-menu #virtual-controls {
 }
 
 .defeat-subtitle {
-  font-family: 'MedievalSharp', cursive, serif;
+  font-family: var(--font-pixel);
   font-size: 13px;
   color: #ffdf70;
   letter-spacing: 1px;
@@ -2574,7 +2577,7 @@ body.in-menu #virtual-controls {
 .hud-bonk-badge {
   background: linear-gradient(135deg, #ff0054, #ff5400);
   color: #fff;
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 15px;
   font-weight: 900;
   padding: 3px 12px;
@@ -2772,7 +2775,7 @@ body.in-menu #virtual-controls {
 }
 
 .quick-levelup-title {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 15px;
   font-weight: 800;
   color: #5ce1e6;
@@ -2804,7 +2807,7 @@ body.in-menu #virtual-controls {
   font-weight: 800;
   padding: 2px 8px;
   border-radius: 12px;
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   text-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
   animation: queuePulse 1s infinite alternate;
 }
@@ -2892,7 +2895,7 @@ body.in-menu #virtual-controls {
 }
 
 .quick-card .boon-card-title {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 12px;
   font-weight: 700;
   color: #f1f5f9;
@@ -3012,7 +3015,7 @@ body.in-menu #virtual-controls {
   border-radius: 6px;
   padding: 8px 14px;
   font-size: 13px;
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
 }
 
 .slot-wallet-item span {
@@ -3223,7 +3226,7 @@ body.in-menu #virtual-controls {
   border-radius: 6px;
   padding: 8px 12px;
   text-align: center;
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 13px;
   color: #ffd166;
   min-height: 20px;
@@ -3364,7 +3367,7 @@ body.in-menu #virtual-controls {
 }
 
 .slider-label-group span {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-weight: 700;
   color: #ffd700;
 }
@@ -3444,7 +3447,7 @@ body.in-menu #virtual-controls {
 }
 
 .achievements-progress-text {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 13px;
   font-weight: 700;
   color: #ffd700;
@@ -3496,7 +3499,7 @@ body.in-menu #virtual-controls {
 }
 
 .achievement-card-title {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 15px;
   font-weight: 700;
   color: #ffffff;
@@ -3576,7 +3579,7 @@ body.in-menu #virtual-controls {
 }
 
 .achievement-toast-header {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 2px;
@@ -3651,7 +3654,7 @@ body.in-menu #virtual-controls {
 .summary-stat-val {
   font-size: 18px;
   font-weight: 800;
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   color: #f1f5f9;
 }
 
@@ -3701,7 +3704,7 @@ body.in-menu #virtual-controls {
   color: #94a3b8;
   padding: 8px 20px;
   border-radius: 8px;
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
@@ -3774,7 +3777,7 @@ body.in-menu #virtual-controls {
   font-size: 16px;
   font-weight: bold;
   color: #f8fafc;
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
 }
 
 .bestiary-subtitle {
@@ -3879,7 +3882,7 @@ body.in-menu #virtual-controls {
 }
 
 .wardrobe-skin-title {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 16px;
   font-weight: 700;
   color: #f8fafc;
@@ -3906,7 +3909,7 @@ body.in-menu #virtual-controls {
   margin-top: 4px;
   padding: 7px 12px;
   font-size: 13px;
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-weight: bold;
 }
 
@@ -4034,7 +4037,7 @@ body.in-menu #virtual-controls {
 }
 
 .hermit-item-name {
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 15px;
   font-weight: bold;
   color: #fef08a;
@@ -4050,7 +4053,7 @@ body.in-menu #virtual-controls {
   background: linear-gradient(180deg, #d97706 0%, #78350f 100%);
   border: 1px solid #f59e0b;
   color: #fff;
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-pixel);
   font-size: 13px;
   font-weight: bold;
   padding: 8px 12px;
@@ -4116,3 +4119,8 @@ body.in-menu #virtual-controls {
 
 
 
+
+
+button, input, select, textarea {
+  font-family: var(--font-pixel);
+}

@@ -32,212 +32,162 @@ class DialogueManager {
         {
           speaker: 'Soldado',
           portrait: 'Soldado',
-          text: 'Kael, el traidor se encuentra escondido en estas ruinas.'
+          text: 'Kael, el traidor está escondido en estas ruinas.'
         },
         {
           speaker: 'Kael',
           portrait: 'Kael',
-          text: 'Entendido, vamos a acabar con ese maldito.'
+          text: 'Entendido. Vamos a por él.'
         },
         {
           speaker: 'Soldado',
           portrait: 'Soldado',
-          text: 'También está junto con su esposa y sus 2 hijas, ¿qué deberíamos hacer con ellas?'
+          text: 'Está con su familia... ¿qué hacemos con ellas?'
         },
         {
           speaker: 'Kael',
           portrait: 'Kael',
-          text: 'No me importa, acabaremos con todos los traidores...'
+          text: 'No hay excepciones. Acabaremos con todos.'
         },
         {
           speaker: 'Narrador',
           portrait: 'Kael',
-          text: 'El soldado contó el trágico incidente al consejo del castillo. Kael fue sentenciado a muerte por asesinar a una mujer y a 2 niñas inocentes; el único culpable por traición era el esposo.'
+          text: 'El consejo del reino condenó a Kael por la muerte de inocentes. Su castigo: la muerte y el destierro al Inframundo.'
         },
         {
           speaker: 'Narrador',
           portrait: 'Kael',
-          text: 'Despertando en el fondo del Inframundo ante la colosal Torre de las Almas, tu única salvación es ascender piso a piso hasta el Mundo Terrenal.'
+          text: 'Frente a la colosal Torre Infernal, tu única salida es luchar y ascender hacia la superficie.'
         }
       ],
 
       demon_slime_intro: [
         {
-          speaker: 'Narrador',
-          portrait: 'Kael',
-          text: 'En las profundidades incandescentes del Foso Abisal, los mares de magma hierven anunciando la llegada del Demonio de Fuego...'
-        },
-        {
-          speaker: 'Demonio de Fuego',
+          speaker: 'Demonio de Magma',
           portrait: 'DemonSlime',
-          text: '¡JAJAJAJA! ¿Una pobre alma intentando escapar del foso? ¡Yo soy el Señor de las Fosas, y tus cenizas alimentarán este fuego eterno!'
+          text: '¡JAJAJA! ¿Un alma intentando huir? ¡Tus huesos se fundirán en mi fuego!'
         },
         {
           speaker: 'Kael',
           portrait: 'Kael',
-          text: '¡No me detendrás en el primer peldaño! ¡Aparta de mi camino hacia las alturas!'
+          text: 'Apártate de mi camino. No pienso quedarme en este foso.'
         }
       ],
 
       frost_guardian_intro: [
         {
-          speaker: 'Narrador',
-          portrait: 'Kael',
-          text: 'En las cumbres congeladas del Piso 2, el viento ártico esculpe la figura imponente del Guardián...'
-        },
-        {
           speaker: 'Guardián de Hielo',
           portrait: 'FrostGuardian',
-          text: 'Penitente... el frío eterno congela las almas indignas. Tu fuego se extinguirá en este glaciar.'
+          text: 'El frío eterno detiene a los débiles. Tu llama se apaga aquí.'
         },
         {
           speaker: 'Kael',
           portrait: 'Kael',
-          text: 'He dejado atrás el foso más profundo. ¡Ninguna ventisca detendrá mi marcha a la superficie!'
+          text: 'Mi espada quema con más fuerza que tu ventisca. ¡En guardia!'
         }
       ],
 
       minotaur_intro: [
         {
-          speaker: 'Narrador',
-          portrait: 'Kael',
-          text: 'En las cavernas rocosas del Piso 3, donde la luz del amanecer terrenal se filtra entre las ruinas de piedra, retumba la pisada colosal del Minotauro...'
-        },
-        {
           speaker: 'Minotauro',
           portrait: 'Minotauro',
-          text: '¡MUUUUGH! ¡Has escalado desde las fosas, pero el laberinto de piedra es mi templo! ¡Nadie cruza hacia la superficie con vida!'
+          text: '¡MUUUUGH! ¡Este laberinto es mi templo! ¡Nadie sale con vida!'
         },
         {
           speaker: 'Kael',
           portrait: 'Kael',
-          text: '¡Puedo ver la luz del sol entre las grietas de esta cueva! ¡Eres el último titán que me separa del Mundo de los Vivos!'
+          text: 'Veo la salida entre las grietas. Eres el último obstáculo en mi camino.'
         }
       ],
 
       minos_intro: [
         {
-          speaker: 'Narrador',
-          portrait: 'Kael',
-          text: 'En el umbral superior del Foso Abisal, un coloso espectral cierra el paso a la torre...'
-        },
-        {
           speaker: 'Minos',
           portrait: 'Minos',
-          text: '¡Detén tu paso, alma caída! Soy Minos, Juez de las Fosas Abisales. Nadie escapa hacia los pisos superiores de la Torre.'
+          text: 'Alto ahí. Soy Minos, juez de las fosas. Nadie sube por esta torre.'
         },
         {
           speaker: 'Kael',
           portrait: 'Kael',
-          text: 'No me doblegaré ante tus cadenas. Mi espada abrirá el camino hacia las alturas.'
+          text: 'Tu sentencia no tiene poder sobre mi acero. ¡A un lado!'
         }
       ],
 
       flegias_intro: [
         {
-          speaker: 'Narrador',
-          portrait: 'Kael',
-          text: 'En las Catacumbas Hundidas de la torre, las aguas pestilentes borbotean con odio...'
-        },
-        {
           speaker: 'Flegias',
           portrait: 'Flegias',
-          text: '¡Miserable intruso! Soy Flegias, señor del pantano sumergido. ¡Nadie cruza hacia las murallas de la Torre con vida!'
+          text: '¡Intruso! El pantano se traga a todos los que intentan escapar.'
         },
         {
           speaker: 'Kael',
           portrait: 'Kael',
-          text: 'Tu lodo no detendrá mi ascenso. Te hundiré en las profundidades de tu propia ciénaga.'
+          text: 'No me ahogaré en tu ciénaga. ¡Prepárate!'
         }
       ],
 
       boss1_intro: [
         {
-          speaker: 'Narrador',
-          portrait: 'Kael',
-          text: 'En las Murallas Carmesí de la Fortaleza de Hierro, el calor sofocante anuncia al verdugo de fuego...'
-        },
-        {
           speaker: 'Azgalor',
           portrait: 'Azgalor',
-          text: '¡Alma insensata! Soy Azgalor, el señor de la Fortaleza. ¡Tus cenizas alimentarán estos hornos por la eternidad!'
+          text: 'Bienvenido a mi forja. Arderás como todos los demás.'
         },
         {
           speaker: 'Kael',
           portrait: 'Kael',
-          text: 'Ya he ardido en las profundidades. Tu fuego no frenará mi ascenso a la superficie.'
+          text: 'El fuego ya no me asusta. Abre paso.'
         }
       ],
 
       azgalor_intro: [
         {
-          speaker: 'Narrador',
-          portrait: 'Kael',
-          text: 'En las Murallas Carmesí de la Fortaleza de Hierro, el calor sofocante anuncia al verdugo de fuego...'
-        },
-        {
           speaker: 'Azgalor',
           portrait: 'Azgalor',
-          text: '¡Alma insensata! Soy Azgalor, el señor de la Fortaleza. ¡Tus cenizas alimentarán estos hornos por la eternidad!'
+          text: 'Bienvenido a mi forja. Arderás como todos los demás.'
         },
         {
           speaker: 'Kael',
           portrait: 'Kael',
-          text: 'Ya he ardido en las profundidades. Tu fuego no frenará mi ascenso a la superficie.'
+          text: 'El fuego ya no me asusta. Abre paso.'
         }
       ],
 
       malacoda_intro: [
         {
-          speaker: 'Narrador',
-          portrait: 'Kael',
-          text: 'En las Agujas Glaciares, la ventisca helada aúlla entre las cumbres antes del Atrio Dorado...'
-        },
-        {
           speaker: 'Malacoda',
           portrait: 'Malacoda',
-          text: '¡Hueles a vida! Soy Malacoda, la Bestia de las Agujas. ¡Tus huesos se congelarán en estas alturas antes de tocar la luz!'
+          text: 'El viento helado corta la carne, mortal. No llegarás a la cima.'
         },
         {
           speaker: 'Kael',
           portrait: 'Kael',
-          text: 'Guarda tus amenazas, demonio alado. Ni el hielo ni el viento impedirán que vea la luz del sol.'
+          text: 'Un último esfuerzo y estaré fuera. ¡A luchar!'
         }
       ],
 
       boss2_intro: [
         {
-          speaker: 'Narrador',
-          portrait: 'Kael',
-          text: 'En el Atrio Dorado de la Cúpula, ante el último umbral antes del Mundo de los Vivos...'
-        },
-        {
           speaker: 'Glacior',
           portrait: 'Glacior',
-          text: '¡Penitente impío! Soy Glacior, el Centinela del Umbral. Más allá aguarda la Puerta al Mundo Terrenal... ¡pero jamás permitiré que escapes!'
+          text: '¡Soy el Centinela del Umbral! Más allá está la salida... ¡pero jamás te dejaré cruzar!'
         },
         {
           speaker: 'Kael',
           portrait: 'Kael',
-          text: 'He escalado la torre entera desde el foso más hondo. ¡Cruzare la Puerta Terrenal y renaceré!'
+          text: 'He subido desde el abismo más profundo. ¡Nadie me impedirá volver a la vida!'
         }
       ],
 
       glacior_intro: [
         {
-          speaker: 'Narrador',
-          portrait: 'Kael',
-          text: 'En el Atrio Dorado de la Cúpula, ante el último umbral antes del Mundo de los Vivos...'
-        },
-        {
           speaker: 'Glacior',
           portrait: 'Glacior',
-          text: '¡Penitente impío! Soy Glacior, el Centinela del Umbral. Más allá aguarda la Puerta al Mundo Terrenal... ¡pero jamás permitiré que escapes!'
+          text: '¡Soy el Centinela del Umbral! Más allá está la salida... ¡pero jamás te dejaré cruzar!'
         },
         {
           speaker: 'Kael',
           portrait: 'Kael',
-          text: 'He escalado la torre entera desde el foso más hondo. ¡Cruzare la Puerta Terrenal y renaceré!'
+          text: 'He subido desde el abismo más profundo. ¡Nadie me impedirá volver a la vida!'
         }
       ]
     };

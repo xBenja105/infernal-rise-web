@@ -1212,7 +1212,7 @@ class Player {
       // Overhead Ascended Avatar Distinction
       if (visuals && visuals.hasAllWeapons) {
         ctx.save();
-        ctx.font = 'bold 8px Cinzel, serif';
+        ctx.font = 'bold 8px "Pixelify Sans", monospace';
         ctx.textAlign = 'center';
         ctx.shadowColor = '#ffd700';
         ctx.shadowBlur = 8;
@@ -3214,7 +3214,7 @@ class Boss {
       ctx.save();
       const bannerY = ry - 32;
       const bannerText = `⚠️ ¡ULTIMATE: ${this.ultimateName.toUpperCase()}! ⚠️`;
-      ctx.font = 'bold 14px MedievalSharp, sans-serif';
+      ctx.font = 'bold 12px "Pixelify Sans", monospace';
       const tw = ctx.measureText(bannerText).width;
       const bx = rx + this.w / 2 - tw / 2 - 12;
 
@@ -3237,7 +3237,7 @@ class Boss {
     } else if (this.isEnraged) {
       ctx.save();
       const badgeY = ry - 18;
-      ctx.font = 'bold 11px MedievalSharp, sans-serif';
+      ctx.font = 'bold 11px "Pixelify Sans", monospace';
       ctx.fillStyle = '#ff3333';
       ctx.shadowColor = '#ff0000';
       ctx.shadowBlur = 8;
@@ -3555,7 +3555,7 @@ class BoonChest {
         ctx.fill();
 
         // Floating Title above relic chest
-        ctx.font = 'bold 11px Cinzel, serif';
+        ctx.font = 'bold 11px "Pixelify Sans", monospace';
         ctx.fillStyle = '#ffd700';
         ctx.textAlign = 'center';
         ctx.shadowColor = '#e63946';
@@ -5509,7 +5509,7 @@ class BossProjectile {
       ctx.fill();
 
       // Hazard notification banner in arena
-      ctx.font = 'bold 12px MedievalSharp, sans-serif';
+      ctx.font = 'bold 12px "Pixelify Sans", monospace';
       ctx.fillStyle = '#6ee7b7';
       ctx.textAlign = 'center';
       ctx.fillText('⚠️ ¡MAREMOTO DEL ESTIGIA! SUBE A LAS PLATAFORMAS ⚠️', rx + this.w / 2, ry - 8);

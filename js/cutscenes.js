@@ -568,7 +568,7 @@ class CutsceneManager {
     ctx.fillText(runeIcon, 0, -ribbonH / 2 + 4);
 
     // Boss Name (Primary Gothic Title)
-    ctx.font = 'bold 22px "Cinzel", "Crimson Text", Georgia, serif';
+    ctx.font = 'bold 18px "Press Start 2P", "Pixelify Sans", monospace';
     ctx.shadowColor = glowCol;
     ctx.shadowBlur = 16;
     ctx.fillStyle = primaryCol;
@@ -576,9 +576,9 @@ class CutsceneManager {
 
     // Subtitle / Circle Title
     ctx.shadowBlur = 6;
-    ctx.font = 'bold 12px "Cinzel", Georgia, serif';
+    ctx.font = 'bold 12px "Pixelify Sans", monospace';
     ctx.fillStyle = subCol;
-    ctx.letterSpacing = '2px';
+    ctx.letterSpacing = '1px';
     ctx.fillText(this.bossSubtitle, 0, 18);
 
     ctx.restore();
@@ -651,13 +651,13 @@ class CutsceneManager {
 
       ctx.shadowColor = 'rgba(245, 158, 11, 0.8)';
       ctx.shadowBlur = 18;
-      ctx.font = 'bold 28px "Cinzel", Georgia, serif';
+      ctx.font = 'bold 22px "Press Start 2P", monospace';
       ctx.fillStyle = '#fef08a';
       ctx.textAlign = 'center';
       ctx.fillText('INFERNAL RISE', 0, -8);
 
       ctx.shadowBlur = 8;
-      ctx.font = 'bold 13px "Cinzel", Georgia, serif';
+      ctx.font = 'bold 12px "Pixelify Sans", monospace';
       ctx.fillStyle = '#67e8f9';
       ctx.fillText('LIBRE DEL AVERNO — REDENCIÓN ALCANZADA', 0, 18);
 
@@ -713,7 +713,7 @@ class CutsceneManager {
     const curH = this.letterboxHeight * this.letterboxProgress;
     const subY = vHeight - Math.max(28, curH * 0.7);
 
-    ctx.font = 'italic 14px "Cinzel", "Crimson Text", Georgia, serif';
+    ctx.font = 'bold 13px "Pixelify Sans", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
@@ -748,7 +748,7 @@ class CutsceneManager {
     ctx.globalAlpha = this.skipPromptAlpha * (0.65 + Math.sin(this.skipTimer * 4.0) * 0.25);
 
     const promptText = '⯈ [Espacio] o Toca para Omitir';
-    ctx.font = '10px "Cinzel", sans-serif';
+    ctx.font = '10px "Pixelify Sans", monospace';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'top';
 

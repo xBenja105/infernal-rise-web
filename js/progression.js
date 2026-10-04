@@ -225,7 +225,7 @@ class ProgressionManager {
         weaponType: 'holy_cross',
         name: 'Cruces de Luz',
         rarity: 'Rara',
-        desc: 'Arma Pasiva: Cruces de oro orbitan a Kael, rebanando enemigos cercanos y destruyendo proyectiles.',
+        desc: 'Cruces de luz orbitan a Kael y rebanan a los enemigos.',
         icon: '✝️'
       },
       {
@@ -234,7 +234,7 @@ class ProgressionManager {
         weaponType: 'hellfire_orb',
         name: 'Orbe del Averno',
         rarity: 'Rara',
-        desc: 'Arma Pasiva: Dispara bolas de fuego teledirigidas al enemigo más cercano que estallan al impactar.',
+        desc: 'Dispara bolas de fuego teledirigidas que explotan al impactar.',
         icon: '☄️'
       },
       {
@@ -243,7 +243,7 @@ class ProgressionManager {
         weaponType: 'celestial_lightning',
         name: 'Ira del Cielo',
         rarity: 'Épica',
-        desc: 'Arma Pasiva: Relámpagos celestiales caen del cielo automáticamente sobre los enemigos en área.',
+        desc: 'Relámpagos celestiales castigan a grupos de enemigos.',
         icon: '⚡'
       },
       {
@@ -252,7 +252,7 @@ class ProgressionManager {
         weaponType: 'death_scythe',
         name: 'Guadaña Espectral',
         rarity: 'Épica',
-        desc: 'Arma Pasiva: Lanza guadañas giratorias que atraviesan y desgarran a todos los enemigos en pantalla.',
+        desc: 'Lanza guadañas giratorias que atraviesan a todos los enemigos.',
         icon: '🪓'
       },
       {
@@ -261,7 +261,7 @@ class ProgressionManager {
         weaponType: 'blood_garlic',
         name: 'Aura de Penitencia',
         rarity: 'Común',
-        desc: 'Arma Pasiva: Un halo carmesí continuo rodea a Kael, dañando y repeliendo a cualquier criatura.',
+        desc: 'Halo carmesí continuo que daña y repele enemigos cercanos.',
         icon: '📿'
       },
       {
@@ -270,7 +270,7 @@ class ProgressionManager {
         weaponType: 'spectral_javelin',
         name: 'Lanza Espectral',
         rarity: 'Épica',
-        desc: 'Arma Pasiva: Dispara jabalinas de luz etérea que perforan a todos los enemigos en fila a gran velocidad.',
+        desc: 'Dispara jabalinas de luz que perforan enemigos en fila.',
         icon: '🔱'
       },
       {
@@ -279,7 +279,7 @@ class ProgressionManager {
         weaponType: 'infernal_chakram',
         name: 'Chakram del Averno',
         rarity: 'Épica',
-        desc: 'Arma Pasiva: Lanza discos cortantes ardientes en arco que regresan a Kael como bumerán, rebanando a su paso.',
+        desc: 'Lanza chakrams ardientes que cortan y regresan como bumerán.',
         icon: '🌀'
       },
       // ─── TOMOS PASIVOS (VAMPIRE SURVIVORS SYNERGY TOMES) ───
@@ -288,7 +288,7 @@ class ProgressionManager {
         isTome: true,
         name: 'Cáliz de Fuego Negro',
         rarity: 'Rara',
-        desc: 'Tomo Pasivo: +25% de tamaño y radio de alcance a todas las armas, ondas y auras.',
+        desc: '+25% área y alcance en todas tus armas y auras.',
         icon: '🕯️'
       },
       {
@@ -296,7 +296,7 @@ class ProgressionManager {
         isTome: true,
         name: 'Extracto de Sangre Impía',
         rarity: 'Rara',
-        desc: 'Tomo Pasivo: +20% de daño a todos los ataques, proyectiles y armas.',
+        desc: '+20% de daño a todos los ataques y armas.',
         icon: '🌿'
       },
       {
@@ -304,7 +304,7 @@ class ProgressionManager {
         isTome: true,
         name: 'Reliquia del Tiempo Condenado',
         rarity: 'Épica',
-        desc: 'Tomo Pasivo: -15% de tiempo de recarga en todas las armas automáticas.',
+        desc: '-15% tiempo de recarga en todas las armas.',
         icon: '⏳'
       },
       {
@@ -312,7 +312,7 @@ class ProgressionManager {
         isTome: true,
         name: 'Sello de Fortuna Infernal',
         rarity: 'Común',
-        desc: 'Tomo Pasivo: +15% de probabilidad de asestar Golpes Críticos e Impactos Demoledores.',
+        desc: '+15% probabilidad de impacto crítico.',
         icon: '🍀'
       },
       {
@@ -320,7 +320,7 @@ class ProgressionManager {
         isTome: true,
         name: 'Guantelete de los Gigantes',
         rarity: 'Rara',
-        desc: 'Tomo Pasivo: +60% de fuerza de empuje demoledor y doble daño por reacción en cadena.',
+        desc: '+60% fuerza de empuje y daño por colisión.',
         icon: '🥊'
       },
       // ─── ARCANOS DEL AVERNO (TALISMANES Y BENDICIONES DE DANTE) ───
@@ -329,7 +329,7 @@ class ProgressionManager {
         isJoker: true,
         name: 'Arcano: El Hereje del Limbo',
         rarity: 'Común',
-        desc: 'Arcano: Otorga +4 Fervor 🔴 en cada muerte enemiga ejecutada en el aire.',
+        desc: '+4 Fervor 🔴 al eliminar enemigos en el aire.',
         icon: '🃏'
       },
       {
@@ -337,7 +337,7 @@ class ProgressionManager {
         isJoker: true,
         name: 'Arcano: El Avaro de Dite',
         rarity: 'Rara',
-        desc: 'Arcano: Si posees más de 150 almas, otorga ×1.5 Cólera 🟣 a todas las almas obtenidas.',
+        desc: 'Con más de 150 almas, otorga ×1.5 Cólera 🟣 a las almas ganadas.',
         icon: '💰'
       },
       {
@@ -345,7 +345,7 @@ class ProgressionManager {
         isJoker: true,
         name: 'Arcano: La Rueda del Destino',
         rarity: 'Épica',
-        desc: 'Arcano: 25% de probabilidad de triplicar (×3.0 🟣) el valor de almas.',
+        desc: '25% de probabilidad de triplicar (×3.0 🟣) las almas obtenidas.',
         icon: '🎡'
       },
       {
@@ -353,7 +353,7 @@ class ProgressionManager {
         isJoker: true,
         name: 'Arcano: El Penitente Colgado',
         rarity: 'Rara',
-        desc: 'Arcano: Al sufrir daño, detona una onda sísmica que aniquila enemigos menores.',
+        desc: 'Al recibir daño, desata una onda sísmica destructiva.',
         icon: '🪢'
       },
       {
@@ -361,7 +361,7 @@ class ProgressionManager {
         isJoker: true,
         name: 'Arcano: El Juicio Carmesí',
         rarity: 'Épica',
-        desc: 'Arcano: Las explosiones de enemigos transmiten fuego ardiente a los adyacentes.',
+        desc: 'Las muertes enemigas propagan fuego a rivales cercanos.',
         icon: '☠️'
       },
       {
@@ -369,7 +369,7 @@ class ProgressionManager {
         isJoker: true,
         name: 'Arcano: El Rompehuesos Titánico',
         rarity: 'Rara',
-        desc: 'Arcano: Cada Impacto Demoledor añade +10 Fervor 🔴 temporal a la racha de almas.',
+        desc: 'Cada impacto contra el muro suma +10 Fervor 🔴.',
         icon: '🔨'
       }
     ];

@@ -419,7 +419,7 @@ class ParticleSystem {
       const alpha = Math.min(1.0, ft.life / 0.28);
       ctx.save();
       ctx.globalAlpha = Math.max(0, alpha);
-      ctx.font = `${ft.isBonk ? '900' : (ft.isCrit ? 'bold' : '700')} ${ft.size}px 'Cinzel', 'Segoe UI', sans-serif`;
+      ctx.font = `${ft.isBonk ? '900' : (ft.isCrit ? 'bold' : '700')} ${ft.size}px 'Pixelify Sans', monospace`;
       ctx.textAlign = 'center';
       // Thick comic outline
       ctx.strokeStyle = '#000000';

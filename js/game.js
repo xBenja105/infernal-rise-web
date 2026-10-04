@@ -1192,11 +1192,11 @@ class Game {
     this.hideAllScreens();
     this.ui.introScreen.classList.remove('hidden');
 
-    const introStory = `Eres Kael, un soldado designado a buscar y darle caza a un traidor del rey. Junto con tus compañeros, creen haber encontrado el escondite de este traidor...
+    const introStory = `Eres Kael. Traicionado y condenado por un crimen que no cometiste, despertaste en lo profundo del Averno.
 
-Sin embargo, Kael no se esperaba que esa noche iba a ser el inicio de una pesadilla. Una masacre despiadada de inocentes por la que fue condenado a muerte y arrojado a los abismos del Inframundo.
+Frente a ti se alza la Torre Infernal.
 
-Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con sangre para escapar de la condenación eterna.`;
+Lucha, sobrevive y reclama tu redención con sangre.`;
 
     this.ui.introTypewriter.textContent = '';
     let idx = 0;
@@ -1218,11 +1218,11 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     if (this.introTimer) {
       clearInterval(this.introTimer);
       this.introTimer = null;
-      this.ui.introTypewriter.textContent = `Eres Kael, un soldado designado a buscar y darle caza a un traidor del rey. Junto con tus compañeros, creen haber encontrado el escondite de este traidor...
+      this.ui.introTypewriter.textContent = `Eres Kael. Traicionado y condenado por un crimen que no cometiste, despertaste en lo profundo del Averno.
 
-Sin embargo, Kael no se esperaba que esa noche iba a ser el inicio de una pesadilla. Una masacre despiadada de inocentes por la que fue condenado a muerte y arrojado a los abismos del Inframundo.
+Frente a ti se alza la Torre Infernal.
 
-Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con sangre para escapar de la condenación eterna.`;
+Lucha, sobrevive y reclama tu redención con sangre.`;
       return;
     }
 
@@ -4464,7 +4464,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
     // 8. Overhead Glowing Tree Title
     this.ctx.save();
-    this.ctx.font = 'bold 10px Cinzel, serif';
+    this.ctx.font = 'bold 10px "Pixelify Sans", monospace';
     this.ctx.textAlign = 'center';
     this.ctx.fillStyle = '#ffd166';
     this.ctx.shadowColor = '#9d4edd';
@@ -4595,7 +4595,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     this.ctx.strokeRect(rx + 6, ry + h - 22, w - 12, 9);
 
     this.ctx.fillStyle = '#ffd700';
-    this.ctx.font = 'bold 7px Cinzel, serif';
+    this.ctx.font = 'bold 8px "Pixelify Sans", monospace';
     this.ctx.textAlign = 'center';
     this.ctx.fillText('80 🔮 OFRENDA', rx + w / 2, ry + h - 15);
 
@@ -4606,7 +4606,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     this.ctx.fillRect(rx + 4, ry - 1, w - 8, 12);
     this.ctx.strokeRect(rx + 4, ry - 1, w - 8, 12);
 
-    this.ctx.font = 'bold 9px Cinzel, serif';
+    this.ctx.font = 'bold 9px "Pixelify Sans", monospace';
     this.ctx.textAlign = 'center';
     this.ctx.fillStyle = '#ffd166';
     this.ctx.shadowColor = '#000000';
@@ -4694,7 +4694,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     this.ctx.strokeRect(rx + portal.w / 2 - 8, ry + 2, 16, 14);
 
     // Label
-    this.ctx.font = 'bold 12px Cinzel, serif';
+    this.ctx.font = 'bold 12px "Pixelify Sans", monospace';
     this.ctx.fillStyle = '#f8df8c';
     this.ctx.shadowColor = '#000000';
     this.ctx.shadowBlur = 4;
@@ -4774,7 +4774,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     }
 
     // Overhead title
-    ctx.font = 'bold 9px Cinzel, serif';
+    ctx.font = 'bold 9px "Pixelify Sans", monospace';
     ctx.textAlign = 'center';
     ctx.fillStyle = '#fde047';
     ctx.shadowColor = '#000';
@@ -4831,12 +4831,12 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
     if (cs.active) {
       ctx.fillStyle = '#ef4444';
-      ctx.font = 'bold 11px Cinzel, serif';
+      ctx.font = 'bold 11px "Pixelify Sans", monospace';
       ctx.textAlign = 'center';
       ctx.fillText(`⚔️ Restantes: ${cs.enemiesLeft}`, rx + 16, ry - 14);
     } else {
       ctx.fillStyle = cs.completed ? '#94a3b8' : '#ffd166';
-      ctx.font = 'bold 9px Cinzel, serif';
+      ctx.font = 'bold 9px "Pixelify Sans", monospace';
       ctx.textAlign = 'center';
       ctx.fillText(cs.completed ? 'Desafío Superado' : 'Monolito de Desafío', rx + 16, ry - 10);
     }
@@ -5254,7 +5254,7 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
         this.ctx.fillRect(0, this.vHeight - barH, this.vWidth, barH);
 
         // Warning badge text
-        this.ctx.font = 'bold 12px MedievalSharp, sans-serif';
+        this.ctx.font = 'bold 12px "Pixelify Sans", monospace';
         this.ctx.textAlign = 'center';
         this.ctx.fillStyle = palette.waveColor;
         this.ctx.shadowColor = palette.topColor;
