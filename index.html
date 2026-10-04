@@ -744,18 +744,24 @@
       </div>
     </div>
 
-    <!-- Ascenso del Alma Modal (Subida de Nivel) -->
-    <div id="level-up-modal" class="screen-overlay hidden">
-      <div class="boon-modal-container levelup-container">
-        <div class="levelup-header">
-          <span class="levelup-icon">⚡</span>
-          <h2 class="game-title" style="font-size: 32px; margin-bottom: 4px; color: #5ce1e6; text-shadow: 0 0 25px rgba(92, 225, 230, 0.9);">¡ASCENSO DEL ALMA!</h2>
-          <div class="levelup-level-title">Nivel <span id="modal-run-level">2</span> Alcanzado</div>
+    <!-- Ascenso del Alma (HUD Flotante de Selección Rápida en Tiempo Real) -->
+    <div id="level-up-modal" class="quick-levelup-hud hidden" role="region" aria-label="Selección de Ascenso del Alma">
+      <div class="quick-levelup-container">
+        <div class="quick-levelup-header">
+          <div class="quick-levelup-title-row">
+            <span class="quick-levelup-title"><span class="levelup-flash-icon">⚡</span> ¡ASCENSO DEL ALMA!</span>
+            <span class="quick-levelup-level">Nivel <span id="modal-run-level">2</span></span>
+            <span id="quick-levelup-queue-badge" class="quick-levelup-queue hidden">+0 en cola</span>
+          </div>
+          <div class="quick-levelup-hint">
+            Elige con <span class="hotkey-pill">[1]</span> <span class="hotkey-pill">[2]</span> <span class="hotkey-pill">[3]</span> o haz clic
+          </div>
         </div>
-        <div class="boon-modal-subtitle">Elige una reliquia, arma autónoma o arcano para forjar tu ascenso:</div>
-        <div id="levelup-cards-container" class="boon-cards-container"></div>
-        <div class="modal-footer-actions">
-          <button id="btn-levelup-reroll" class="btn-infernal btn-reroll">🎲 Barajar Destino (15 🔮)</button>
+        <div id="levelup-cards-container" class="quick-levelup-cards-grid boon-cards-container"></div>
+        <div class="quick-levelup-footer">
+          <button id="btn-levelup-reroll" class="btn-quick-reroll" title="Atajo: Tecla [R] / Mando (Y)">
+            <span class="hotkey-pill small">[R]</span> 🎲 Barajar Destino (15 🔮)
+          </button>
         </div>
       </div>
     </div>

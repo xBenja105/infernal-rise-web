@@ -224,11 +224,12 @@ class Game {
       boonCardsContainer: document.getElementById('boon-cards-container'),
       btnBoonReroll: document.getElementById('btn-boon-reroll'),
 
-      // Vampire Survivors Level-Up & Reroll
+      // Vampire Survivors Level-Up & Reroll (Quick Real-Time HUD)
       levelUpModal: document.getElementById('level-up-modal'),
       modalRunLevel: document.getElementById('modal-run-level'),
       levelupCardsContainer: document.getElementById('levelup-cards-container'),
       btnLevelupReroll: document.getElementById('btn-levelup-reroll'),
+      quickLevelupQueueBadge: document.getElementById('quick-levelup-queue-badge'),
 
       // Ruleta de Armas (Slot Machine) Modal
       slotMachineModal: document.getElementById('slot-machine-modal'),
@@ -418,6 +419,30 @@ class Game {
         e.preventDefault();
         this.rebindActionKey(this.rebindingAction, e.code);
         return;
+      }
+
+      // Real-time Quick Level-Up hotkey selection [1], [2], [3] and Reroll [R]
+      if (this.isQuickLevelUpActive && this.state === 'PLAYING') {
+        if (e.code === 'Digit1' || e.code === 'Numpad1') {
+          e.preventDefault();
+          this.selectQuickLevelUpChoice(0);
+          return;
+        }
+        if (e.code === 'Digit2' || e.code === 'Numpad2') {
+          e.preventDefault();
+          this.selectQuickLevelUpChoice(1);
+          return;
+        }
+        if (e.code === 'Digit3' || e.code === 'Numpad3') {
+          e.preventDefault();
+          this.selectQuickLevelUpChoice(2);
+          return;
+        }
+        if (e.code === 'KeyR') {
+          e.preventDefault();
+          this.rerollQuickLevelUp();
+          return;
+        }
       }
 
       if (this.isActionKey('left', e.code)) this.input.left = true;
@@ -981,15 +1006,10 @@ class Game {
     // Intro Screen Click
     this.ui.introScreen.addEventListener('click', () => this.advanceIntroScreen());
 
-    // Vampire Survivors Level-Up Reroll Button
+    // Vampire Survivors Level-Up Reroll Button (Quick Real-Time HUD)
     if (this.ui.btnLevelupReroll) {
       this.ui.btnLevelupReroll.addEventListener('click', () => {
-        if (Date.now() < this.modalInputCooldownUntil) return;
-        if (window.progression && window.progression.performReroll()) {
-          const fresh = window.progression.getRandomBoons(3, false);
-          this.renderLevelUpCards(fresh);
-          this.ui.btnLevelupReroll.disabled = !window.progression.canReroll();
-        }
+        this.rerollQuickLevelUp();
       });
     }
 
@@ -5497,64 +5517,44 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     this.state = targetState;
   }
 
-  // ─── VAMPIRE SURVIVORS LEVEL-UP MODAL & QUEUE ───
+  // ─── QUICK REAL-TIME LEVEL-UP HUD SYSTEM (NON-BLOCKING) ───
   queueLevelUps(count = 1) {
     if (!this.pendingLevelUps) this.pendingLevelUps = 0;
     this.pendingLevelUps += count;
-    // Only open immediately if playing and no other modal is currently active!
+    // Activate or update the quick real-time HUD without freezing gameplay!
     if (this.state === 'PLAYING') {
-      this.openLevelUpModal();
+      this.showQuickLevelUpHUD();
     }
-    // If state is 'BOON_SELECT', 'LEVEL_UP', 'HERMIT_SHOP', 'SANCTUARY', 'SLOT_MACHINE', 'PAUSED', 'DIALOGUE',
-    // the level up will stay safely in pendingLevelUps and open cleanly as soon as the active modal closes.
   }
 
-  openLevelUpModal() {
+  showQuickLevelUpHUD() {
     if (!window.progression) return;
     if (!this.pendingLevelUps || this.pendingLevelUps < 1) {
       this.pendingLevelUps = 1;
     }
 
-    const boons = window.progression.getRandomBoons(3, false);
-    if (boons.length === 0) {
-      this.pendingLevelUps = 0;
-      this.state = 'PLAYING';
+    // If HUD is already active and displaying choices, update the pending queue counter smoothly
+    if (this.isQuickLevelUpActive && this.currentQuickLevelUpBoons && this.currentQuickLevelUpBoons.length > 0) {
+      this.updateQuickLevelUpQueueBadge();
       return;
     }
 
-    // Only record previous state if it was a non-modal state
-    const nonModalStates = ['PLAYING', 'MENU'];
-    if (nonModalStates.includes(this.state)) {
-      this.prevStateBeforeModal = this.state;
-    } else if (!this.prevStateBeforeModal || this.prevStateBeforeModal === 'LEVEL_UP' || this.prevStateBeforeModal === 'BOON_SELECT') {
-      this.prevStateBeforeModal = 'PLAYING';
+    const boons = window.progression.getRandomBoons(3, false);
+    if (!boons || boons.length === 0) {
+      this.pendingLevelUps = 0;
+      this.hideQuickLevelUpHUD();
+      return;
     }
 
-    this.state = 'LEVEL_UP';
-    this.input.attack = false;
-    this.modalInputCooldownUntil = Date.now() + 450;
-    if (this.ui && this.ui.interactionBadge) {
-      this.ui.interactionBadge.style.display = 'none';
-    }
+    this.currentQuickLevelUpBoons = boons;
+    this.isQuickLevelUpActive = true;
+    this.modalInputCooldownUntil = 0;
 
     if (this.ui && this.ui.modalRunLevel) {
       this.ui.modalRunLevel.textContent = window.progression.runLevel;
     }
 
-    if (this.ui && this.ui.levelupCardsContainer) {
-      this.ui.levelupCardsContainer.classList.add('modal-input-locked');
-      setTimeout(() => {
-        if (this.ui && this.ui.levelupCardsContainer) {
-          this.ui.levelupCardsContainer.classList.remove('modal-input-locked');
-        }
-      }, 450);
-    }
-
-    if (window.soundEngine) {
-      if (window.soundEngine.playPrestige) window.soundEngine.playPrestige();
-      else if (window.soundEngine.playBoonSelect) window.soundEngine.playBoonSelect();
-    }
-
+    this.updateQuickLevelUpQueueBadge();
     this.renderLevelUpCards(boons);
 
     if (this.ui && this.ui.btnLevelupReroll) {
@@ -5564,47 +5564,71 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
     if (this.ui && this.ui.levelUpModal) {
       this.ui.levelUpModal.classList.remove('hidden');
     }
+
+    if (window.soundEngine) {
+      if (window.soundEngine.playLevelUp) window.soundEngine.playLevelUp();
+      else if (window.soundEngine.playBoonSelect) window.soundEngine.playBoonSelect();
+    }
+  }
+
+  // Alias for backward compatibility
+  openLevelUpModal() {
+    this.showQuickLevelUpHUD();
+  }
+
+  updateQuickLevelUpQueueBadge() {
+    const badge = document.getElementById('quick-levelup-queue-badge') || (this.ui && this.ui.quickLevelupQueueBadge);
+    if (!badge) return;
+    const queuedExtra = (this.pendingLevelUps || 1) - 1;
+    if (queuedExtra > 0) {
+      badge.textContent = `+${queuedExtra} en cola`;
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+    }
   }
 
   renderLevelUpCards(boons) {
     if (!this.ui.levelupCardsContainer) return;
     this.ui.levelupCardsContainer.innerHTML = '';
 
-    for (const b of boons) {
+    for (let index = 0; index < boons.length; index++) {
+      const b = boons[index];
       const card = document.createElement('div');
-      card.className = 'boon-card';
+      card.className = 'boon-card quick-card';
 
       let badgeHtml = '';
       let titleHtml = b.name;
-      let btnText = 'Elegir';
+      let btnText = `Elegir [${index + 1}]`;
 
       if (b.isEvolution) {
         badgeHtml = `<span class="boon-rarity" style="background:rgba(255,215,0,0.25);border:1.5px solid #ffd700;color:#ffd700;text-shadow:0 0 10px #ffd700;">★ SUPER EVOLUCIÓN ★</span>`;
         titleHtml = `<span style="color:#ffd700;">${b.name}</span>`;
-        btnText = 'Evolucionar';
+        btnText = `Evolucionar [${index + 1}]`;
       } else if (b.isWeapon) {
         const currentLvl = this.passiveWeaponsManager ? this.passiveWeaponsManager.getLevel(b.weaponType) : 0;
         if (currentLvl > 0) {
-          badgeHtml = `<span class="boon-rarity weapon-tag">⚔️ MEJORA DE ARMA</span>`;
-          titleHtml = `${b.name} <span class="weapon-lvl-tag">Nivel ${currentLvl + 1}</span>`;
-          btnText = 'Mejorar Arma';
+          badgeHtml = `<span class="boon-rarity weapon-tag">⚔️ MEJORA ARMA</span>`;
+          titleHtml = `${b.name} <span class="weapon-lvl-tag">Nv. ${currentLvl + 1}</span>`;
+          btnText = `Mejorar [${index + 1}]`;
         } else {
-          badgeHtml = `<span class="boon-rarity weapon-tag">⚔️ ARMA PASIVA</span>`;
-          titleHtml = `${b.name} <span class="weapon-lvl-tag">Nueva Arma</span>`;
-          btnText = 'Empuñar';
+          badgeHtml = `<span class="boon-rarity weapon-tag">⚔️ NUEVA ARMA</span>`;
+          titleHtml = `${b.name}`;
+          btnText = `Empuñar [${index + 1}]`;
         }
       } else if (b.isJoker) {
-        badgeHtml = `<span class="boon-rarity" style="background:rgba(181,23,158,0.25);border:1.5px solid #b5179e;color:#f72585;">🃏 ARCANO DEL AVERNO</span>`;
-        btnText = 'Equipar Arcano';
+        badgeHtml = `<span class="boon-rarity" style="background:rgba(181,23,158,0.25);border:1.5px solid #b5179e;color:#f72585;">🃏 ARCANO</span>`;
+        btnText = `Equipar [${index + 1}]`;
       } else if (b.isTome) {
-        badgeHtml = `<span class="boon-rarity" style="background:rgba(0,180,216,0.25);border:1.5px solid #00b4d8;color:#90e0ef;">📖 TOMO PASIVO</span>`;
-        btnText = 'Aprender Tomo';
+        badgeHtml = `<span class="boon-rarity" style="background:rgba(0,180,216,0.25);border:1.5px solid #00b4d8;color:#90e0ef;">📖 TOMO</span>`;
+        btnText = `Aprender [${index + 1}]`;
       } else {
         const rarityClass = b.rarity.toLowerCase() === 'épica' ? 'rarity-epica' : (b.rarity.toLowerCase() === 'rara' ? 'rarity-rara' : 'rarity-comun');
         badgeHtml = `<span class="boon-rarity ${rarityClass}">${b.rarity}</span>`;
       }
 
       card.innerHTML = `
+        <span class="card-hotkey-badge">[${index + 1}]</span>
         ${badgeHtml}
         <div class="boon-icon-large">${b.icon}</div>
         <div class="boon-card-title">${titleHtml}</div>
@@ -5617,33 +5641,74 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
       });
 
       card.addEventListener('click', () => {
-        if (Date.now() < this.modalInputCooldownUntil) return;
-        window.progression.chooseBoon(b);
-        this.closeLevelUpModal();
+        this.selectQuickLevelUpChoice(index);
       });
 
       this.ui.levelupCardsContainer.appendChild(card);
     }
   }
 
-  closeLevelUpModal() {
-    this.input.attack = false;
-    this.modalInputCooldownUntil = 0;
+  selectQuickLevelUpChoice(index) {
+    if (!this.isQuickLevelUpActive || !this.currentQuickLevelUpBoons) return;
+    const b = this.currentQuickLevelUpBoons[index];
+    if (!b) return;
+
+    if (window.progression) {
+      window.progression.chooseBoon(b);
+    }
+
+    if (window.soundEngine && window.soundEngine.playBoonSelect) {
+      window.soundEngine.playBoonSelect();
+    }
+
+    this.currentQuickLevelUpBoons = null;
+
     if (this.pendingLevelUps > 1) {
       this.pendingLevelUps--;
-      this.openLevelUpModal();
-      return;
+      this.showQuickLevelUpHUD();
+    } else {
+      this.pendingLevelUps = 0;
+      this.hideQuickLevelUpHUD();
     }
+  }
+
+  rerollQuickLevelUp() {
+    if (!this.isQuickLevelUpActive) return;
+    if (window.progression && window.progression.performReroll()) {
+      const fresh = window.progression.getRandomBoons(3, false);
+      this.currentQuickLevelUpBoons = fresh;
+      this.renderLevelUpCards(fresh);
+      if (this.ui && this.ui.btnLevelupReroll) {
+        this.ui.btnLevelupReroll.disabled = !window.progression.canReroll();
+      }
+      if (window.soundEngine && window.soundEngine.playCardShuffle) {
+        window.soundEngine.playCardShuffle();
+      }
+    }
+  }
+
+  hideQuickLevelUpHUD() {
+    this.isQuickLevelUpActive = false;
+    this.currentQuickLevelUpBoons = null;
     this.pendingLevelUps = 0;
     if (this.ui && this.ui.levelUpModal) {
       this.ui.levelUpModal.classList.add('hidden');
     }
-    // Always return cleanly to PLAYING (or valid non-modal state), never a stuck modal state!
-    const targetState = (this.prevStateBeforeModal && !['LEVEL_UP', 'BOON_SELECT', 'SANCTUARY', 'HERMIT_SHOP', 'SLOT_MACHINE'].includes(this.prevStateBeforeModal))
-      ? this.prevStateBeforeModal
-      : 'PLAYING';
-    this.prevStateBeforeModal = null;
-    this.state = targetState;
+    const badge = document.getElementById('quick-levelup-queue-badge') || (this.ui && this.ui.quickLevelupQueueBadge);
+    if (badge) badge.classList.add('hidden');
+
+    if (this.state === 'LEVEL_UP') {
+      const targetState = (this.prevStateBeforeModal && !['LEVEL_UP', 'BOON_SELECT', 'SANCTUARY', 'HERMIT_SHOP', 'SLOT_MACHINE'].includes(this.prevStateBeforeModal))
+        ? this.prevStateBeforeModal
+        : 'PLAYING';
+      this.prevStateBeforeModal = null;
+      this.state = targetState;
+    }
+  }
+
+  // Alias for backward compatibility
+  closeLevelUpModal() {
+    this.hideQuickLevelUpHUD();
   }
 
   // ─── PASSIVE WEAPONS HELPERS ───
@@ -6503,6 +6568,14 @@ Ahora, ante la colosal Torre Infernal, deberás escalar y purgar tus culpas con 
 
       if (justPressed(0) && this.player) {
         this.player.jumpBufferTimer = this.player.jumpBufferMax;
+      }
+
+      // Quick Real-Time Level-Up Selection via Gamepad D-Pad (Left: 1, Up: 2, Right: 3) & (Y: Reroll)
+      if (this.isQuickLevelUpActive) {
+        if (justPressed(14)) this.selectQuickLevelUpChoice(0);
+        else if (justPressed(12)) this.selectQuickLevelUpChoice(1);
+        else if (justPressed(15)) this.selectQuickLevelUpChoice(2);
+        else if (justPressed(3)) this.rerollQuickLevelUp();
       }
     }
 
