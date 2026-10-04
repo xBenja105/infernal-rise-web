@@ -20,7 +20,7 @@ class LevelManager {
       this.currentLevel = this.createBossDemonSlimeLevel();
     } else if (levelId === 'tower2') {
       this.currentLevel = this.createTower2Level();
-    } else if (levelId === 'boss2' || levelId === 'boss_frost_guardian' || levelId === 'boss_flegias' || levelId === 'boss_glacior') {
+    } else if (levelId === 'boss2' || levelId === 'boss_frost_guardian' || levelId === 'boss_flegias') {
       this.currentLevel = this.createBossFrostGuardianLevel();
     } else if (levelId === 'tower3') {
       this.currentLevel = this.createTower3Level();
@@ -28,8 +28,12 @@ class LevelManager {
       this.currentLevel = this.createBossMinotaurLevel();
     } else if (levelId === 'tower4') {
       this.currentLevel = this.createTower4Level();
+    } else if (levelId === 'boss4' || levelId === 'boss_malacoda') {
+      this.currentLevel = this.createBossMalacodaLevel();
     } else if (levelId === 'tower5') {
       this.currentLevel = this.createTower5Level();
+    } else if (levelId === 'boss5' || levelId === 'boss_glacior') {
+      this.currentLevel = this.createBossGlaciorLevel();
     } else if (levelId === 'tower6') {
       this.currentLevel = this.createTower6Level();
     } else if (levelId === 'infernal') {
@@ -1035,9 +1039,6 @@ class LevelManager {
     };
   }
   createBossFlegiasLevel() {
-    return this.createBossFrostGuardianLevel();
-  }
-  createBossGlaciorLevel() {
     return this.createBossFrostGuardianLevel();
   }
 
